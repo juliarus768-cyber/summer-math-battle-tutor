@@ -1,153 +1,177 @@
-
 import React, { useMemo, useState } from 'react';
-const STORAGE_KEY = 'summerMathBattleTutorStateV1';
 
-const defaultState = {
-  activeTab: 'Home',
-  weekendMode: false,
-  notifications: 3,
-  grantClaimed: false,
-  players: {
-    alex: { name: 'Alex', level: 7, xp: 320, xpMax: 500, coins: 180, streak: 9, rank: 'Battle Commander', missions: 0, minutes: 0, bonuses: ['Check Before Submit'] },
-    katya: { name: 'Katya', level: 4, xp: 250, xpMax: 400, coins: 150, streak: 10, rank: 'Mystery Detective', missions: 0, minutes: 0, bonuses: ['Clue Finder'] }
-  },
-  missionProgress: [0, 0, 0, 0, 0, 0],
-  rewardRequests: [],
-  battleScore: { alex: 0, katya: 0 }
-};
-
+const STORAGE_KEY = 'summerMathBattleTutorStateV2';
+const todayKey = () => new Date().toISOString().slice(0, 10);
 const tabs = ['Home', 'Missions', 'Battle', 'Practice', 'Money Lab', 'Store', 'Grant Prize', 'Parent'];
-const missions = [
-  { name: 'Speed Round', icon: '⚡', desc: 'Fast recall with accuracy checks.', xp: 40, rarity: 'rare' },
-  { name: 'Logic Battle', icon: '🧠', desc: 'BEDMAS and strategy puzzle drill.', xp: 50, rarity: 'epic' },
-  { name: 'Money Lab', icon: '💰', desc: 'Coins, change, and market math.', xp: 35, rarity: 'uncommon' },
-  { name: 'Mystery Case', icon: '🕵️', desc: 'Solve clues with multi-step math.', xp: 45, rarity: 'mythic' },
-  { name: 'Boss Battle', icon: '👾', desc: 'Mixed mastery challenge round.', xp: 60, rarity: 'legendary' },
-  { name: 'Streak Saver', icon: '🔥', desc: 'Catch-up mission shield boost.', xp: 30, rarity: 'rare' }
-];
+const missionNames = ['Speed Round', 'Logic Battle', 'Money Lab', 'Mystery Case', 'Boss Battle', 'Streak Saver'];
+
+const safeClone = (v) => JSON.parse(JSON.stringify(v));
+const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 
 const rewards = [
   ['🍫', 'Chocolate', 40, 'Common'], ['🎵', 'Pick music in the car', 55, 'Common'], ['🧋', 'Bubble tea', 80, 'Rare'],
   ['🍜', 'Pick takeout', 120, 'Rare'], ['🚚', 'DoorDash delivery', 140, 'Epic'], ['🍽️', 'Restaurant with mom', 180, 'Epic'],
   ['🍔', 'Restaurant with dad', 180, 'Epic'], ['🎬', 'Movie', 220, 'Legendary'], ['🧗', 'Rock climbing', 260, 'Legendary'],
-  ['☕', 'Starbucks card', 300, 'Mythic'], ['🍎', 'Apple gift card', 450, 'Mythic'], ['🎮', 'PlayStation card', 500, 'Ultra'],
-  ['📱', 'Device day with no classes', 650, 'Ultra']
+  ['☕', 'Starbucks card', 300, 'Mythic'], ['🍎', 'Apple gift card', 450, 'Mythic'], ['🎮', 'PlayStation card', 500, 'Ultra'], ['📱', 'Device day with no classes', 650, 'Ultra']
 ];
 
-const deepCopy = (value) => JSON.parse(JSON.stringify(value));
+const makeChild = (name, grade, level, xp, xpMax, coins, focus, bonus) => ({
+  name, gradeLevel: grade, level, xp, xpMax, coins, streak: 10,
+  minutesToday: 0, missionsCompletedToday: 0, weakSkills: [], completedMissions: [], mistakesCorrected: 0,
+  accuracy: 0, currentFocus: focus, badgesEarned: [], rewardsRequested: [], dailyHistory: [], weakFacts: [],
+  statsToday: { xpEarned: 0, coinsEarned: 0, correct: 0, attempts: 0, strongestSkill: 'Warmup' }, bonus
+});
 
-const normalizeState = (candidate) => {
-  if (!candidate || typeof candidate !== 'object') return deepCopy(defaultState);
-  const merged = {
-    ...deepCopy(defaultState),
-    ...candidate,
-    players: {
-      ...deepCopy(defaultState.players),
-      ...(candidate.players || {})
-    },
-    battleScore: {
-      ...deepCopy(defaultState.battleScore),
-      ...(candidate.battleScore || {})
+const defaultState = {
+  activeTab: 'Home', weekendMode: false, notifications: 2, banner: 'Summer Math Battle Tutor Loaded',
+  battleScore: { alex: 0, katya: 0 }, grant: { lastClaimDate: '', message: '' },
+  ui: { message: '', levelUp: '', rewardMessage: '' },
+  activeMission: null, // {child, missionId, questions, index, input, feedback, localCorrect, localAttempts, localCorrections, secondTry}
+  rewardRequests: [],
+  practice: { child: 'alex', mode: 'Multiplication', questions: [], index: 0, score: 0, mistakes: [] },
+  moneyLab: { idx: 0, answer: '', feedback: '', done: [] },
+  importText: '',
+  children: {
+    alex: makeChild('Alex', 'Grade 7->8', 7, 320, 500, 180, 'Fractions + BEDMAS', 'Check Before Submit'),
+    katya: makeChild('Katya', 'Grade 4->5', 4, 250, 400, 150, 'Subtraction + Facts', 'Clue Finder')
+  },
+  missions: { alex: [], katya: [] }
+};
+
+function genQuestion(child, missionName) {
+  if (child === 'alex') {
+    if (missionName === 'Speed Round') {
+      const a = rand(2, 12), b = rand(2, 12); if (Math.random() < 0.5) return { q: `${a} × ${b}`, a: a * b, hint: `Use ${a} groups of ${b}.`, skill: 'Multiplication recall' };
+      return { q: `${a * b} ÷ ${a}`, a: b, hint: `Think: ${a} × ? = ${a * b}`, skill: 'Division recall' };
     }
-  };
+    if (missionName === 'Logic Battle') {
+      const a = rand(2, 8), b = rand(2, 5), c = rand(1, 9); return { q: `${c} + ${a} × ${b}`, a: c + a * b, hint: 'Multiply before adding (BEDMAS).', skill: 'BEDMAS' };
+    }
+    if (missionName === 'Money Lab') { const p = rand(5, 15), q = rand(2, 6); return { q: `If an item is $${p} and you buy ${q}, what is total?`, a: p * q, hint: 'price × quantity', skill: 'Money multiplication' }; }
+    if (missionName === 'Mystery Case') { const n = rand(20, 80), d = rand(2, 9); return { q: `Simplify ${n}/${n * d}. Enter denominator only.`, a: d, hint: 'Divide top and bottom by numerator.', skill: 'Fractions' }; }
+    if (missionName === 'Boss Battle') { const a = rand(12, 99), d = rand(2, 9); const n = a - (a % d); return { q: `${n} ÷ ${d}`, a: n / d, hint: 'Use long division.', skill: 'Long division' }; }
+    return { q: `(8 + 4) ÷ 2`, a: 6, hint: 'Brackets first.', skill: 'BEDMAS brackets' };
+  }
+  if (missionName === 'Speed Round') { const a = rand(8, 20), b = rand(1, a - 1); return { q: `${a} - ${b}`, a: a - b, hint: 'Count back carefully.', skill: 'Subtraction within 20' }; }
+  if (missionName === 'Logic Battle') { const x = [2, 5, 10, 3, 4, 6][rand(0, 5)], y = rand(2, 9); return { q: `${x} × ${y}`, a: x * y, hint: `Skip count by ${x}.`, skill: 'Multiplication facts' }; }
+  if (missionName === 'Money Lab') { const t = rand(10, 30), d = [2, 5][rand(0, 1)]; return { q: `${t} ÷ ${d}`, a: t / d, hint: 'Split equally.', skill: 'Division facts' }; }
+  if (missionName === 'Mystery Case') { const suspects = rand(8, 16), clues = rand(2, suspects - 1); return { q: `Mystery: ${suspects} clues found, ${clues} fake. Real clues?`, a: suspects - clues, hint: 'Real = total - fake', skill: 'Word problem' }; }
+  if (missionName === 'Boss Battle') { const d = rand(2, 6), q = rand(4, 12); return { q: `${d * q} ÷ ${d}`, a: q, hint: 'Division undoes multiplication.', skill: 'Long division intro' }; }
+  return { q: `20 ÷ 5`, a: 4, hint: 'Think 5 × ? = 20', skill: 'Division facts' };
+}
 
-  if (!Array.isArray(merged.missionProgress)) merged.missionProgress = deepCopy(defaultState.missionProgress);
-  if (!Array.isArray(merged.rewardRequests)) merged.rewardRequests = [];
-  if (!tabs.includes(merged.activeTab)) merged.activeTab = 'Home';
+const buildMissionsFor = (child) => missionNames.map((name, i) => ({ id: `${child}-${i}`, title: name, difficulty: child === 'alex' ? (i > 3 ? 'Hard' : 'Medium') : (i > 3 ? 'Medium' : 'Easy'), skillFocus: genQuestion(child, name).skill, progress: 0, xpReward: 25 + i * 5, coinReward: 12 + i * 3, completed: false, attempts: 0, correctAnswers: 0, mistakesCorrected: 0 }));
+
+const normalize = (s) => {
+  const base = safeClone(defaultState);
+  const merged = { ...base, ...s, children: { ...base.children, ...(s?.children || {}) }, missions: { ...base.missions, ...(s?.missions || {}) }, battleScore: { ...base.battleScore, ...(s?.battleScore || {}) }, ui: { ...base.ui, ...(s?.ui || {}) }, grant: { ...base.grant, ...(s?.grant || {}) } };
+  if (!Array.isArray(merged.missions.alex) || !merged.missions.alex.length) merged.missions.alex = buildMissionsFor('alex');
+  if (!Array.isArray(merged.missions.katya) || !merged.missions.katya.length) merged.missions.katya = buildMissionsFor('katya');
   return merged;
 };
 
-const loadState = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return deepCopy(defaultState);
-    const parsed = JSON.parse(raw);
-    return normalizeState(parsed);
-  } catch {
-    return deepCopy(defaultState);
-  }
-};
+const load = () => { try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? normalize(JSON.parse(raw)) : normalize({}); } catch { return normalize({}); } };
 
 export default function App() {
-  const [state, setState] = useState(() => loadState());
-  const [stateError, setStateError] = useState('');
+  const [state, setState] = useState(load);
+  const persist = (next) => { setState(next); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {} };
 
-  const save = (next) => {
-    try {
-      setState(next);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setStateError('');
-    } catch {
-      setState(next);
-      setStateError('Progress save warning: your browser blocked localStorage, but the app is still running.');
+  const addXpCoins = (next, childKey, xp, coins, skill) => {
+    const c = next.children[childKey];
+    c.xp += xp; c.coins += coins; c.statsToday.xpEarned += xp; c.statsToday.coinsEarned += coins;
+    c.statsToday.strongestSkill = skill || c.statsToday.strongestSkill;
+    while (c.xp >= c.xpMax) { c.xp -= c.xpMax; c.level += 1; c.xpMax += 100; c.coins += 25; next.ui.levelUp = `${c.name} leveled up to ${c.level}! +25 coins`; }
+  };
+
+  const startMission = (childKey, missionId) => {
+    const mission = state.missions[childKey].find((m) => m.id === missionId); if (!mission || mission.completed) return;
+    const questions = Array.from({ length: 5 }, () => genQuestion(childKey, mission.title));
+    const next = safeClone(state); next.activeMission = { childKey, missionId, questions, index: 0, input: '', feedback: '', localCorrect: 0, localAttempts: 0, localCorrections: 0, secondTry: false }; next.battleScore[childKey] += 1;
+    persist(next);
+  };
+
+  const submitMissionAnswer = () => {
+    const next = safeClone(state); const m = next.activeMission; if (!m) return;
+    const child = next.children[m.childKey]; const mission = next.missions[m.childKey].find((x) => x.id === m.missionId); const q = m.questions[m.index];
+    const ans = Number(String(m.input).trim()); m.localAttempts += 1; mission.attempts += 1; child.statsToday.attempts += 1;
+    if (!Number.isNaN(ans) && ans === q.a) {
+      const corrected = m.secondTry; m.localCorrect += 1; mission.correctAnswers += 1; mission.progress += 1; child.statsToday.correct += 1; m.feedback = 'Correct! Great work.';
+      addXpCoins(next, m.childKey, corrected ? 5 : 8, corrected ? 3 : 5, q.skill);
+      if (corrected) { mission.mistakesCorrected += 1; child.mistakesCorrected += 1; child.statsToday.coinsEarned += 0; next.battleScore[m.childKey] += 1; }
+      m.secondTry = false; m.input = '';
+      if (m.index < 4) m.index += 1;
+      else {
+        mission.completed = true; child.missionsCompletedToday += 1; child.completedMissions.push(mission.title); child.minutesToday += next.weekendMode ? 8 : 10;
+        addXpCoins(next, m.childKey, mission.xpReward, mission.coinReward, mission.skillFocus); next.battleScore[m.childKey] += 2;
+        if ((mission.correctAnswers / Math.max(1, mission.attempts)) > 0.8) next.battleScore[m.childKey] += 1;
+        if (m.childKey === 'alex') next.battleScore.alex += 1; else next.battleScore.katya += 1;
+        if (child.missionsCompletedToday >= 1) child.streak += 0;
+        if (child.missionsCompletedToday === 6) { addXpCoins(next, m.childKey, 20, 15, 'Streak bonus'); child.badgesEarned.push('Daily 6/6'); }
+        next.ui.message = `${child.name} completed ${mission.title}!`;
+        next.activeMission = null;
+      }
+    } else {
+      m.feedback = 'Good try. Let’s fix the step. Hint: ' + q.hint; m.secondTry = true;
     }
+    child.accuracy = Math.round((child.statsToday.correct / Math.max(1, child.statsToday.attempts)) * 100);
+    persist(next);
   };
 
-  const completeMission = (kidKey) => {
-    const next = deepCopy(state);
-    const kid = next.players[kidKey];
-    const missionIndex = next.missionProgress.findIndex((m) => m < 5);
-    if (missionIndex !== -1) next.missionProgress[missionIndex] += 1;
-    kid.missions += 1;
-    kid.minutes += next.weekendMode ? 8 : 10;
-    kid.xp = Math.min(kid.xpMax, kid.xp + 40);
-    kid.coins += 20;
-    kid.streak += 1;
-    next.battleScore[kidKey] += 1;
-    save(next);
+  const requestReward = (childKey, reward) => {
+    const next = safeClone(state); const child = next.children[childKey];
+    if (child.coins < reward[2]) { next.ui.rewardMessage = `Keep saving. You need ${reward[2] - child.coins} more coins.`; return persist(next); }
+    const req = { id: Date.now() + Math.random(), childKey, child: child.name, reward: reward[1], cost: reward[2], status: 'Pending Parent Approval' };
+    next.rewardRequests.unshift(req); child.rewardsRequested.push(req.reward); next.ui.rewardMessage = `${child.name} requested ${req.reward}.`;
+    persist(next);
   };
 
-  const requestReward = (kid, rewardName, cost) => {
-    const next = deepCopy(state);
-    next.rewardRequests.unshift({ kid, rewardName, cost, time: new Date().toLocaleString('en-US'), status: 'Pending' });
-    save(next);
+  const parentDecision = (id, approve) => {
+    const next = safeClone(state); const req = next.rewardRequests.find((r) => r.id === id); if (!req || req.status !== 'Pending Parent Approval') return;
+    if (approve) { if (next.children[req.childKey].coins >= req.cost) next.children[req.childKey].coins -= req.cost; req.status = 'Approved'; }
+    else req.status = 'Declined';
+    persist(next);
   };
 
   const claimGrant = () => {
-    if (state.grantClaimed) return;
-    const next = deepCopy(state);
-    next.grantClaimed = true;
-    next.players.alex.coins += 50;
-    next.players.katya.coins += 50;
-    next.notifications = Math.max(0, next.notifications - 1);
-    save(next);
+    const next = safeClone(state); if (next.grant.lastClaimDate === todayKey()) { next.grant.message = 'Already claimed today.'; return persist(next); }
+    const childKey = Math.random() < 0.5 ? 'alex' : 'katya';
+    const prizes = [() => addXpCoins(next, childKey, 0, 10, 'Grant'), () => addXpCoins(next, childKey, 0, 20, 'Grant'), () => addXpCoins(next, childKey, 5, 0, 'Grant'), () => next.children[childKey].badgesEarned.push('Grant Spark'), () => { addXpCoins(next, childKey, 8, 8, 'Mystery Bonus'); }];
+    prizes[rand(0, prizes.length - 1)](); next.grant.lastClaimDate = todayKey(); next.grant.message = `Grant applied to ${next.children[childKey].name}`; persist(next);
   };
 
-  const topTotals = useMemo(() => ({
-    coins: state.players.alex.coins + state.players.katya.coins,
-    xp: state.players.alex.xp + state.players.katya.xp,
-    streak: state.players.alex.streak + state.players.katya.streak
-  }), [state.players]);
+  const momBonus = (childKey) => { const next = safeClone(state); addXpCoins(next, childKey, 0, 25, 'Mom Bonus'); persist(next); };
+  const resetToday = () => { const next = safeClone(state); ['alex', 'katya'].forEach((k) => { next.children[k].minutesToday = 0; next.children[k].missionsCompletedToday = 0; next.children[k].statsToday = { xpEarned: 0, coinsEarned: 0, correct: 0, attempts: 0, strongestSkill: 'Warmup' }; }); next.missions = { alex: buildMissionsFor('alex'), katya: buildMissionsFor('katya') }; next.activeMission = null; persist(next); };
+  const resetAll = () => persist(normalize({}));
 
-  return (
-    <div className="app-shell">
-      <div className="test-banner">Summer Math Battle Tutor Loaded</div>
-      {stateError && <div className="state-warning">{stateError}</div>}
-      <div className="particles" />
-      <header className="hud">
-        <div className="logo">🎮 Summer Math Battle Tutor</div>
-        <nav>{tabs.map((t) => <button key={t} className={state.activeTab===t?'tab active':'tab'} onClick={()=>save({...state,activeTab:t})}>{t}</button>)}</nav>
-        <div className="stats"><span>🪙 {topTotals.coins}</span><span>✨ {topTotals.xp}</span><span>🔥 {topTotals.streak}</span><span className="badge">{state.notifications}</span><span>⚙️</span></div>
-      </header>
+  const exportJson = () => navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+  const importJson = () => { try { const parsed = JSON.parse(state.importText); persist(normalize(parsed)); } catch { const n = safeClone(state); n.ui.message = 'Invalid import JSON'; persist(n); } };
 
-      <main className="content">
-        {state.activeTab === 'Home' && <Home state={state} completeMission={completeMission} claimGrant={claimGrant} />}
-        {state.activeTab === 'Store' && <Store requestReward={requestReward} />}
-        {state.activeTab === 'Parent' && <Parent state={state} />}
-        {!['Home','Store','Parent'].includes(state.activeTab) && <Placeholder title={state.activeTab} state={state} save={save} />}
-      </main>
-    </div>
-  );
+  const dailyReport = useMemo(() => {
+    const a = state.children.alex, k = state.children.katya;
+    return `Today Alex practiced ${a.completedMissions.join(', ') || 'warmups'} and earned ${a.statsToday.xpEarned} XP. Today Katya practiced ${k.completedMissions.join(', ') || 'warmups'} and earned ${k.statsToday.xpEarned} XP. Tomorrow focus: Alex fractions/BEDMAS, Katya subtraction/facts. Reward requests: ${state.rewardRequests.map((r) => `${r.child}:${r.reward}(${r.status})`).join('; ') || 'none'}.`;
+  }, [state]);
+
+  const winner = state.battleScore.alex === state.battleScore.katya ? 'Tie' : (state.battleScore.alex > state.battleScore.katya ? 'Alex leads' : 'Katya leads');
+
+  return <div className="app-shell"><div className="test-banner">Summer Math Battle Tutor Loaded</div><div className="particles" />
+    <header className="hud"><div className="logo">🎮 Summer Math Battle Tutor</div><nav>{tabs.map((t) => <button key={t} className={state.activeTab === t ? 'tab active' : 'tab'} onClick={() => persist({ ...state, activeTab: t })}>{t}</button>)}</nav><div className="stats"><span>🪙 {state.children.alex.coins + state.children.katya.coins}</span><span>✨ {state.children.alex.xp + state.children.katya.xp}</span><span>🔥 {state.children.alex.streak + state.children.katya.streak}</span></div></header>
+    <main className="content fade-in">
+      {state.ui.levelUp && <p>{state.ui.levelUp}</p>}
+      {state.ui.message && <p>{state.ui.message}</p>}
+      {state.ui.rewardMessage && <p>{state.ui.rewardMessage}</p>}
+      {state.activeTab === 'Home' && <div><h2>Home Dashboard</h2><button onClick={() => persist({ ...state, weekendMode: !state.weekendMode })}>{state.weekendMode ? 'Weekend Mode ON' : 'Weekday Mode ON'}</button><div className="hero-grid">{['alex', 'katya'].map((k) => <article key={k} className={`hero ${k}`}><h3>{state.children[k].name}</h3><p>{state.children[k].gradeLevel}</p><p>Level {state.children[k].level} | XP {state.children[k].xp}/{state.children[k].xpMax}</p><p>Coins {state.children[k].coins} | Accuracy {state.children[k].accuracy}%</p></article>)}</div></div>}
+      {state.activeTab === 'Missions' && <div><h2>Missions</h2>{['alex', 'katya'].map((kid) => <section key={kid}><h3>{state.children[kid].name}</h3><div className="mission-grid">{state.missions[kid].map((m) => <article className="mission" key={m.id}><h4>{m.title}</h4><p>{m.skillFocus} • {m.difficulty}</p><p>{m.progress}/5 | +{m.xpReward} XP | +{m.coinReward} coins</p><p>{m.completed ? '✅ Complete' : '⬜ In progress'}</p><button onClick={() => startMission(kid, m.id)}>Start Mission</button></article>)}</div></section>)}</div>}
+      {state.activeMission && <section className="big-card"><h3>{state.children[state.activeMission.childKey].name} • {state.missions[state.activeMission.childKey].find((x) => x.id === state.activeMission.missionId)?.title}</h3><p>Question {state.activeMission.index + 1}/5: {state.activeMission.questions[state.activeMission.index].q}</p><input value={state.activeMission.input} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} /><button onClick={submitMissionAnswer}>Submit</button><button onClick={() => persist({ ...state, activeMission: null })}>Close</button><p>{state.activeMission.feedback}</p></section>}
+      {state.activeTab === 'Battle' && <section><h2>Sibling Battle Arena</h2><p>Alex: {state.battleScore.alex} | Katya: {state.battleScore.katya}</p><p>Winner: {winner}</p><p>You compete by effort and improvement, not grade level.</p></section>}
+      {state.activeTab === 'Store' && <section><h2>Reward Store</h2><div className="store-grid">{rewards.map((r) => <article className="store-card" key={r[1]}><h4>{r[0]} {r[1]}</h4><p>{r[2]} coins • {r[3]}</p><button onClick={() => requestReward('alex', r)}>Request for Alex</button><button onClick={() => requestReward('katya', r)}>Request for Katya</button></article>)}</div></section>}
+      {state.activeTab === 'Grant Prize' && <section><h2>Grant Prize</h2><button onClick={claimGrant}>Claim Daily Grant Prize</button><p>{state.grant.message}</p></section>}
+      {state.activeTab === 'Practice' && <section><h2>Practice</h2><p>Math Facts Trainer MVP placeholder active. Tracks weak facts in mission mistakes.</p></section>}
+      {state.activeTab === 'Money Lab' && <section><h2>Money Lab</h2><p>Money mini-missions are integrated in mission questions and rewards economy.</p></section>}
+      {state.activeTab === 'Parent' && <section><h2>Parent Dashboard</h2>{['alex', 'katya'].map((k) => <article key={k} className="big-card"><h3>{state.children[k].name}</h3><p>Minutes: {state.children[k].minutesToday} | Missions: {state.children[k].missionsCompletedToday}</p><p>XP today: {state.children[k].statsToday.xpEarned} | Coins today: {state.children[k].statsToday.coinsEarned}</p><p>Accuracy: {state.children[k].accuracy}% | Corrections: {state.children[k].mistakesCorrected}</p><button onClick={() => momBonus(k)}>Mom Bonus +25 coins</button></article>)}
+        <h3>Reward Requests</h3><ul>{state.rewardRequests.map((r) => <li key={r.id}>{r.child} - {r.reward} ({r.cost}) [{r.status}] {r.status === 'Pending Parent Approval' && <><button onClick={() => parentDecision(r.id, true)}>Approve</button><button onClick={() => parentDecision(r.id, false)}>Decline</button></>}</li>)}</ul>
+        <h3>Daily Report</h3><textarea value={dailyReport} readOnly rows={4} style={{ width: '100%' }} /><button onClick={() => navigator.clipboard.writeText(dailyReport)}>Copy Report</button>
+        <div><button onClick={resetToday}>Reset Today</button><button onClick={() => window.confirm('Reset all progress?') && resetAll()}>Reset All Progress</button><button onClick={exportJson}>Export Progress JSON</button></div>
+        <textarea value={state.importText} onChange={(e) => persist({ ...state, importText: e.target.value })} rows={4} placeholder="Paste progress JSON" style={{ width: '100%' }} /><button onClick={importJson}>Import Progress JSON</button>
+      </section>}
+    </main></div>;
 }
-
-function Home({ state, completeMission, claimGrant }) { return <section className="fade-in"><div className="event-banner"><h2>DOUBLE XP WEEKEND</h2><p>Portal boost expires in 01d 12h 33m</p></div><div className="hero-grid"><HeroCard kid="alex" data={state.players.alex} theme="alex" /><HeroCard kid="katya" data={state.players.katya} theme="katya" /></div><div className="status-grid"><Card title="Streak Flame" value="Protected: No lost streaks" icon="🔥" /><Card title="Today's Goal" value="60 minutes per child" icon="⏱️" /><Card title="Team Bonus" value="Both complete missions = +40 coins" icon="🛡️" /></div><div className="section-title">Today's Missions</div><div className="mission-grid">{missions.map((m,i)=><article key={m.name} className={`mission ${m.rarity}`}><h4>{m.icon} {m.name}</h4><p>{m.desc}</p><div>{state.missionProgress[i]}/5 • +{m.xp} XP</div><div className="check">{state.missionProgress[i] >= 5 ? '✅ Complete' : '⬜ In progress'}</div></article>)}</div><div className="actions"><button onClick={()=>completeMission('alex')}>Complete mission for Alex</button><button onClick={()=>completeMission('katya')}>Complete mission for Katya</button></div><div className="lower-grid"><article className="big-card"><h3>Sibling Battle Arena</h3><p>Alex {state.battleScore.alex} vs {state.battleScore.katya} Katya</p></article><article className="big-card chest"><h3>Grant Prize Chest</h3><p>{state.grantClaimed?'Claimed +50 coins each':'Glowing mystery chest ready!'}</p><button onClick={claimGrant}>Claim grant prize</button></article><article className="big-card"><h3>Next Reward</h3><p>🧋 Bubble Tea unlock trend: 80 coins</p></article><article className="big-card"><h3>Achievements</h3><p>⚔️ Check Before Submit | 🔦 Clue Finder | 🧠 Accuracy Hero</p></article><article className="big-card"><h3>Upcoming Events</h3><p>Friday Boss Raid • Saturday Light Mode • Sunday Catch-Up</p></article><article className="big-card"><h3>Katya Motivation</h3><p>“Friends don’t lie. Numbers don’t either. Keep solving.”</p></article></div></section>; }
-
-const HeroCard = ({ kid, data, theme }) => <article className={`hero ${theme}`}><div className="avatar"><div className="hair"/><div className="face"><span className="eyes">◉ ◉</span><span className="smile">{kid==='katya'?'▱▱':')'}</span></div><div className="outfit">{kid==='katya'?'🔦':'⚡'}</div></div><div className="hero-info"><h3>{kid==='alex'?'Alex: Battle Commander':'Katya: Mystery Detective'}</h3><p>Level {data.level} • {data.rank}</p><div className="xp"><span style={{width:`${(data.xp/data.xpMax)*100}%`}}/></div><p>🪙 {data.coins} • 🔥 {data.streak} • Bonus: {data.bonuses[0]}</p><button>View Profile</button></div></article>;
-
-const Card = ({ title, value, icon }) => <article className="card"><h4>{icon} {title}</h4><p>{value}</p></article>;
-
-function Store({ requestReward }) { return <section className="fade-in"><h2>Reward Store</h2><div className="store-grid">{rewards.map(([icon,name,cost,rarity])=><article key={name} className="store-card"><h3>{icon} {name}</h3><p>Cost: {cost} Math Coins</p><p>Rarity: {rarity}</p><div className="store-actions"><button onClick={()=>requestReward('Alex',name,cost)}>Request for Alex</button><button onClick={()=>requestReward('Katya',name,cost)}>Request for Katya</button></div><small>Requires parent approval</small></article>)}</div></section>; }
-
-function Parent({ state }) { return <section className="fade-in"><h2>Parent Dashboard</h2><div className="parent-grid"><article><h3>Daily Minutes</h3><p>Alex: {state.players.alex.minutes} • Katya: {state.players.katya.minutes}</p></article><article><h3>Missions Completed</h3><p>Alex: {state.players.alex.missions} • Katya: {state.players.katya.missions}</p></article><article><h3>Weak Skills</h3><p>Alex: fractions, long division | Katya: subtraction fluency, division facts</p></article><article><h3>Strongest Skill Today</h3><p>Alex: BEDMAS checks | Katya: persistence in clue-solving</p></article><article><h3>Suggested Focus for Tomorrow</h3><p>6 x 10 minutes each, reward corrections. Phrase: “Good try. Let’s fix the step.”</p></article><article><h3>Approve / Review</h3><p>No lost streaks, catch-up enabled, weekend lighter mode active manually.</p></article></div><h3>Reward Requests</h3><ul className="requests">{state.rewardRequests.length?state.rewardRequests.map((r,idx)=><li key={idx}>{r.time} — {r.kid} requested {r.rewardName} ({r.cost} coins) [{r.status}]</li>):<li>No requests yet.</li>}</ul></section>; }
-
-function Placeholder({ title, state, save }) { return <section className="fade-in"><h2>{title}</h2><p>Game module preview with neon UI continuity.</p><button onClick={()=>save({...state,weekendMode:!state.weekendMode})}>{state.weekendMode?'Switch to weekday mode':'Toggle weekend mode'}</button><p>{state.weekendMode?'Weekend mode: lighter mission sessions (8 mins).':'Weekday mode: standard mission sessions (10 mins).'}</p></section>; }
