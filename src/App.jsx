@@ -1,6 +1,5 @@
-import React from 'react';
-import { useMemo, useState } from 'react';
 
+import React, { useMemo, useState } from 'react';
 const STORAGE_KEY = 'summerMathBattleTutorStateV1';
 
 const defaultState = {
@@ -9,8 +8,8 @@ const defaultState = {
   notifications: 3,
   grantClaimed: false,
   players: {
-    alex: { level: 7, xp: 320, xpMax: 500, coins: 180, streak: 9, rank: 'Battle Commander', missions: 0, minutes: 0, bonuses: ['Check Before Submit'] },
-    katya: { level: 4, xp: 250, xpMax: 400, coins: 150, streak: 10, rank: 'Mystery Detective', missions: 0, minutes: 0, bonuses: ['Clue Finder'] }
+    alex: { name: 'Alex', level: 7, xp: 320, xpMax: 500, coins: 180, streak: 9, rank: 'Battle Commander', missions: 0, minutes: 0, bonuses: ['Check Before Submit'] },
+    katya: { name: 'Katya', level: 4, xp: 250, xpMax: 400, coins: 150, streak: 10, rank: 'Mystery Detective', missions: 0, minutes: 0, bonuses: ['Clue Finder'] }
   },
   missionProgress: [0, 0, 0, 0, 0, 0],
   rewardRequests: [],
