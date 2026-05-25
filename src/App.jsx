@@ -35,41 +35,57 @@ const rewards = [
   ['📱', 'Device day with no classes', 650, 'Ultra']
 ];
 
-function safeClone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
+const deepCopy = (value) => JSON.parse(JSON.stringify(value));
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return safeClone(defaultState);
-    const parsed = JSON.parse(raw);
-    return {
-      ...safeClone(defaultState),
-      ...parsed,
-      players: { ...safeClone(defaultState.players), ...(parsed.players || {}) },
-      battleScore: { ...safeClone(defaultState.battleScore), ...(parsed.battleScore || {}) },
-      missionProgress: Array.isArray(parsed.missionProgress) ? parsed.missionProgress : safeClone(defaultState.missionProgress),
-      rewardRequests: Array.isArray(parsed.rewardRequests) ? parsed.rewardRequests : []
-    };
-  } catch {
-    localStorage.removeItem(STORAGE_KEY);
-    return safeClone(defaultState);
-  }
-}
-
-export default function App() {
-  const [state, setState] = useState(loadState);
-
-  const save = (next) => {
-    setState(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+const normalizeState = (candidate) => {
+  if (!candidate || typeof candidate !== 'object') return deepCopy(defaultState);
+  const merged = {
+    ...deepCopy(defaultState),
+    ...candidate,
+    players: {
+      ...deepCopy(defaultState.players),
+      ...(candidate.players || {})
+    },
+    battleScore: {
+      ...deepCopy(defaultState.battleScore),
+      ...(candidate.battleScore || {})
+    }
   };
 
-  const switchTab = (tab) => save({ ...state, activeTab: tab });
+  if (!Array.isArray(merged.missionProgress)) merged.missionProgress = deepCopy(defaultState.missionProgress);
+  if (!Array.isArray(merged.rewardRequests)) merged.rewardRequests = [];
+  if (!tabs.includes(merged.activeTab)) merged.activeTab = 'Home';
+  return merged;
+};
+
+const loadState = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return deepCopy(defaultState);
+    const parsed = JSON.parse(raw);
+    return normalizeState(parsed);
+  } catch {
+    return deepCopy(defaultState);
+  }
+};
+
+export default function App() {
+  const [state, setState] = useState(() => loadState());
+  const [stateError, setStateError] = useState('');
+
+  const save = (next) => {
+    try {
+      setState(next);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setStateError('');
+    } catch {
+      setState(next);
+      setStateError('Progress save warning: your browser blocked localStorage, but the app is still running.');
+    }
+  };
 
   const completeMission = (kidKey) => {
-    const next = safeClone(state);
+    const next = deepCopy(state);
     const kid = next.players[kidKey];
     const missionIndex = next.missionProgress.findIndex((m) => m < 5);
     if (missionIndex !== -1) next.missionProgress[missionIndex] += 1;
