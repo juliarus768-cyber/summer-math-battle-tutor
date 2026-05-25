@@ -23,7 +23,7 @@ const makeChild = (name, grade, level, xp, xpMax, coins, focus, bonus) => ({
 });
 
 const defaultState = {
-  activeTab: 'Home', weekendMode: false, notifications: 2, banner: 'Summer Math Battle Tutor Loaded',
+  activeTab: 'Home', selectedChild: 'alex', weekendMode: false, notifications: 2, banner: 'Summer Math Battle Tutor Loaded',
   battleScore: { alex: 0, katya: 0 }, grant: { lastClaimDate: '', message: '' },
   ui: { message: '', levelUp: '', rewardMessage: '' },
   activeMission: null, // {child, missionId, questions, index, input, feedback, localCorrect, localAttempts, localCorrections, secondTry}
@@ -76,6 +76,21 @@ export default function App() {
   const [state, setState] = useState(load);
   const persist = (next) => { setState(next); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {} };
 
+  const setSelectedChild = (childKey) => {
+    const next = safeClone(state);
+    next.selectedChild = childKey;
+    next.ui.message = `${next.children[childKey].name} selected. Ready for mission.`;
+    persist(next);
+  };
+
+  const switchTab = (tab) => {
+    const next = safeClone(state);
+    next.activeTab = tab;
+    next.ui.message = '';
+    next.ui.rewardMessage = '';
+    persist(next);
+  };
+
   const addXpCoins = (next, childKey, xp, coins, skill) => {
     const c = next.children[childKey];
     c.xp += xp; c.coins += coins; c.statsToday.xpEarned += xp; c.statsToday.coinsEarned += coins;
@@ -86,7 +101,7 @@ export default function App() {
   const startMission = (childKey, missionId) => {
     const mission = state.missions[childKey].find((m) => m.id === missionId); if (!mission || mission.completed) return;
     const questions = Array.from({ length: 5 }, () => genQuestion(childKey, mission.title));
-    const next = safeClone(state); next.activeMission = { childKey, missionId, questions, index: 0, input: '', feedback: '', localCorrect: 0, localAttempts: 0, localCorrections: 0, secondTry: false }; next.battleScore[childKey] += 1;
+    const next = safeClone(state); next.selectedChild = childKey; next.activeMission = { childKey, missionId, questions, index: 0, input: '', feedback: '', localCorrect: 0, localAttempts: 0, localCorrections: 0, secondTry: false }; next.battleScore[childKey] += 1; next.ui.message = `${next.children[childKey].name} mission started.`;
     persist(next);
   };
 
@@ -153,25 +168,31 @@ export default function App() {
 
   const winner = state.battleScore.alex === state.battleScore.katya ? 'Tie' : (state.battleScore.alex > state.battleScore.katya ? 'Alex leads' : 'Katya leads');
 
+  const selected = state.selectedChild || 'alex';
+  const selectedName = state.children[selected].name;
+  const selectedMissions = state.missions[selected];
+  const nextMission = selectedMissions.find((m) => !m.completed);
+
   return <div className="app-shell"><div className="test-banner">Summer Math Battle Tutor Loaded</div><div className="particles" />
-    <header className="hud"><div className="logo">🎮 Summer Math Battle Tutor</div><nav>{tabs.map((t) => <button key={t} className={state.activeTab === t ? 'tab active' : 'tab'} onClick={() => persist({ ...state, activeTab: t })}>{t}</button>)}</nav><div className="stats"><span>🪙 {state.children.alex.coins + state.children.katya.coins}</span><span>✨ {state.children.alex.xp + state.children.katya.xp}</span><span>🔥 {state.children.alex.streak + state.children.katya.streak}</span></div></header>
+    <header className="hud"><div className="logo">🎮 Summer Math Battle Tutor</div><nav>{tabs.map((t) => <button key={t} className={state.activeTab === t ? 'tab active' : 'tab'} onClick={() => switchTab(t)}>{t}</button>)}</nav><div className="stats"><span>🪙 {state.children.alex.coins + state.children.katya.coins}</span><span>✨ {state.children.alex.xp + state.children.katya.xp}</span><span>🔥 {state.children.alex.streak + state.children.katya.streak}</span></div></header>
+    <div className="actions"><button onClick={() => setSelectedChild('alex')}>Alex</button><button onClick={() => setSelectedChild('katya')}>Katya</button><strong>Currently selected: {selectedName}</strong></div>
+    {state.activeMission && <section className="big-card" id="active-mission"><h3>Active Mission • {state.children[state.activeMission.childKey].name} • {state.missions[state.activeMission.childKey].find((x) => x.id === state.activeMission.missionId)?.title}</h3><p>Question {state.activeMission.index + 1}/5: {state.activeMission.questions[state.activeMission.index].q}</p><input value={state.activeMission.input} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} /><button onClick={submitMissionAnswer}>Submit</button><button onClick={() => persist({ ...state, activeMission: null, ui: { ...state.ui, message: 'Mission closed.' } })}>Close Mission</button><p>{state.activeMission.feedback}</p></section>}
     <main className="content fade-in">
       {state.ui.levelUp && <p>{state.ui.levelUp}</p>}
       {state.ui.message && <p>{state.ui.message}</p>}
       {state.ui.rewardMessage && <p>{state.ui.rewardMessage}</p>}
-      {state.activeTab === 'Home' && <div><h2>Home Dashboard</h2><button onClick={() => persist({ ...state, weekendMode: !state.weekendMode })}>{state.weekendMode ? 'Weekend Mode ON' : 'Weekday Mode ON'}</button><div className="hero-grid">{['alex', 'katya'].map((k) => <article key={k} className={`hero ${k}`}><h3>{state.children[k].name}</h3><p>{state.children[k].gradeLevel}</p><p>Level {state.children[k].level} | XP {state.children[k].xp}/{state.children[k].xpMax}</p><p>Coins {state.children[k].coins} | Accuracy {state.children[k].accuracy}%</p></article>)}</div></div>}
-      {state.activeTab === 'Missions' && <div><h2>Missions</h2>{['alex', 'katya'].map((kid) => <section key={kid}><h3>{state.children[kid].name}</h3><div className="mission-grid">{state.missions[kid].map((m) => <article className="mission" key={m.id}><h4>{m.title}</h4><p>{m.skillFocus} • {m.difficulty}</p><p>{m.progress}/5 | +{m.xpReward} XP | +{m.coinReward} coins</p><p>{m.completed ? '✅ Complete' : '⬜ In progress'}</p><button onClick={() => startMission(kid, m.id)}>Start Mission</button></article>)}</div></section>)}</div>}
-      {state.activeMission && <section className="big-card"><h3>{state.children[state.activeMission.childKey].name} • {state.missions[state.activeMission.childKey].find((x) => x.id === state.activeMission.missionId)?.title}</h3><p>Question {state.activeMission.index + 1}/5: {state.activeMission.questions[state.activeMission.index].q}</p><input value={state.activeMission.input} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} /><button onClick={submitMissionAnswer}>Submit</button><button onClick={() => persist({ ...state, activeMission: null })}>Close</button><p>{state.activeMission.feedback}</p></section>}
+      {state.activeTab === 'Home' && <div><h2>Home Dashboard</h2><div className="hero-grid">{['alex', 'katya'].map((k) => <article key={k} className={`hero ${k} ${selected===k?'selected-hero':''}`} onClick={() => setSelectedChild(k)}><h3>{state.children[k].name}</h3><p>{state.children[k].gradeLevel}</p><p>Level {state.children[k].level} | XP {state.children[k].xp}/{state.children[k].xpMax}</p><p>Coins {state.children[k].coins} | Accuracy {state.children[k].accuracy}%</p></article>)}</div><article className="big-card"><h3>Selected Child Panel: {selectedName}</h3><p>Today's missions completed: {state.children[selected].missionsCompletedToday}/6</p><p>Next mission: {nextMission ? nextMission.title : 'All done today!'}</p><button disabled={!nextMission} onClick={() => nextMission && startMission(selected, nextMission.id)}>Start Next Mission</button>{state.activeMission && <button onClick={() => document.getElementById('active-mission')?.scrollIntoView({ behavior: 'smooth' })}>Continue Active Mission</button>}</article></div>}
+      {state.activeTab === 'Missions' && <div><h2>{selectedName}’s Missions</h2><div className="mission-grid">{selectedMissions.map((m) => <article className="mission" key={m.id}><h4>{m.title}</h4><p>{m.skillFocus} • {m.difficulty}</p><p>{m.progress}/5 | +{m.xpReward} XP | +{m.coinReward} coins</p><p>{m.completed ? '✅ Complete' : '⬜ In progress'}</p><button onClick={() => startMission(selected, m.id)}>Start Mission</button></article>)}</div></div>}
       {state.activeTab === 'Battle' && <section><h2>Sibling Battle Arena</h2><p>Alex: {state.battleScore.alex} | Katya: {state.battleScore.katya}</p><p>Winner: {winner}</p><p>You compete by effort and improvement, not grade level.</p></section>}
-      {state.activeTab === 'Store' && <section><h2>Reward Store</h2><div className="store-grid">{rewards.map((r) => <article className="store-card" key={r[1]}><h4>{r[0]} {r[1]}</h4><p>{r[2]} coins • {r[3]}</p><button onClick={() => requestReward('alex', r)}>Request for Alex</button><button onClick={() => requestReward('katya', r)}>Request for Katya</button></article>)}</div></section>}
+      {state.activeTab === 'Store' && <section><h2>Reward Store ({selectedName} selected)</h2><div className="store-grid">{rewards.map((r) => <article className="store-card" key={r[1]}><h4>{r[0]} {r[1]}</h4><p>{r[2]} coins • {r[3]}</p><button onClick={() => requestReward(selected, r)}>Request for Selected Child</button><button onClick={() => requestReward('alex', r)}>Request for Alex</button><button onClick={() => requestReward('katya', r)}>Request for Katya</button></article>)}</div></section>}
       {state.activeTab === 'Grant Prize' && <section><h2>Grant Prize</h2><button onClick={claimGrant}>Claim Daily Grant Prize</button><p>{state.grant.message}</p></section>}
-      {state.activeTab === 'Practice' && <section><h2>Practice</h2><p>Math Facts Trainer MVP placeholder active. Tracks weak facts in mission mistakes.</p></section>}
-      {state.activeTab === 'Money Lab' && <section><h2>Money Lab</h2><p>Money mini-missions are integrated in mission questions and rewards economy.</p></section>}
+      {state.activeTab === 'Practice' && <section><h2>Practice Trainer</h2><p>Selected child: {selectedName}</p><select value={state.practice.mode} onChange={(e)=>persist({...state,practice:{...state.practice,mode:e.target.value,child:selected}})}><option>Multiplication</option><option>Division</option><option>Mixed</option><option>Missing Number</option></select><button onClick={()=>{const qs=Array.from({length:10},()=>genQuestion(selected,'Speed Round'));persist({...state,practice:{...state.practice,child:selected,questions:qs,index:0,score:0}})}}>Generate 10 Questions</button>{state.practice.questions.length>0&&<article className="big-card"><p>{state.practice.index+1}/10: {state.practice.questions[state.practice.index]?.q}</p><input value={state.practice.answer||''} onChange={(e)=>persist({...state,practice:{...state.practice,answer:e.target.value}})} /><button onClick={()=>{const n=safeClone(state);const q=n.practice.questions[n.practice.index];if(Number((n.practice.answer||'').trim())===q.a)n.practice.score+=1;n.practice.index=Math.min(9,n.practice.index+1);n.practice.answer='';persist(n);}}>Submit</button><p>Score: {state.practice.score}</p></article>}</section>}
+      {state.activeTab === 'Money Lab' && <section><h2>Money Lab ({selectedName})</h2><p>Use missions Money Lab + Store requests to build financial choices.</p></section>}
       {state.activeTab === 'Parent' && <section><h2>Parent Dashboard</h2>{['alex', 'katya'].map((k) => <article key={k} className="big-card"><h3>{state.children[k].name}</h3><p>Minutes: {state.children[k].minutesToday} | Missions: {state.children[k].missionsCompletedToday}</p><p>XP today: {state.children[k].statsToday.xpEarned} | Coins today: {state.children[k].statsToday.coinsEarned}</p><p>Accuracy: {state.children[k].accuracy}% | Corrections: {state.children[k].mistakesCorrected}</p><button onClick={() => momBonus(k)}>Mom Bonus +25 coins</button></article>)}
         <h3>Reward Requests</h3><ul>{state.rewardRequests.map((r) => <li key={r.id}>{r.child} - {r.reward} ({r.cost}) [{r.status}] {r.status === 'Pending Parent Approval' && <><button onClick={() => parentDecision(r.id, true)}>Approve</button><button onClick={() => parentDecision(r.id, false)}>Decline</button></>}</li>)}</ul>
         <h3>Daily Report</h3><textarea value={dailyReport} readOnly rows={4} style={{ width: '100%' }} /><button onClick={() => navigator.clipboard.writeText(dailyReport)}>Copy Report</button>
         <div><button onClick={resetToday}>Reset Today</button><button onClick={() => window.confirm('Reset all progress?') && resetAll()}>Reset All Progress</button><button onClick={exportJson}>Export Progress JSON</button></div>
         <textarea value={state.importText} onChange={(e) => persist({ ...state, importText: e.target.value })} rows={4} placeholder="Paste progress JSON" style={{ width: '100%' }} /><button onClick={importJson}>Import Progress JSON</button>
       </section>}
-    </main></div>;
+    </main><div className="card">Selected child: {selected} | Active tab: {state.activeTab} | Active mission: {state.activeMission ? 'yes' : 'no'}</div></div>;
 }
