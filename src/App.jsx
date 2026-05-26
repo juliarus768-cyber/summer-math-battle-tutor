@@ -264,6 +264,14 @@ export default function App() {
   const moneyLabChild = state.moneyLab?.activeChild || selected;
   const moneyLabBucket = state.moneyLab?.byChild?.[moneyLabChild] || { missions: [], completedCount: 0, coinsEarned: 0 };
 
+  console.log('[Render] NavBar');
+  if (state.activeTab === 'Home') console.log('[Render] HomeDashboard');
+  if (state.activeTab === 'Home') console.log('[Render] HeroPanel');
+  if (state.activeTab === 'Home' || state.activeTab === 'Missions') console.log('[Render] MissionGrid');
+  if (state.activeTab === 'Store') console.log('[Render] RewardStore');
+  if (state.activeTab === 'Battle') console.log('[Render] BattleArena');
+  console.log('[Render] Particles');
+
   return <div className="app-shell"><div className="test-banner">Summer Math Battle Tutor Loaded</div><Particles color={selected === 'alex' ? '#00b4ff' : '#ff006e'} />
     <nav style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 20px',height:'60px',position:'sticky',top:0,zIndex:100,background:'rgba(5,5,30,0.97)',backdropFilter:'blur(16px)',borderBottom:'1px solid #00b4ff22'}}>
       <div style={{fontFamily:'var(--font-game)',color:'var(--alex-primary)',fontSize:16,textShadow:'0 0 12px var(--alex-primary)',letterSpacing:2}}>⚔ MATH BATTLE</div>
