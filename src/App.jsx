@@ -259,8 +259,18 @@ export default function App() {
 
   const selected = state.selectedChild || 'alex';
   const selectedName = state.children[selected].name;
-  const selectedMissions = state.missions[selected];
-  const nextMission = selectedMissions.find((m) => !m.completed);
+const selectedMissions = Array.isArray(state.missions?.[selected]) ? state.missions[selected] : [];
+const nextMission = selectedMissions.find((m) => !m.completed);
+const moneyLabChild = state.moneyLab?.activeChild || selected;
+const moneyLabBucket = state.moneyLab?.byChild?.[moneyLabChild] || { missions: [], completedCount: 0, coinsEarned: 0 };
+
+  console.log('[Render] NavBar');
+  if (state.activeTab === 'Home') console.log('[Render] HomeDashboard');
+  if (state.activeTab === 'Home') console.log('[Render] HeroPanel');
+  if (state.activeTab === 'Home' || state.activeTab === 'Missions') console.log('[Render] MissionGrid');
+  if (state.activeTab === 'Store') console.log('[Render] RewardStore');
+  if (state.activeTab === 'Battle') console.log('[Render] BattleArena');
+  console.log('[Render] Particles');
 
   return <div className="app-shell"><div className="test-banner">Summer Math Battle Tutor Loaded</div><Particles color={selected === 'alex' ? '#00b4ff' : '#ff006e'} />
     <nav style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 20px',height:'60px',position:'sticky',top:0,zIndex:100,background:'rgba(5,5,30,0.97)',backdropFilter:'blur(16px)',borderBottom:'1px solid #00b4ff22'}}>
