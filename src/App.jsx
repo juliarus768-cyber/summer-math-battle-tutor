@@ -62,9 +62,46 @@ function genQuestion(child, missionName) {
 
 const buildMissionsFor = (child) => missionNames.map((name, i) => ({ id: `${child}-${i}`, title: name, difficulty: child === 'alex' ? (i > 3 ? 'Hard' : 'Medium') : (i > 3 ? 'Medium' : 'Easy'), skillFocus: genQuestion(child, name).skill, progress: 0, xpReward: 25 + i * 5, coinReward: 12 + i * 3, completed: false, attempts: 0, correctAnswers: 0, mistakesCorrected: 0 }));
 
+const buildMoneyLabMissions = (childKey) => {
+  if (childKey === 'katya') {
+    return [
+      { id: 'needs-wants', title: 'Needs vs Wants', story: 'Katya checks reward ideas.', question: 'Is chocolate a need or a want?', type: 'choice', options: ['Need', 'Want'], answer: 'Want', hint: 'Needs are required for living.', skill: 'Needs vs wants', xpReward: 10, coinReward: 6, completed: false, attempts: 0, corrected: false },
+      { id: 'bubble-tea', title: 'Save for Bubble Tea', story: 'Katya has 10 coins. Bubble tea costs 8.', question: 'How many coins are left?', type: 'number', answer: 2, hint: 'Coins left = 10 - 8.', skill: 'Subtraction budgeting', xpReward: 10, coinReward: 6, completed: false, attempts: 0, corrected: false },
+      { id: 'compare-prices', title: 'Compare Prices', story: 'Two snacks have different prices.', question: 'Which is cheaper: 9 coins or 12 coins?', type: 'choice', options: ['9 coins', '12 coins'], answer: '9 coins', hint: 'Smaller number is cheaper.', skill: 'Compare prices', xpReward: 12, coinReward: 7, completed: false, attempts: 0, corrected: false },
+      { id: 'takeout-budget', title: 'Budget a Takeout Order', story: 'A meal is 15 coins and juice is 5.', question: 'How many coins total?', type: 'number', answer: 20, hint: 'Add 15 + 5.', skill: 'Addition budgeting', xpReward: 12, coinReward: 8, completed: false, attempts: 0, corrected: false },
+      { id: 'doordash-total', title: 'DoorDash Total', story: 'Delivery is 4 coins and food is 16.', question: 'What is the total cost?', type: 'number', answer: 20, hint: 'Food + delivery.', skill: 'Total cost', xpReward: 14, coinReward: 8, completed: false, attempts: 0, corrected: false },
+      { id: 'save-or-spend', title: 'Save or Spend Choice', story: 'Katya wants a movie reward later.', question: 'You save 5 coins Monday and 5 Tuesday. How many saved?', type: 'number', answer: 10, hint: 'Add saved amounts.', skill: 'Saving habit', xpReward: 14, coinReward: 9, completed: false, attempts: 0, corrected: false },
+      { id: 'gift-card-goal', title: 'Gift Card Savings Goal', story: 'Katya wants a Starbucks card.', question: 'If card costs 300 and you have 50, how many more coins?', type: 'number', answer: 250, hint: 'Need = goal - current.', skill: 'Savings goal', xpReward: 16, coinReward: 10, completed: false, attempts: 0, corrected: false }
+    ];
+  }
+  return [
+    { id: 'needs-wants', title: 'Needs vs Wants', story: 'Alex plans reward purchases.', question: 'Is a PlayStation card a need or a want?', type: 'choice', options: ['Need', 'Want'], answer: 'Want', hint: 'Needs are essentials.', skill: 'Needs vs wants', xpReward: 12, coinReward: 7, completed: false, attempts: 0, corrected: false },
+    { id: 'bubble-tea', title: 'Save for Bubble Tea', story: 'Alex tracks spending.', question: 'You have 120 coins. Bubble tea costs 80. Coins left?', type: 'number', answer: 40, hint: 'Subtract cost from total.', skill: 'Budget subtraction', xpReward: 12, coinReward: 8, completed: false, attempts: 0, corrected: false },
+    { id: 'compare-prices', title: 'Compare Prices', story: 'Alex compares two stores.', question: 'Item A is 34 coins, item B is 41 coins. Which is cheaper?', type: 'choice', options: ['Item A', 'Item B'], answer: 'Item A', hint: 'Lower price is cheaper.', skill: 'Compare prices', xpReward: 14, coinReward: 8, completed: false, attempts: 0, corrected: false },
+    { id: 'takeout-budget', title: 'Budget a Takeout Order', story: 'Dinner planning time.', question: 'Takeout is $18, delivery fee is $4, tax is $3. Total?', type: 'number', answer: 25, hint: 'Add all three costs.', skill: 'Budgeting totals', xpReward: 15, coinReward: 9, completed: false, attempts: 0, corrected: false },
+    { id: 'doordash-total', title: 'DoorDash Total', story: 'DoorDash order with discount.', question: 'Meal is 30, fee is 5, discount is 10. Final total?', type: 'number', answer: 25, hint: '30 + 5 - 10.', skill: 'Discount totals', xpReward: 16, coinReward: 10, completed: false, attempts: 0, corrected: false },
+    { id: 'save-or-spend', title: 'Save or Spend Choice', story: 'Alex chooses between now and later reward.', question: 'Best choice to reach PlayStation card faster?', type: 'choice', options: ['Spend on small reward now', 'Save coins for bigger reward'], answer: 'Save coins for bigger reward', hint: 'Saving increases future buying power.', skill: 'Saving choices', xpReward: 16, coinReward: 10, completed: false, attempts: 0, corrected: false },
+    { id: 'gift-card-goal', title: 'Gift Card Savings Goal', story: 'Alex wants PlayStation card.', question: 'You have 120 coins. PlayStation card costs 500. How many more?', type: 'number', answer: 380, hint: 'Goal - current coins.', skill: 'Savings goal', xpReward: 18, coinReward: 12, completed: false, attempts: 0, corrected: false }
+  ];
+};
+
 const normalize = (s) => {
   const base = safeClone(defaultState);
   const merged = { ...base, ...s, children: { ...base.children, ...(s?.children || {}) }, missions: { ...base.missions, ...(s?.missions || {}) }, battleScore: { ...base.battleScore, ...(s?.battleScore || {}) }, ui: { ...base.ui, ...(s?.ui || {}) }, grant: { ...base.grant, ...(s?.grant || {}) } };
+  if (!merged.moneyLab || typeof merged.moneyLab !== 'object') merged.moneyLab = { activeChild: 'alex', answer: '', feedback: '', secondTry: false, byChild: {} };
+  if (!merged.moneyLab.byChild || typeof merged.moneyLab.byChild !== 'object') merged.moneyLab.byChild = {};
+  ['alex', 'katya'].forEach((k) => {
+    const existing = merged.moneyLab.byChild[k] || {};
+    if (!Array.isArray(existing.missions) || !existing.missions.length) existing.missions = buildMoneyLabMissions(k);
+    existing.activeId = existing.activeId || existing.missions[0]?.id || '';
+    existing.completedCount = existing.completedCount || 0;
+    existing.xpEarned = existing.xpEarned || 0;
+    existing.coinsEarned = existing.coinsEarned || 0;
+    existing.skills = Array.isArray(existing.skills) ? existing.skills : [];
+    existing.mistakesCorrected = existing.mistakesCorrected || 0;
+    existing.savingChoices = Array.isArray(existing.savingChoices) ? existing.savingChoices : [];
+    merged.moneyLab.byChild[k] = existing;
+  });
   if (!Array.isArray(merged.missions.alex) || !merged.missions.alex.length) merged.missions.alex = buildMissionsFor('alex');
   if (!Array.isArray(merged.missions.katya) || !merged.missions.katya.length) merged.missions.katya = buildMissionsFor('katya');
   return merged;
@@ -161,6 +198,56 @@ export default function App() {
 
   const exportJson = () => navigator.clipboard.writeText(JSON.stringify(state, null, 2));
   const importJson = () => { try { const parsed = JSON.parse(state.importText); persist(normalize(parsed)); } catch { const n = safeClone(state); n.ui.message = 'Invalid import JSON'; persist(n); } };
+  const setMoneyLabChild = (childKey) => {
+    const next = safeClone(state);
+    next.selectedChild = childKey;
+    next.moneyLab.activeChild = childKey;
+    next.moneyLab.answer = '';
+    next.moneyLab.feedback = '';
+    next.moneyLab.secondTry = false;
+    next.ui.message = `${next.children[childKey].name} selected for Money Lab.`;
+    persist(next);
+  };
+  const setMoneyLabMission = (childKey, missionId) => {
+    const next = safeClone(state);
+    next.moneyLab.activeChild = childKey;
+    next.moneyLab.byChild[childKey].activeId = missionId;
+    next.moneyLab.answer = '';
+    next.moneyLab.feedback = '';
+    next.moneyLab.secondTry = false;
+    persist(next);
+  };
+  const submitMoneyLab = () => {
+    const next = safeClone(state);
+    const childKey = next.moneyLab.activeChild || next.selectedChild;
+    const bucket = next.moneyLab.byChild[childKey];
+    const mission = bucket.missions.find((m) => m.id === bucket.activeId);
+    if (!mission || mission.completed) return;
+    mission.attempts += 1;
+    const raw = String(next.moneyLab.answer || '').trim();
+    const ok = mission.type === 'choice' ? raw === mission.answer : Number(raw) === mission.answer;
+    if (ok) {
+      const corrected = next.moneyLab.secondTry;
+      next.moneyLab.feedback = 'Correct! Smart money move.';
+      mission.completed = true;
+      mission.corrected = corrected;
+      bucket.completedCount += 1;
+      const gainXp = corrected ? 5 : mission.xpReward;
+      const gainCoins = corrected ? 3 : mission.coinReward;
+      addXpCoins(next, childKey, gainXp, gainCoins, mission.skill);
+      bucket.xpEarned += gainXp;
+      bucket.coinsEarned += gainCoins;
+      if (!bucket.skills.includes(mission.skill)) bucket.skills.push(mission.skill);
+      if (mission.title.includes('Save') || mission.title.includes('Goal')) bucket.savingChoices.push(mission.title);
+      if (corrected) { bucket.mistakesCorrected += 1; next.children[childKey].mistakesCorrected += 1; }
+      next.moneyLab.answer = '';
+      next.moneyLab.secondTry = false;
+    } else {
+      next.moneyLab.feedback = `Good try. Let’s fix the step. Hint: ${mission.hint}`;
+      next.moneyLab.secondTry = true;
+    }
+    persist(next);
+  };
 
   const dailyReport = useMemo(() => {
     const a = state.children.alex, k = state.children.katya;
@@ -188,8 +275,9 @@ export default function App() {
       {state.activeTab === 'Store' && <section><h2>Reward Store ({selectedName} selected)</h2><div className="store-grid">{rewards.map((r) => <article className="store-card" key={r[1]}><h4>{r[0]} {r[1]}</h4><p>{r[2]} coins • {r[3]}</p><button onClick={() => requestReward(selected, r)}>Request for Selected Child</button><button onClick={() => requestReward('alex', r)}>Request for Alex</button><button onClick={() => requestReward('katya', r)}>Request for Katya</button></article>)}</div></section>}
       {state.activeTab === 'Grant Prize' && <section><h2>Grant Prize</h2><button onClick={claimGrant}>Claim Daily Grant Prize</button><p>{state.grant.message}</p></section>}
       {state.activeTab === 'Practice' && <section><h2>Practice Trainer</h2><p>Selected child: {selectedName}</p><div className="actions"><button onClick={() => setSelectedChild('alex')}>Alex</button><button onClick={() => setSelectedChild('katya')}>Katya</button></div><select value={state.practice.mode} onChange={(e)=>persist({...state,practice:{...state.practice,mode:e.target.value,child:selected}})}><option>Multiplication</option><option>Division</option><option>Mixed</option><option>Missing Number</option></select><button onClick={()=>{const qs=Array.from({length:10},()=>genQuestion(selected,'Speed Round'));persist({...state,practice:{...state.practice,child:selected,questions:qs,index:0,score:0}})}}>Generate 10 Questions</button>{state.practice.questions.length>0&&<article className="big-card"><p>{state.practice.index+1}/10: {state.practice.questions[state.practice.index]?.q}</p><input value={state.practice.answer||''} onChange={(e)=>persist({...state,practice:{...state.practice,answer:e.target.value}})} /><button onClick={()=>{const n=safeClone(state);const q=n.practice.questions[n.practice.index];if(Number((n.practice.answer||'').trim())===q.a)n.practice.score+=1;n.practice.index=Math.min(9,n.practice.index+1);n.practice.answer='';persist(n);}}>Submit</button><p>Score: {state.practice.score}</p></article>}</section>}
-      {state.activeTab === 'Money Lab' && <section><h2>Money Lab ({selectedName})</h2><p>Use missions Money Lab + Store requests to build financial choices.</p></section>}
+      {state.activeTab === 'Money Lab' && <section><h2>💰 Money Lab for {state.children[state.moneyLab.activeChild || selected].name}</h2><div className="actions"><button onClick={() => setMoneyLabChild('alex')}>Alex</button><button onClick={() => setMoneyLabChild('katya')}>Katya</button></div><article className="big-card"><h3>Selected Child Card</h3><p>{state.children[state.moneyLab.activeChild || selected].name} • Coins: {state.children[state.moneyLab.activeChild || selected].coins}</p><p>Piggy Bank: {state.moneyLab.byChild[state.moneyLab.activeChild || selected].coinsEarned} coins earned in Money Lab</p><p>Completed badges: {state.moneyLab.byChild[state.moneyLab.activeChild || selected].completedCount}/7</p></article><div className="mission-grid">{state.moneyLab.byChild[state.moneyLab.activeChild || selected].missions.map((m) => <article className="mission" key={m.id}><h4>🐷 {m.title}</h4><p>{m.story}</p><p><strong>Question:</strong> {m.question}</p>{m.type === 'choice' ? <div>{m.options.map((opt) => <button key={opt} onClick={() => persist({ ...state, moneyLab: { ...state.moneyLab, answer: opt, activeChild: state.moneyLab.activeChild || selected, byChild: { ...state.moneyLab.byChild, [state.moneyLab.activeChild || selected]: { ...state.moneyLab.byChild[state.moneyLab.activeChild || selected], activeId: m.id } } } })}>{opt}</button>)}</div> : <input placeholder="Enter number" value={(state.moneyLab.byChild[state.moneyLab.activeChild || selected].activeId === m.id) ? state.moneyLab.answer : ''} onChange={(e) => { const key = state.moneyLab.activeChild || selected; persist({ ...state, moneyLab: { ...state.moneyLab, activeChild: key, answer: e.target.value, byChild: { ...state.moneyLab.byChild, [key]: { ...state.moneyLab.byChild[key], activeId: m.id } } } }); }} />}<p>Rewards: +{m.xpReward} XP • +{m.coinReward} coins</p><p>Status: {m.completed ? '✅ Completed' : '⬜ Not completed'}</p><button disabled={m.completed} onClick={() => { setMoneyLabMission(state.moneyLab.activeChild || selected, m.id); submitMoneyLab(); }}>Submit</button></article>)}</div><article className="big-card"><h3>Savings Goal Card</h3><p>Goal rewards: Bubble tea, DoorDash, Movie, Restaurant with mom/dad, Starbucks card, Apple gift card, PlayStation card.</p><p>Feedback: {state.moneyLab.feedback}</p><p>Coin progress bar: {Math.min(100, Math.round((state.children[state.moneyLab.activeChild || selected].coins / 500) * 100))}% toward PlayStation card</p></article></section>}
       {state.activeTab === 'Parent' && <section><h2>Parent Dashboard</h2>{['alex', 'katya'].map((k) => <article key={k} className="big-card"><h3>{state.children[k].name}</h3><p>Minutes: {state.children[k].minutesToday} | Missions: {state.children[k].missionsCompletedToday}</p><p>XP today: {state.children[k].statsToday.xpEarned} | Coins today: {state.children[k].statsToday.coinsEarned}</p><p>Accuracy: {state.children[k].accuracy}% | Corrections: {state.children[k].mistakesCorrected}</p><button onClick={() => momBonus(k)}>Mom Bonus +25 coins</button></article>)}
+        <h3>Money Lab Progress</h3><ul>{['alex', 'katya'].map((k) => <li key={k}>{state.children[k].name}: completed {state.moneyLab.byChild[k].completedCount}/7, skills: {state.moneyLab.byChild[k].skills.join(', ') || 'none'}, money choices: {state.moneyLab.byChild[k].savingChoices.join(', ') || 'none'}, next lesson: {state.moneyLab.byChild[k].completedCount < 3 ? 'Needs vs Wants + Saving basics' : 'Budgeting and delivery fees'}.</li>)}</ul>
         <h3>Reward Requests</h3><ul>{state.rewardRequests.map((r) => <li key={r.id}>{r.child} - {r.reward} ({r.cost}) [{r.status}] {r.status === 'Pending Parent Approval' && <><button onClick={() => parentDecision(r.id, true)}>Approve</button><button onClick={() => parentDecision(r.id, false)}>Decline</button></>}</li>)}</ul>
         <h3>Daily Report</h3><textarea value={dailyReport} readOnly rows={4} style={{ width: '100%' }} /><button onClick={() => navigator.clipboard.writeText(dailyReport)}>Copy Report</button>
         <div><button onClick={resetToday}>Reset Today</button><button onClick={() => window.confirm('Reset all progress?') && resetAll()}>Reset All Progress</button><button onClick={exportJson}>Export Progress JSON</button></div>
