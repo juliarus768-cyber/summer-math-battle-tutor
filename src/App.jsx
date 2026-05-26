@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Particles from './components/Particles';
 
 const STORAGE_KEY = 'summerMathBattleTutorStateV2';
@@ -259,10 +259,10 @@ export default function App() {
 
   const selected = state.selectedChild || 'alex';
   const selectedName = state.children[selected].name;
-  const selectedMissions = Array.isArray(state.missions?.[selected]) ? state.missions[selected] : [];
-  const nextMission = selectedMissions.find((m) => !m.completed);
-  const moneyLabChild = state.moneyLab?.activeChild || selected;
-  const moneyLabBucket = state.moneyLab?.byChild?.[moneyLabChild] || { missions: [], completedCount: 0, coinsEarned: 0 };
+const selectedMissions = Array.isArray(state.missions?.[selected]) ? state.missions[selected] : [];
+const nextMission = selectedMissions.find((m) => !m.completed);
+const moneyLabChild = state.moneyLab?.activeChild || selected;
+const moneyLabBucket = state.moneyLab?.byChild?.[moneyLabChild] || { missions: [], completedCount: 0, coinsEarned: 0 };
 
   console.log('[Render] NavBar');
   if (state.activeTab === 'Home') console.log('[Render] HomeDashboard');
