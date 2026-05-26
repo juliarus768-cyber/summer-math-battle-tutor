@@ -1,0 +1,30 @@
+:root {
+  --alex-primary: #00b4ff; --alex-secondary: #0044ff; --alex-glow: #00b4ff66; --alex-bg: #001833;
+  --katya-primary: #ff006e; --katya-secondary: #9900ff; --katya-glow: #ff006e66; --katya-bg: #1a0011;
+  --gold: #ffd700; --dark-bg: #05050f; --font-game: 'Orbitron', monospace; --font-body: 'Rajdhani', sans-serif; --font-ui: 'Exo 2', sans-serif;
+}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#15193b,#06070f 45%,#030409);color:#fff;font-family:var(--font-body);overflow-x:hidden}
+@keyframes xpPulse{0%,100%{box-shadow:0 0 4px var(--alex-primary)}50%{box-shadow:0 0 18px var(--alex-primary)}}
+@keyframes borderGlowAlex{0%,100%{box-shadow:0 0 8px var(--alex-glow),inset 0 0 8px var(--alex-glow)}50%{box-shadow:0 0 24px var(--alex-primary),inset 0 0 16px var(--alex-glow)}}
+@keyframes borderGlowKatya{0%,100%{box-shadow:0 0 8px var(--katya-glow),inset 0 0 8px var(--katya-glow)}50%{box-shadow:0 0 24px var(--katya-primary),inset 0 0 16px var(--katya-glow)}}
+@keyframes chestFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-8px) rotate(1deg)}}
+@keyframes particleFloat{0%{transform:translateY(100vh);opacity:0}10%{opacity:.4}100%{transform:translateY(-10vh) translateX(20px);opacity:0}}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.app-shell{position:relative;min-height:100vh;padding:12px}
+.test-banner{position:sticky;top:0;z-index:200;margin-bottom:10px;padding:10px 14px;border:1px solid #65f5ff;border-radius:12px;background:linear-gradient(90deg,#08305f,#43115d);box-shadow:0 0 14px #52c7ff;font-weight:800;text-align:center}
+.actions{display:flex;gap:10px;margin:12px 0;align-items:center}.actions button{background:linear-gradient(90deg,#355eff,#ff3fa4);color:#fff;border:none;border-radius:12px;padding:10px 14px;cursor:pointer}
+.home-game-layout{display:grid;grid-template-columns:260px 1fr 260px;gap:14px;min-height:calc(100vh - 130px)}
+.hero-side{padding:20px;display:flex;flex-direction:column;align-items:center;border-radius:18px;cursor:pointer}
+.alex-side{background:linear-gradient(180deg,#001833 0%,#000d1a 100%);border-right:2px solid var(--alex-primary);animation:borderGlowAlex 3s ease-in-out infinite}
+.katya-side{background:linear-gradient(180deg,#1a0011 0%,#0d0008 100%);border-left:2px solid var(--katya-primary);animation:borderGlowKatya 3s ease-in-out infinite}
+.avatar-wrap{border:1px solid #ffffff22;border-radius:12px;overflow:hidden;background:#00000066}
+.center-dashboard{display:flex;flex-direction:column;gap:12px}.event-banner{background:linear-gradient(130deg,#2f0d5e,#0d2b80,#6a1036);border:1px solid #9f62ff;padding:18px;border-radius:18px;text-align:center;box-shadow:0 0 26px #7f3bff}
+.status-grid,.mission-grid,.lower-grid,.store-grid{display:grid;gap:12px}.status-grid{grid-template-columns:repeat(3,1fr)}.mission-grid{grid-template-columns:repeat(3,1fr)}.lower-grid{grid-template-columns:repeat(3,1fr)}.store-grid{grid-template-columns:repeat(4,1fr)}
+.card,.mission,.big-card,.store-card{background:rgba(13,18,44,.85);border:1px solid #3d4dc0;border-radius:16px;padding:12px;box-shadow:0 0 14px #222f82;transition:.2s}.mission:hover,.big-card:hover,.store-card:hover{transform:translateY(-4px) scale(1.01);filter:brightness(1.1)}
+.xp{height:10px;background:#06162f;border-radius:999px;overflow:hidden}.xp span{display:block;height:100%;background:linear-gradient(90deg,var(--alex-primary),var(--alex-secondary));animation:xpPulse 2s ease-in-out infinite}
+.chest{animation:chestFloat 2.5s ease-in-out infinite}
+.content{animation:fade .35s ease}
+#active-mission{background:radial-gradient(circle at top,#102847,#170725);border:1px solid #56c0ff;border-radius:18px;padding:16px;box-shadow:0 0 20px #00b4ff66;position:relative;z-index:5}
+#active-mission input{width:100%;max-width:360px;background:rgba(0,0,0,.6);border:2px solid #00b4ff;color:#fff;padding:14px 20px;border-radius:12px;font-size:24px;text-align:center}
+#active-mission button{margin:8px 8px 0 0;height:46px;background:linear-gradient(135deg,var(--alex-primary),var(--alex-secondary));color:#fff;border:none;border-radius:12px;padding:0 16px;cursor:pointer}
+@media (max-width:1200px){.home-game-layout{grid-template-columns:1fr}.hero-side{order:2}.center-dashboard{order:1}.store-grid{grid-template-columns:repeat(2,1fr)}}
