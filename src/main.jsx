@@ -1,8 +1,8 @@
-import React from 'react';
+import { Component, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
-class RuntimeErrorBoundary extends React.Component {
+class RuntimeErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
@@ -46,11 +46,11 @@ async function bootstrap() {
   try {
     const { default: App } = await import('./App');
     createRoot(rootElement).render(
-      <React.StrictMode>
+      <StrictMode>
         <RuntimeErrorBoundary>
           <App />
         </RuntimeErrorBoundary>
-      </React.StrictMode>
+      </StrictMode>
     );
   } catch (error) {
     console.error('Bootstrap error:', error);
