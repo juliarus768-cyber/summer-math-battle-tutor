@@ -1,30 +1,41 @@
 :root {
-  --alex-primary: #00b4ff; --alex-secondary: #0044ff; --alex-glow: #00b4ff66; --alex-bg: #001833;
-  --katya-primary: #ff006e; --katya-secondary: #9900ff; --katya-glow: #ff006e66; --katya-bg: #1a0011;
-  --gold: #ffd700; --dark-bg: #05050f; --font-game: 'Orbitron', monospace; --font-body: 'Rajdhani', sans-serif; --font-ui: 'Exo 2', sans-serif;
+  --alex-primary:#00b4ff; --alex-secondary:#0044ff; --alex-glow:#00b4ff66;
+  --katya-primary:#ff006e; --katya-secondary:#9900ff; --katya-glow:#ff006e66;
+  --gold:#ffd700; --dark-bg:#05050f; --font-game:'Orbitron', monospace; --font-body:'Rajdhani', sans-serif; --font-ui:'Exo 2', sans-serif;
 }
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#15193b,#06070f 45%,#030409);color:#fff;font-family:var(--font-body);overflow-x:hidden}
-@keyframes xpPulse{0%,100%{box-shadow:0 0 4px var(--alex-primary)}50%{box-shadow:0 0 18px var(--alex-primary)}}
-@keyframes borderGlowAlex{0%,100%{box-shadow:0 0 8px var(--alex-glow),inset 0 0 8px var(--alex-glow)}50%{box-shadow:0 0 24px var(--alex-primary),inset 0 0 16px var(--alex-glow)}}
-@keyframes borderGlowKatya{0%,100%{box-shadow:0 0 8px var(--katya-glow),inset 0 0 8px var(--katya-glow)}50%{box-shadow:0 0 24px var(--katya-primary),inset 0 0 16px var(--katya-glow)}}
-@keyframes chestFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-8px) rotate(1deg)}}
-@keyframes particleFloat{0%{transform:translateY(100vh);opacity:0}10%{opacity:.4}100%{transform:translateY(-10vh) translateX(20px);opacity:0}}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.app-shell{position:relative;min-height:100vh;padding:12px}
-.test-banner{position:sticky;top:0;z-index:200;margin-bottom:10px;padding:10px 14px;border:1px solid #65f5ff;border-radius:12px;background:linear-gradient(90deg,#08305f,#43115d);box-shadow:0 0 14px #52c7ff;font-weight:800;text-align:center}
-.actions{display:flex;gap:10px;margin:12px 0;align-items:center}.actions button{background:linear-gradient(90deg,#355eff,#ff3fa4);color:#fff;border:none;border-radius:12px;padding:10px 14px;cursor:pointer}
-.home-game-layout{display:grid;grid-template-columns:260px 1fr 260px;gap:14px;min-height:calc(100vh - 130px)}
-.hero-side{padding:20px;display:flex;flex-direction:column;align-items:center;border-radius:18px;cursor:pointer}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% -20%,#1d265f 0,#0a0f2a 45%,#030409 100%);color:#fff;font-family:var(--font-body);overflow-x:hidden}
+@keyframes xpPulse{0%,100%{box-shadow:0 0 6px var(--alex-primary)}50%{box-shadow:0 0 20px var(--alex-primary)}}
+@keyframes borderGlowAlex{0%,100%{box-shadow:0 0 10px var(--alex-glow),inset 0 0 8px var(--alex-glow)}50%{box-shadow:0 0 28px var(--alex-primary),inset 0 0 18px var(--alex-glow)}}
+@keyframes borderGlowKatya{0%,100%{box-shadow:0 0 10px var(--katya-glow),inset 0 0 8px var(--katya-glow)}50%{box-shadow:0 0 28px var(--katya-primary),inset 0 0 18px var(--katya-glow)}}
+@keyframes chestFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes particleFloat{0%{transform:translateY(100vh);opacity:0}10%{opacity:.45}100%{transform:translateY(-10vh) translateX(20px);opacity:0}}
+@keyframes pulseGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+.app-shell{position:relative;min-height:100vh;padding:14px}
+.test-banner{position:sticky;top:0;z-index:200;margin-bottom:12px;padding:12px 16px;border:1px solid #65f5ff;border-radius:14px;background:linear-gradient(90deg,#08305f,#43115d);box-shadow:0 0 20px #52c7ff;font:800 22px var(--font-game);letter-spacing:1px;text-align:center}
+.actions{display:flex;gap:12px;margin:14px 0;align-items:center;flex-wrap:wrap}.actions button{min-height:50px;padding:10px 18px;border-radius:14px;font:700 18px var(--font-ui);background:linear-gradient(90deg,#355eff,#ff3fa4);color:#fff;border:none;cursor:pointer;box-shadow:0 0 16px #6f7dff;transition:.2s}.actions button:hover{transform:translateY(-2px) scale(1.02)}
+.home-game-layout{display:grid;grid-template-columns:300px 1fr 300px;gap:18px;min-height:calc(100vh - 130px)}
+.hero-side{padding:22px;display:flex;flex-direction:column;align-items:center;border-radius:20px;cursor:pointer}
 .alex-side{background:linear-gradient(180deg,#001833 0%,#000d1a 100%);border-right:2px solid var(--alex-primary);animation:borderGlowAlex 3s ease-in-out infinite}
 .katya-side{background:linear-gradient(180deg,#1a0011 0%,#0d0008 100%);border-left:2px solid var(--katya-primary);animation:borderGlowKatya 3s ease-in-out infinite}
-.avatar-wrap{border:1px solid #ffffff22;border-radius:12px;overflow:hidden;background:#00000066}
-.center-dashboard{display:flex;flex-direction:column;gap:12px}.event-banner{background:linear-gradient(130deg,#2f0d5e,#0d2b80,#6a1036);border:1px solid #9f62ff;padding:18px;border-radius:18px;text-align:center;box-shadow:0 0 26px #7f3bff}
-.status-grid,.mission-grid,.lower-grid,.store-grid{display:grid;gap:12px}.status-grid{grid-template-columns:repeat(3,1fr)}.mission-grid{grid-template-columns:repeat(3,1fr)}.lower-grid{grid-template-columns:repeat(3,1fr)}.store-grid{grid-template-columns:repeat(4,1fr)}
-.card,.mission,.big-card,.store-card{background:rgba(13,18,44,.85);border:1px solid #3d4dc0;border-radius:16px;padding:12px;box-shadow:0 0 14px #222f82;transition:.2s}.mission:hover,.big-card:hover,.store-card:hover{transform:translateY(-4px) scale(1.01);filter:brightness(1.1)}
-.xp{height:10px;background:#06162f;border-radius:999px;overflow:hidden}.xp span{display:block;height:100%;background:linear-gradient(90deg,var(--alex-primary),var(--alex-secondary));animation:xpPulse 2s ease-in-out infinite}
+.avatar-wrap{width:240px;border:1px solid #ffffff33;border-radius:14px;overflow:hidden;background:#00000066}
+.hero-side h2{font:900 44px var(--font-game);margin:12px 0 4px;text-shadow:0 0 14px #fff}.hero-side p{font:600 18px var(--font-ui);margin:2px 0 10px;color:#f2f6ff}
+.center-dashboard{display:flex;flex-direction:column;gap:16px}
+.event-banner{background:linear-gradient(130deg,#2f0d5e,#0d2b80,#6a1036);border:1px solid #c06dff;padding:22px;border-radius:20px;text-align:center;box-shadow:0 0 30px #7f3bff}.event-banner h3{font:900 40px var(--font-game);margin:0}
+.status-grid,.mission-grid,.lower-grid,.store-grid{display:grid;gap:14px}.status-grid{grid-template-columns:repeat(3,1fr)}.mission-grid{grid-template-columns:repeat(3,1fr)}.lower-grid{grid-template-columns:repeat(3,1fr)}.store-grid{grid-template-columns:repeat(3,1fr)}
+.card,.mission,.big-card,.store-card,section{background:linear-gradient(180deg,rgba(18,24,68,.95),rgba(10,14,44,.9));border:1px solid #5170ff;border-radius:18px;padding:16px;box-shadow:0 0 18px #2d3ea7, inset 0 0 10px #7fa2ff22}
+.card,.big-card,p,li,label{font-size:16px;color:#f3f7ff}
+.mission{min-height:220px;display:flex;flex-direction:column;justify-content:flex-start;gap:8px;border:2px solid #6c86ff;box-shadow:0 0 18px #6c86ff55;transition:.22s}
+.mission:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 0 30px #7aa8ff99}
+.mission h4{font:800 24px var(--font-game);margin:0 0 4px}.mission p{font-size:17px;margin:0}
+.mission button{margin-top:auto;min-height:52px;font:800 19px var(--font-ui);background:linear-gradient(135deg,var(--alex-primary),var(--alex-secondary));border:none;border-radius:14px;color:#fff;cursor:pointer;box-shadow:0 0 16px #1fa5ff;transition:.2s}.mission button:hover{transform:scale(1.03);filter:brightness(1.15)}
+.store-card{min-height:250px}.store-card h4{font:800 22px var(--font-game);margin:4px 0}.store-card p{font-size:18px}.store-card button{min-height:50px;width:100%;font:800 18px var(--font-ui);border:none;border-radius:12px;background:linear-gradient(135deg,#5d6bff,#ff4cb3);color:#fff;cursor:pointer}
+.xp{height:14px;background:#071a36;border-radius:999px;overflow:hidden}.xp span{display:block;height:100%;background:linear-gradient(90deg,var(--alex-primary),var(--alex-secondary));animation:xpPulse 2s ease-in-out infinite}
 .chest{animation:chestFloat 2.5s ease-in-out infinite}
-.content{animation:fade .35s ease}
-#active-mission{background:radial-gradient(circle at top,#102847,#170725);border:1px solid #56c0ff;border-radius:18px;padding:16px;box-shadow:0 0 20px #00b4ff66;position:relative;z-index:5}
-#active-mission input{width:100%;max-width:360px;background:rgba(0,0,0,.6);border:2px solid #00b4ff;color:#fff;padding:14px 20px;border-radius:12px;font-size:24px;text-align:center}
-#active-mission button{margin:8px 8px 0 0;height:46px;background:linear-gradient(135deg,var(--alex-primary),var(--alex-secondary));color:#fff;border:none;border-radius:12px;padding:0 16px;cursor:pointer}
-@media (max-width:1200px){.home-game-layout{grid-template-columns:1fr}.hero-side{order:2}.center-dashboard{order:1}.store-grid{grid-template-columns:repeat(2,1fr)}}
+#active-mission{background:radial-gradient(circle at top,#123463,#240b3e);border:2px solid #71cbff;border-radius:20px;padding:20px;box-shadow:0 0 28px #56c0ff99;position:relative;z-index:20}
+#active-mission h3{font:900 30px var(--font-game);margin:0 0 10px}#active-mission p{font-size:22px;line-height:1.35}
+#active-mission input{width:100%;max-width:460px;min-height:64px;background:rgba(0,0,0,.58);border:3px solid #00b4ff;color:#fff;padding:14px 20px;border-radius:14px;font:800 32px var(--font-game);text-align:center;box-shadow:0 0 18px #00b4ff77;animation:pulseGlow 2s infinite}
+#active-mission button{margin:10px 10px 0 0;min-height:60px;padding:0 24px;background:linear-gradient(135deg,var(--alex-primary),var(--alex-secondary));color:#fff;border:none;border-radius:14px;font:900 20px var(--font-game);cursor:pointer;box-shadow:0 0 20px #00a8ff88}
+#active-mission button:hover{transform:translateY(-2px) scale(1.03);filter:brightness(1.15)}
+@media (max-width:1360px){.home-game-layout{grid-template-columns:1fr}.hero-side{order:2}.center-dashboard{order:1}.store-grid{grid-template-columns:repeat(2,1fr)}.mission-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:900px){.status-grid,.mission-grid,.lower-grid,.store-grid{grid-template-columns:1fr}.test-banner{font-size:18px}.hero-side h2{font-size:34px}#active-mission p{font-size:18px}#active-mission input{font-size:24px}}
