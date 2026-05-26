@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Particles from './components/Particles';
 
 const STORAGE_KEY = 'summerMathBattleTutorStateV2';
