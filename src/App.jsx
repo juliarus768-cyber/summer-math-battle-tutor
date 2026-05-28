@@ -263,6 +263,11 @@ export default function App() {
   const nextMission = selectedMissions.find((m) => !m.completed);
   const moneyLabChild = state.moneyLab?.activeChild || selected;
   const moneyLabBucket = state.moneyLab?.byChild?.[moneyLabChild] || { missions: [], completedCount: 0, coinsEarned: 0 };
+  const activeMissionRecord = state.activeMission
+    ? state.missions[state.activeMission.childKey]?.find((x) => x.id === state.activeMission.missionId)
+    : null;
+  const activeQuestion = state.activeMission?.questions?.[state.activeMission.index];
+  const activeFeedbackType = state.activeMission?.feedback?.startsWith('Correct') ? 'correct' : (state.activeMission?.feedback ? 'coach' : '');
 
   return <div className="app-shell"><div className="test-banner">Summer Math Battle Tutor Loaded</div><Particles color={selected === 'alex' ? '#00b4ff' : '#ff006e'} />
     <nav style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 20px',height:'60px',position:'sticky',top:0,zIndex:100,background:'rgba(5,5,30,0.97)',backdropFilter:'blur(16px)',borderBottom:'1px solid #00b4ff22'}}>
@@ -271,7 +276,39 @@ export default function App() {
       <div style={{display:'flex',gap:16,alignItems:'center'}}><span style={{color:'var(--gold)',fontFamily:'var(--font-game)',fontSize:12}}>🪙 {state.children.alex.coins + state.children.katya.coins}</span><span style={{color:'#cc88ff',fontFamily:'var(--font-game)',fontSize:12}}>⭐ {state.children.alex.xp + state.children.katya.xp} XP</span><span style={{position:'relative',cursor:'pointer'}}>🔔<span style={{position:'absolute',top:-6,right:-6,background:'#ff4444',borderRadius:'50%',width:14,height:14,fontSize:9,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700}}>3</span></span><span style={{cursor:'pointer',color:'#aaa',fontSize:18}}>⚙</span></div>
     </nav>
     <div className="actions"><button onClick={() => setSelectedChild('alex')}>Alex</button><button onClick={() => setSelectedChild('katya')}>Katya</button><strong>Currently selected: {selectedName}</strong></div>
-    {state.activeMission && <section className="big-card" id="active-mission"><h3>Active Mission • {state.children[state.activeMission.childKey].name} • {state.missions[state.activeMission.childKey].find((x) => x.id === state.activeMission.missionId)?.title}</h3><p>Question {state.activeMission.index + 1}/5: {state.activeMission.questions[state.activeMission.index].q}</p><input value={state.activeMission.input} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} /><button onClick={submitMissionAnswer}>Submit</button><button onClick={() => persist({ ...state, activeMission: null, ui: { ...state.ui, message: 'Mission closed.' } })}>Close Mission</button><p>{state.activeMission.feedback}</p></section>}
+    {state.activeMission && <section id="active-mission" className={`learning-stage ${activeFeedbackType}`}>
+      <div className="mission-topline">
+        <div>
+          <span className="mission-kicker">Learning Battle</span>
+          <h2>{activeMissionRecord?.title || 'Active Mission'}</h2>
+        </div>
+        <div className="mission-rewards"><span>+{activeMissionRecord?.xpReward || 0} XP</span><span>+{activeMissionRecord?.coinReward || 0} 🪙</span></div>
+        <button className="mission-exit" onClick={() => persist({ ...state, activeMission: null, ui: { ...state.ui, message: 'Mission closed.' } })}>Close</button>
+      </div>
+      <div className="mission-progress">
+        <strong>Question {state.activeMission.index + 1} of 5</strong>
+        <div className="mission-progress-track"><span style={{ width: `${((state.activeMission.index + 1) / 5) * 100}%` }} /></div>
+      </div>
+      <div className="learning-grid">
+        <aside className={`solver-card ${state.activeMission.childKey}`}>
+          <div className="solver-avatar">{state.activeMission.childKey === 'alex' ? '⚡' : '🔎'}</div>
+          <h3>{state.children[state.activeMission.childKey].name}</h3>
+          <p>{state.children[state.activeMission.childKey].bonus} bonus ready</p>
+        </aside>
+        <div className="question-arena">
+          <p className="question-label">Solve this step</p>
+          <div className="question-text">{activeQuestion?.q || 'Loading question...'}</div>
+          <input className="answer-input" aria-label="Answer" placeholder="Type your answer" value={state.activeMission.input} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} />
+          <button className="submit-answer" onClick={submitMissionAnswer}>Submit Answer</button>
+          {state.activeMission.feedback && <div className={`feedback-box ${activeFeedbackType}`}>{state.activeMission.feedback}</div>}
+        </div>
+        <aside className="scratchpad-panel">
+          <h3>Scratchpad</h3>
+          <p>Work out steps here before submitting.</p>
+          <textarea placeholder="Write notes, steps, or checks..." />
+        </aside>
+      </div>
+    </section>}
     <main className="content fade-in">
       {state.ui.levelUp && <p>{state.ui.levelUp}</p>}
       {state.ui.message && <p>{state.ui.message}</p>}
