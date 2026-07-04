@@ -3,7 +3,7 @@ import Particles from './components/Particles';
 
 const STORAGE_KEY = 'summerMathBattleTutorStateV2';
 const todayKey = () => new Date().toISOString().slice(0, 10);
-const tabs = ['Home', 'Missions', 'Battle', 'Practice', 'Money Lab', 'Store', 'Grant Prize', 'Parent'];
+const tabs = ['Home', 'Daily Mission', 'Battle', 'Store', 'Grant Prize', 'Parent'];
 const missionNames = ['Speed Round', 'Logic Battle', 'Money Lab', 'Mystery Case', 'Boss Battle', 'Streak Saver'];
 const alexQuestNames = ['🚀 Speed Run', '🥷 Ninja Precision', '💰 Money Boss', '🎯 Accuracy Trial', '🏆 Champion Quest', '🔥 Streak Protector'];
 const katyaQuestNames = ['🗝 Secret Code Breaker', '🔍 Mystery File', '💄 Sephora Shopping Mystery', '📺 Portal Investigation', '🎮 Roblox Signal', '🌙 Midnight Puzzle'];
@@ -49,11 +49,68 @@ const safeClone = (v) => JSON.parse(JSON.stringify(v));
 const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 
 const rewards = [
+  ['🎮', 'Small digital reward', 90, 'Common'], ['🎵', 'Pick music in the car', 140, 'Common'], ['🍫', 'Chocolate or small treat', 220, 'Rare'],
+  ['🧋', 'Bubble tea', 360, 'Rare'], ['☕', 'Starbucks card', 850, 'Epic'], ['🎲', 'Roblox card', 950, 'Epic'],
+  ['🎮', 'PlayStation card', 1200, 'Legendary'], ['🍎', 'Apple gift card', 1300, 'Legendary'], ['🍽️', 'Restaurant with mom', 1500, 'Mythic'],
+  ['🍔', 'Restaurant with dad', 1500, 'Mythic'], ['🚚', 'DoorDash delivery', 1800, 'Ultra'], ['📱', 'Device day with no classes', 2200, 'Ultra']
+];
+
+const legacyRewards = [
   ['🍫', 'Chocolate', 40, 'Common'], ['🎵', 'Pick music in the car', 55, 'Common'], ['🧋', 'Bubble tea', 80, 'Rare'],
   ['🍜', 'Pick takeout', 120, 'Rare'], ['🚚', 'DoorDash delivery', 140, 'Epic'], ['🍽️', 'Restaurant with mom', 180, 'Epic'],
   ['🍔', 'Restaurant with dad', 180, 'Epic'], ['🎬', 'Movie', 220, 'Legendary'], ['🧗', 'Rock climbing', 260, 'Legendary'],
   ['☕', 'Starbucks card', 300, 'Mythic'], ['🍎', 'Apple gift card', 450, 'Mythic'], ['🎮', 'PlayStation card', 500, 'Ultra'], ['📱', 'Device day with no classes', 650, 'Ultra']
 ];
+
+const missionQuestionSets = {
+  katya: [
+    { q: '6 x 7 = ?', a: 42, hint: 'Think 6 groups of 7.', skill: 'Multiplication facts', inputMode: 'numeric' },
+    { q: '56 / 8 = ?', a: 7, hint: 'Ask: 8 times what makes 56?', skill: 'Division facts', inputMode: 'numeric' },
+    { q: '84 / 4 = ?', a: 21, hint: 'Split 80, then split 4.', skill: 'Long division basics', inputMode: 'numeric' },
+    { q: '23 x 14 = ?', a: 322, hint: '23 x 10 plus 23 x 4.', skill: 'Multi-digit multiplication', inputMode: 'numeric' },
+    { q: 'What is 1/4 of 20?', a: 5, hint: 'Divide 20 into 4 equal parts.', skill: 'Fractions basics', inputMode: 'numeric' },
+    { q: 'Which is equal to 1/2?', type: 'choice', options: ['0.25', '0.5', '0.75'], a: '0.5', hint: 'Half is two equal parts.', skill: 'Decimals introduction' },
+    { q: 'Katya has $12.50 and spends $3.25. How much is left?', a: 9.25, hint: 'Subtract dollars and cents carefully.', skill: 'Money math', inputMode: 'decimal' },
+    { q: 'Pattern: 4, 8, 12, 16, __', a: 20, hint: 'The pattern adds 4 each time.', skill: 'Patterns', inputMode: 'numeric' },
+    { q: 'A rectangle has 4 sides. How many sides do 3 rectangles have?', a: 12, hint: '3 groups of 4 sides.', skill: 'Geometry basics', inputMode: 'numeric' },
+    { q: 'How many centimeters are in 1 meter?', a: 100, hint: '1 meter equals 100 centimeters.', skill: 'Measurement', inputMode: 'numeric' },
+    { q: '9 x 8 = ?', a: 72, hint: 'Try 10 x 8, then subtract 8.', skill: 'Multiplication facts', inputMode: 'numeric' },
+    { q: '63 / 9 = ?', a: 7, hint: '9 times what makes 63?', skill: 'Division facts', inputMode: 'numeric' },
+    { q: '126 / 3 = ?', a: 42, hint: 'Split 120 and 6 into 3 groups.', skill: 'Long division basics', inputMode: 'numeric' },
+    { q: '34 x 12 = ?', a: 408, hint: '34 x 10 plus 34 x 2.', skill: 'Multi-digit multiplication', inputMode: 'numeric' },
+    { q: 'Which fraction means 3 out of 4 equal parts?', type: 'choice', options: ['1/4', '3/4', '4/3'], a: '3/4', hint: 'The top number counts the parts you have.', skill: 'Fractions basics' },
+    { q: 'Write four and six tenths as a decimal.', a: 4.6, hint: 'Tenths go one place after the decimal.', skill: 'Decimals introduction', inputMode: 'decimal' },
+    { q: 'A toy costs $7. Katya buys 3. What is the total cost?', a: 21, hint: 'Cost each times number bought.', skill: 'Word problems', inputMode: 'numeric' },
+    { q: 'A square has side length 5 cm. What is its perimeter?', a: 20, hint: 'Add all 4 equal sides.', skill: 'Geometry basics', inputMode: 'numeric' },
+    { q: '2 liters = how many milliliters?', a: 2000, hint: '1 liter is 1000 milliliters.', skill: 'Measurement', inputMode: 'numeric' },
+    { q: 'Katya has $20. She saves $6 and earns $4 more. How much money now?', a: 30, hint: 'Start with 20, add 6, add 4.', skill: 'Money math', inputMode: 'numeric' }
+  ],
+  alex: [
+    { q: '3/4 + 1/8 = ?', type: 'choice', options: ['5/8', '7/8', '4/12'], a: '7/8', hint: 'Change 3/4 to 6/8 first.', skill: 'Fractions' },
+    { q: '7.2 / 0.6 = ?', a: 12, hint: 'Think 72 divided by 6.', skill: 'Decimals', inputMode: 'decimal' },
+    { q: 'What is 15% of 80?', a: 12, hint: '10% is 8 and 5% is 4.', skill: 'Percentages', inputMode: 'numeric' },
+    { q: 'A recipe uses 2 cups flour for 5 pancakes. How many cups for 20 pancakes?', a: 8, hint: '20 is 4 times 5, so multiply cups by 4.', skill: 'Ratios and rates', inputMode: 'numeric' },
+    { q: '-6 + 14 = ?', a: 8, hint: 'Move 14 steps right from -6.', skill: 'Integers', inputMode: 'numeric' },
+    { q: 'If x + 7 = 19, what is x?', a: 12, hint: 'Undo plus 7 by subtracting 7.', skill: 'Equations', inputMode: 'numeric' },
+    { q: '3 + 4 x 5 = ?', a: 23, hint: 'Multiply before adding.', skill: 'BEDMAS', inputMode: 'numeric' },
+    { q: 'A triangle has angles 50 and 60 degrees. What is the third angle?', a: 70, hint: 'Triangle angles total 180 degrees.', skill: 'Geometry', inputMode: 'numeric' },
+    { q: 'Area of a rectangle 9 cm by 6 cm?', a: 54, hint: 'Area equals length times width.', skill: 'Area', inputMode: 'numeric' },
+    { q: 'Volume of a box 4 x 3 x 5?', a: 60, hint: 'Multiply length, width, and height.', skill: 'Volume', inputMode: 'numeric' },
+    { q: 'A bag has 3 red and 2 blue marbles. Probability of red?', type: 'choice', options: ['2/5', '3/5', '3/2'], a: '3/5', hint: 'Red marbles over total marbles.', skill: 'Probability' },
+    { q: 'A $48 hoodie is 25% off. What is the sale price?', a: 36, hint: '25% of 48 is 12, then subtract.', skill: 'Money math', inputMode: 'decimal' },
+    { q: 'Solve: 2x = 18.', a: 9, hint: 'Divide both sides by 2.', skill: 'Algebra basics', inputMode: 'numeric' },
+    { q: '(-4) x (-7) = ?', a: 28, hint: 'Negative times negative is positive.', skill: 'Integers', inputMode: 'numeric' },
+    { q: '0.45 + 1.8 = ?', a: 2.25, hint: 'Line up the decimal points.', skill: 'Decimals', inputMode: 'decimal' },
+    { q: 'Simplify the ratio 12:18.', type: 'choice', options: ['2:3', '3:2', '6:9'], a: '2:3', hint: 'Divide both numbers by 6.', skill: 'Ratios and rates' },
+    { q: '5^2 + 3^2 = ?', a: 34, hint: '5 squared is 25 and 3 squared is 9.', skill: 'BEDMAS', inputMode: 'numeric' },
+    { q: 'A car travels 180 km in 3 hours. Speed in km/h?', a: 60, hint: 'Speed equals distance divided by time.', skill: 'Rates', inputMode: 'numeric' },
+    { q: 'A game card costs $25 plus 13% tax. Total cost?', a: 28.25, hint: '13% of 25 is 3.25.', skill: 'Financial math', inputMode: 'decimal' },
+    { q: 'Speed check: 12 x 15 = ?', a: 180, hint: '12 x 10 plus 12 x 5.', skill: 'Speed and accuracy', inputMode: 'numeric' }
+  ]
+};
+
+const getDailyQuestions = (childKey) => safeClone(missionQuestionSets[childKey] || []);
+const missionTotal = (childKey) => missionQuestionSets[childKey]?.length || 20;
 
 const makeChild = (name, grade, level, xp, xpMax, coins, focus, bonus) => ({
   name, gradeLevel: grade, level, xp, xpMax, coins, streak: 10,
@@ -102,7 +159,25 @@ function genQuestion(child, missionName) {
   return { q: `Tolik left 20 glowing clues in 5 envelopes. Clues per envelope?`, a: 4, hint: 'Think 5 × ? = 20.', skill: 'Midnight clue focus' };
 }
 
-const buildMissionsFor = (child) => missionNames.map((name, i) => { const theme = missionTheme(child, name, i); return { id: `${child}-${i}`, title: theme.title, story: theme.story, objective: theme.objective, icon: theme.icon, difficulty: child === 'alex' ? (i > 3 ? 'Ranked' : 'Arena') : (i > 3 ? 'Mystery' : 'Clue'), skillFocus: theme.skill, progress: 0, xpReward: 25 + i * 5, coinReward: 12 + i * 3, completed: false, attempts: 0, correctAnswers: 0, mistakesCorrected: 0 }; });
+const buildMissionsFor = (child) => {
+  const total = missionTotal(child);
+  const theme = child === 'alex'
+    ? {
+      title: 'Daily Grade 8 Prep Mission',
+      icon: '⚡',
+      story: 'Alex clears one focused arena run with fractions, decimals, percentages, ratios, integers, algebra, geometry, probability, money, and speed checks.',
+      objective: `Complete ${total} mixed Grade 7 review and Grade 8 prep questions.`,
+      skill: 'Grade 8 prep mix'
+    }
+    : {
+      title: 'Daily Grade 5 Prep Mission',
+      icon: '🔎',
+      story: 'Katya solves one mystery path with facts, long division basics, multiplication, fractions, decimals, patterns, geometry, measurement, word problems, and money math.',
+      objective: `Complete ${total} mixed Grade 4 refresh and Grade 5 prep questions.`,
+      skill: 'Grade 5 prep mix'
+    };
+  return [{ id: `${child}-daily`, title: theme.title, story: theme.story, objective: theme.objective, icon: theme.icon, difficulty: 'Daily', skillFocus: theme.skill, progress: 0, total, xpReward: 110, coinReward: 55, completed: false, attempts: 0, correctAnswers: 0, mistakesCorrected: 0, lastScore: null }];
+};
 
 const buildMoneyLabMissions = (childKey) => {
   if (childKey === 'katya') {
@@ -130,6 +205,7 @@ const buildMoneyLabMissions = (childKey) => {
 const normalize = (s) => {
   const base = safeClone(defaultState);
   const merged = { ...base, ...s, children: { ...base.children, ...(s?.children || {}) }, missions: { ...base.missions, ...(s?.missions || {}) }, battleScore: { ...base.battleScore, ...(s?.battleScore || {}) }, ui: { ...base.ui, ...(s?.ui || {}) }, grant: { ...base.grant, ...(s?.grant || {}) } };
+  if (!tabs.includes(merged.activeTab)) merged.activeTab = 'Home';
   if (!merged.moneyLab || typeof merged.moneyLab !== 'object') merged.moneyLab = { activeChild: 'alex', answer: '', feedback: '', secondTry: false, byChild: {} };
   if (!merged.moneyLab.byChild || typeof merged.moneyLab.byChild !== 'object') merged.moneyLab.byChild = {};
   ['alex', 'katya'].forEach((k) => {
@@ -144,8 +220,8 @@ const normalize = (s) => {
     existing.savingChoices = Array.isArray(existing.savingChoices) ? existing.savingChoices : [];
     merged.moneyLab.byChild[k] = existing;
   });
-  if (!Array.isArray(merged.missions.alex) || !merged.missions.alex.length) merged.missions.alex = buildMissionsFor('alex');
-  if (!Array.isArray(merged.missions.katya) || !merged.missions.katya.length) merged.missions.katya = buildMissionsFor('katya');
+  if (!Array.isArray(merged.missions.alex) || merged.missions.alex.length !== 1 || merged.missions.alex[0]?.id !== 'alex-daily') merged.missions.alex = buildMissionsFor('alex');
+  if (!Array.isArray(merged.missions.katya) || merged.missions.katya.length !== 1 || merged.missions.katya[0]?.id !== 'katya-daily') merged.missions.katya = buildMissionsFor('katya');
   return merged;
 };
 
@@ -177,10 +253,25 @@ export default function App() {
     while (c.xp >= c.xpMax) { c.xp -= c.xpMax; c.level += 1; c.xpMax += 100; c.coins += 25; next.ui.levelUp = `${c.name} leveled up to ${c.level}! +25 coins`; }
   };
 
+  const scrollMissionInputIntoView = () => {
+    window.setTimeout(() => {
+      document.querySelector('.answer-input, .choice-answer')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+  };
+
+  const isAnswerCorrect = (question, rawAnswer) => {
+    const raw = String(rawAnswer ?? '').trim();
+    if (!raw) return false;
+    if (question.type === 'choice') return raw === String(question.a);
+    const numericAnswer = Number(raw.replace(',', '.').replace(/^\$/, ''));
+    const expected = Number(question.a);
+    return !Number.isNaN(numericAnswer) && Math.abs(numericAnswer - expected) < 0.001;
+  };
+
   const startMission = (childKey, missionId) => {
-    const mission = state.missions[childKey].find((m) => m.id === missionId); if (!mission || mission.completed) return;
-    const questions = Array.from({ length: 5 }, () => genQuestion(childKey, mission.title));
-    const next = safeClone(state); next.selectedChild = childKey; next.activeMission = { childKey, missionId, questions, index: 0, input: '', feedback: '', localCorrect: 0, localAttempts: 0, localCorrections: 0, secondTry: false }; next.battleScore[childKey] += 1; next.ui.message = `${next.children[childKey].name} mission started.`;
+    const mission = state.missions[childKey].find((m) => m.id === missionId); if (!mission) return;
+    const questions = getDailyQuestions(childKey);
+    const next = safeClone(state); next.selectedChild = childKey; next.activeTab = 'Daily Mission'; next.activeMission = { childKey, missionId, questions, index: Math.min(mission.progress || 0, questions.length - 1), input: '', feedback: '', localCorrect: 0, localAttempts: 0, localCorrections: 0, secondTry: false }; next.battleScore[childKey] += 1; next.ui.message = `${next.children[childKey].name} daily mission started.`;
     persist(next);
     setTimeout(() => document.getElementById('active-mission')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   };
@@ -188,25 +279,30 @@ export default function App() {
   const submitMissionAnswer = () => {
     const next = safeClone(state); const m = next.activeMission; if (!m) return;
     const child = next.children[m.childKey]; const mission = next.missions[m.childKey].find((x) => x.id === m.missionId); const q = m.questions[m.index];
-    const ans = Number(String(m.input).trim()); m.localAttempts += 1; mission.attempts += 1; child.statsToday.attempts += 1;
-    if (!Number.isNaN(ans) && ans === q.a) {
-      const corrected = m.secondTry; m.localCorrect += 1; mission.correctAnswers += 1; mission.progress += 1; child.statsToday.correct += 1; m.feedback = 'Correct! Great work.';
+    m.localAttempts += 1; mission.attempts += 1; child.statsToday.attempts += 1;
+    if (isAnswerCorrect(q, m.input)) {
+      const corrected = m.secondTry; m.localCorrect += 1; mission.correctAnswers += 1; mission.progress = Math.max(mission.progress, m.index + 1); child.statsToday.correct += 1; m.feedback = corrected ? 'Nice fix. That step is stronger now.' : 'Correct! Great work.';
       addXpCoins(next, m.childKey, corrected ? 5 : 8, corrected ? 3 : 5, q.skill);
       if (corrected) { mission.mistakesCorrected += 1; child.mistakesCorrected += 1; child.statsToday.coinsEarned += 0; next.battleScore[m.childKey] += 1; }
       m.secondTry = false; m.input = '';
-      if (m.index < 4) m.index += 1;
+      if (m.index < m.questions.length - 1) m.index += 1;
       else {
+        const score = m.localCorrect;
+        const accuracy = Math.round((score / Math.max(1, m.questions.length)) * 100);
+        const accuracyBonusXp = Math.round(accuracy / 4);
+        const accuracyBonusCoins = Math.round(accuracy / 8);
         mission.completed = true; child.missionsCompletedToday += 1; child.completedMissions.push(mission.title); child.minutesToday += next.weekendMode ? 8 : 10;
-        addXpCoins(next, m.childKey, mission.xpReward, mission.coinReward, mission.skillFocus); next.battleScore[m.childKey] += 2;
-        if ((mission.correctAnswers / Math.max(1, mission.attempts)) > 0.8) next.battleScore[m.childKey] += 1;
+        mission.lastScore = `${score}/${m.questions.length}`;
+        child.dailyHistory.unshift({ date: todayKey(), mission: mission.title, score, total: m.questions.length, accuracy });
+        addXpCoins(next, m.childKey, mission.xpReward + accuracyBonusXp, mission.coinReward + accuracyBonusCoins, mission.skillFocus); next.battleScore[m.childKey] += 2;
+        if (accuracy >= 80) next.battleScore[m.childKey] += 1;
         if (m.childKey === 'alex') next.battleScore.alex += 1; else next.battleScore.katya += 1;
         if (child.missionsCompletedToday >= 1) child.streak += 0;
-        if (child.missionsCompletedToday === 6) { addXpCoins(next, m.childKey, 20, 15, 'Streak bonus'); child.badgesEarned.push('Daily 6/6'); }
-        next.ui.message = `${child.name} completed ${mission.title}!`;
+        next.ui.message = `${child.name} completed ${mission.title}! Score: ${score}/${m.questions.length} (${accuracy}%). XP and coins added.`;
         next.activeMission = null;
       }
     } else {
-      m.feedback = 'Good try. Let’s fix the step. Hint: ' + q.hint; m.secondTry = true;
+      m.feedback = 'Good try, fix the step. Hint: ' + q.hint; m.secondTry = true;
     }
     child.accuracy = Math.round((child.statsToday.correct / Math.max(1, child.statsToday.attempts)) * 100);
     persist(next);
@@ -326,14 +422,14 @@ export default function App() {
       <div className="mission-topline">
         <div>
           <span className="mission-kicker">{state.activeMission.childKey === 'alex' ? 'Shadow Ninja Arena' : 'Mystery Investigation'}</span>
-          <h2>{activeTheme?.title || activeMissionRecord?.title || 'Active Mission'}</h2>
+          <h2>{activeMissionRecord?.title || activeTheme?.title || 'Active Mission'}</h2>
         </div>
         <div className="mission-rewards"><span>+{activeMissionRecord?.xpReward || 0} XP</span><span>+{activeMissionRecord?.coinReward || 0} 🪙</span></div>
         <button className="mission-exit" onClick={() => persist({ ...state, activeMission: null, ui: { ...state.ui, message: 'Mission closed.' } })}>Close</button>
       </div>
       <div className="mission-progress">
-        <strong>Question {state.activeMission.index + 1} of 5</strong>
-        <div className="mission-progress-track"><span style={{ width: `${((state.activeMission.index + 1) / 5) * 100}%` }} /></div>
+        <strong>Question {state.activeMission.index + 1} of {state.activeMission.questions.length}</strong>
+        <div className="mission-progress-track"><span style={{ width: `${((state.activeMission.index + 1) / state.activeMission.questions.length) * 100}%` }} /></div>
       </div>
       <div className="learning-grid">
         <aside className={`solver-card ${state.activeMission.childKey}`}>
@@ -342,10 +438,10 @@ export default function App() {
           <p>{state.children[state.activeMission.childKey].bonus} bonus ready</p>
         </aside>
         <div className="question-arena">
-          <p className="question-label">{activeTheme?.objective}</p>
-          <p className="mission-story">{activeTheme?.story}</p>
+          <p className="question-label">{activeMissionRecord?.objective || activeTheme?.objective}</p>
+          <p className="mission-story">{activeMissionRecord?.story || activeTheme?.story}</p>
           <div className="question-text">{activeQuestion?.q || 'Loading question...'}</div>
-          <input className="answer-input" aria-label="Answer" placeholder="Type your answer" value={state.activeMission.input} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} />
+          {activeQuestion?.type === 'choice' ? <div className="choice-grid">{activeQuestion.options.map((option) => <button className={`choice-answer ${state.activeMission.input === option ? 'selected' : ''}`} key={option} onClick={() => persist({ ...state, activeMission: { ...state.activeMission, input: option } })}>{option}</button>)}</div> : <input className="answer-input" aria-label="Answer" placeholder="Type your answer" inputMode={activeQuestion?.inputMode || 'numeric'} autoComplete="off" value={state.activeMission.input} onFocus={scrollMissionInputIntoView} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} />}
           <button className="submit-answer" onClick={submitMissionAnswer}>Submit Answer</button>
           {state.activeMission.feedback && <div className={`feedback-box ${activeFeedbackType}`}>{state.activeMission.feedback}</div>}
         </div>
@@ -360,8 +456,8 @@ export default function App() {
       {state.ui.levelUp && <p>{state.ui.levelUp}</p>}
       {state.ui.message && <p>{state.ui.message}</p>}
       {state.ui.rewardMessage && <p>{state.ui.rewardMessage}</p>}
-      {state.activeTab === 'Home' && <div className='home-game-layout'><aside className={`hero-side alex-side ${selected === 'alex' ? 'selected' : ''}`} onClick={()=>setSelectedChild('alex')}><div className='avatar-wrap avatar-alex'><svg width='200' height='220' viewBox='0 0 200 220'><rect width='200' height='220' fill='url(#aBg)' rx='10'/><defs><radialGradient id='aBg' cx='50%' cy='60%'><stop offset='0%' stopColor='#003366'/><stop offset='100%' stopColor='#000d1a'/></radialGradient></defs><polygon points='36,34 23,78 42,70 29,122 72,55 52,63' fill='#00b4ff' opacity='.6'/><circle cx='100' cy='118' r='32' fill='#f5c842'/><ellipse cx='100' cy='92' rx='36' ry='18' fill='#FFD700'/><circle cx='88' cy='118' r='5' fill='#00b4ff'/><circle cx='112' cy='118' r='5' fill='#00b4ff'/><rect x='60' y='150' width='80' height='62' rx='16' fill='#10264d'/></svg></div><h2>ALEX</h2><p>SHADOW NINJA • BATTLE ARENA CHAMPION</p><div className='hero-stats'><span>LVL {state.children.alex.level}</span><span>🪙 {state.children.alex.coins}</span><span>🔥 {state.children.alex.streak}</span></div><div className='xp'><span style={{width:`${Math.min(100,(state.children.alex.xp/state.children.alex.xpMax)*100)}%`}}/></div><button>Choose Alex</button></aside><main className='center-dashboard'><section className='event-banner'><span>Daily Event</span><h3>SUMMER BATTLE QUEST 2026</h3><p>Selected: {selectedName} • Next reward path is active</p></section><section className='status-grid'><div className='card'>🔥 <strong>{state.children[selected].streak}</strong><span>Day streak</span></div><div className='card'>🎯 <strong>{state.children[selected].missionsCompletedToday}/6</strong><span>Quests today</span></div><div className='card'>🤝 <strong>+15%</strong><span>Team bonus</span></div></section><section className='dashboard-panel'><div className='section-title'><h3>TODAY'S MISSIONS</h3><button onClick={()=>nextMission && startMission(selected,nextMission.id)} disabled={!nextMission}>{nextMission ? 'Start Next Mission' : 'All Complete'}</button></div><div className='mission-grid'>{selectedMissions.map((m,i)=>{ const theme = missionTheme(selected, m.title, i); return <article key={m.id} className={`mission ${m.completed ? 'complete' : ''}`}><div className='mission-icon'>{m.icon || theme.icon}</div><h4>{m.title || theme.title}</h4><p>{m.story || theme.story}</p><p className='reward-line'>{m.progress}/5 • +{m.xpReward} XP • +{m.coinReward} 🪙</p><button onClick={()=>startMission(selected,m.id)}>{m.completed ? 'Replay Quest' : 'Start Quest'}</button></article>; })}</div></section><section className='lower-grid'><article className='big-card'><h3>Summer Team Quest</h3><p>Combined XP: {state.battleScore.alex + state.battleScore.katya}</p></article><article className='big-card chest'><h3>Grant Prize Chest</h3><button onClick={claimGrant}>Claim Prize</button></article><article className='big-card'><h3>Next Reward</h3><p className='big-reward'>🧋 Bubble Tea</p></article></section></main><aside className={`hero-side katya-side ${selected === 'katya' ? 'selected' : ''}`} onClick={()=>setSelectedChild('katya')}><div className='avatar-wrap avatar-katya'><svg width='200' height='220' viewBox='0 0 200 220'><rect width='200' height='220' fill='url(#kBg)' rx='10'/><defs><radialGradient id='kBg' cx='50%' cy='60%'><stop offset='0%' stopColor='#330011'/><stop offset='100%' stopColor='#0d0008'/></radialGradient></defs><circle cx='40' cy='38' r='3' fill='#ff8fd6'/><circle cx='72' cy='22' r='3' fill='#ff4fbc'/><circle cx='132' cy='26' r='3' fill='#ff8fd6'/><ellipse cx='154' cy='128' rx='42' ry='16' fill='#fff6a0' opacity='.16'/><circle cx='100' cy='116' r='30' fill='#f5c842'/><ellipse cx='100' cy='90' rx='32' ry='16' fill='#FFD700'/><circle cx='88' cy='116' r='5' fill='#00b4ff'/><circle cx='112' cy='116' r='5' fill='#00b4ff'/><rect x='92' y='128' width='16' height='5' rx='2' fill='#fff'/><rect x='60' y='150' width='80' height='62' rx='16' fill='#321126'/></svg></div><h2>KATYA</h2><p>LEAD INVESTIGATOR • HAWKINS MYSTERY HUNTER</p><div className='hero-stats'><span>LVL {state.children.katya.level}</span><span>🪙 {state.children.katya.coins}</span><span>🔥 {state.children.katya.streak}</span></div><div className='xp'><span style={{width:`${Math.min(100,(state.children.katya.xp/state.children.katya.xpMax)*100)}%`,background:'linear-gradient(90deg,var(--katya-primary),var(--katya-secondary))'}}/></div><button>Choose Katya</button><div className='quote-card'>"Friends don't lie. Numbers don't either. Keep solving."</div></aside></div>}
-      {state.activeTab === 'Missions' && <section className='dashboard-panel'><div className='section-title'><h2>{selectedName}’s Quest Board</h2><span>{selected === 'alex' ? 'Battle pass route' : 'Mystery case route'}</span></div><div className="mission-grid">{selectedMissions.map((m, i) => { const theme = missionTheme(selected, m.title, i); return <article className={`mission ${m.completed ? 'complete' : ''} ${state.activeMission?.missionId === m.id ? 'selected-mission' : ''}`} key={m.id}><div className='mission-icon'>{m.icon || theme.icon}</div><h4>{m.title || theme.title}</h4><p>{m.story || theme.story}</p><p><strong>Objective:</strong> {m.objective || theme.objective}</p><p className='reward-line'>Progress {m.progress}/5 • +{m.xpReward} XP • +{m.coinReward} 🪙</p><p className='status-pill'>{m.completed ? '✅ Quest Complete' : '⬜ Ready to play'}</p><button onClick={() => startMission(selected, m.id)}>{state.activeMission?.missionId === m.id ? 'Continue Mission' : 'Start Mission'}</button></article>; })}</div></section>}
+      {state.activeTab === 'Home' && <div className='home-game-layout'><aside className={`hero-side alex-side ${selected === 'alex' ? 'selected' : ''}`} onClick={()=>setSelectedChild('alex')}><div className='avatar-wrap avatar-alex'><svg width='200' height='220' viewBox='0 0 200 220'><rect width='200' height='220' fill='url(#aBg)' rx='10'/><defs><radialGradient id='aBg' cx='50%' cy='60%'><stop offset='0%' stopColor='#003366'/><stop offset='100%' stopColor='#000d1a'/></radialGradient></defs><polygon points='36,34 23,78 42,70 29,122 72,55 52,63' fill='#00b4ff' opacity='.6'/><circle cx='100' cy='118' r='32' fill='#f5c842'/><ellipse cx='100' cy='92' rx='36' ry='18' fill='#FFD700'/><circle cx='88' cy='118' r='5' fill='#00b4ff'/><circle cx='112' cy='118' r='5' fill='#00b4ff'/><rect x='60' y='150' width='80' height='62' rx='16' fill='#10264d'/></svg></div><h2>ALEX</h2><p>SHADOW NINJA • BATTLE ARENA CHAMPION</p><div className='hero-stats'><span>LVL {state.children.alex.level}</span><span>🪙 {state.children.alex.coins}</span><span>🔥 {state.children.alex.streak}</span></div><div className='xp'><span style={{width:`${Math.min(100,(state.children.alex.xp/state.children.alex.xpMax)*100)}%`}}/></div><button>Choose Alex</button></aside><main className='center-dashboard'><section className='event-banner'><span>Daily Event</span><h3>SUMMER BATTLE QUEST 2026</h3><p>Selected: {selectedName} • Next reward path is active</p></section><section className='status-grid'><div className='card'>🔥 <strong>{state.children[selected].streak}</strong><span>Day streak</span></div><div className='card'>🎯 <strong>{state.children[selected].missionsCompletedToday}/1</strong><span>Daily mission</span></div><div className='card'>🤝 <strong>+15%</strong><span>Team bonus</span></div></section><section className='dashboard-panel'><div className='section-title'><h3>TODAY'S DAILY MISSION</h3><button onClick={()=>nextMission && startMission(selected,nextMission.id)} disabled={!nextMission}>{nextMission ? 'Start Next Mission' : 'All Complete'}</button></div><div className='mission-grid'>{selectedMissions.map((m,i)=>{ const theme = missionTheme(selected, m.title, i); return <article key={m.id} className={`mission ${m.completed ? 'complete' : ''}`}><div className='mission-icon'>{m.icon || theme.icon}</div><h4>{m.title || theme.title}</h4><p>{m.story || theme.story}</p><p className='reward-line'>{m.progress}/{m.total || missionTotal(selected)} • +{m.xpReward} XP • +{m.coinReward} 🪙</p><button onClick={()=>startMission(selected,m.id)}>{m.completed ? 'Replay Quest' : 'Start Quest'}</button></article>; })}</div></section><section className='lower-grid'><article className='big-card'><h3>Summer Team Quest</h3><p>Combined XP: {state.battleScore.alex + state.battleScore.katya}</p></article><article className='big-card chest'><h3>Grant Prize Chest</h3><button onClick={claimGrant}>Claim Prize</button></article><article className='big-card'><h3>Next Reward</h3><p className='big-reward'>🧋 Bubble Tea</p></article></section></main><aside className={`hero-side katya-side ${selected === 'katya' ? 'selected' : ''}`} onClick={()=>setSelectedChild('katya')}><div className='avatar-wrap avatar-katya'><svg width='200' height='220' viewBox='0 0 200 220'><rect width='200' height='220' fill='url(#kBg)' rx='10'/><defs><radialGradient id='kBg' cx='50%' cy='60%'><stop offset='0%' stopColor='#330011'/><stop offset='100%' stopColor='#0d0008'/></radialGradient></defs><circle cx='40' cy='38' r='3' fill='#ff8fd6'/><circle cx='72' cy='22' r='3' fill='#ff4fbc'/><circle cx='132' cy='26' r='3' fill='#ff8fd6'/><ellipse cx='154' cy='128' rx='42' ry='16' fill='#fff6a0' opacity='.16'/><circle cx='100' cy='116' r='30' fill='#f5c842'/><ellipse cx='100' cy='90' rx='32' ry='16' fill='#FFD700'/><circle cx='88' cy='116' r='5' fill='#00b4ff'/><circle cx='112' cy='116' r='5' fill='#00b4ff'/><rect x='92' y='128' width='16' height='5' rx='2' fill='#fff'/><rect x='60' y='150' width='80' height='62' rx='16' fill='#321126'/></svg></div><h2>KATYA</h2><p>LEAD INVESTIGATOR • HAWKINS MYSTERY HUNTER</p><div className='hero-stats'><span>LVL {state.children.katya.level}</span><span>🪙 {state.children.katya.coins}</span><span>🔥 {state.children.katya.streak}</span></div><div className='xp'><span style={{width:`${Math.min(100,(state.children.katya.xp/state.children.katya.xpMax)*100)}%`,background:'linear-gradient(90deg,var(--katya-primary),var(--katya-secondary))'}}/></div><button>Choose Katya</button><div className='quote-card'>"Friends don't lie. Numbers don't either. Keep solving."</div></aside></div>}
+      {state.activeTab === 'Daily Mission' && <section className='dashboard-panel'><div className='section-title'><h2>{selectedName}’s Daily Mission</h2><span>{selected === 'alex' ? 'One focused daily arena' : 'One focused daily mystery'}</span></div><div className="mission-grid">{selectedMissions.map((m, i) => { const theme = missionTheme(selected, m.title, i); return <article className={`mission ${m.completed ? 'complete' : ''} ${state.activeMission?.missionId === m.id ? 'selected-mission' : ''}`} key={m.id}><div className='mission-icon'>{m.icon || theme.icon}</div><h4>{m.title || theme.title}</h4><p>{m.story || theme.story}</p><p><strong>Objective:</strong> {m.objective || theme.objective}</p><p className='reward-line'>Progress {m.progress}/{m.total || missionTotal(selected)} • +{m.xpReward} XP • +{m.coinReward} 🪙</p><p className='status-pill'>{m.completed ? '✅ Quest Complete' : '⬜ Ready to play'}</p><button onClick={() => startMission(selected, m.id)}>{state.activeMission?.missionId === m.id ? 'Continue Mission' : 'Start Mission'}</button></article>; })}</div></section>}
       {state.activeTab === 'Battle' && <section className='battle-stage'><div className='battle-side alex-battle'><span>Alex path energy</span><strong>{state.battleScore.alex}</strong></div><div className='versus-core'><h2>Summer Team Quest</h2><p>Combined XP: {state.battleScore.alex + state.battleScore.katya}</p><b>VS = Victory by Solving</b><p>Compete by effort and improvement. Family rewards unlock through teamwork: pizza night, movie night, activity day, and bonus bubble tea.</p></div><div className='battle-side katya-battle'><span>Katya clue energy</span><strong>{state.battleScore.katya}</strong></div></section>}
       {state.activeTab === 'Store' && <section className='dashboard-panel'><div className='section-title'><h2>Reward Store</h2><span>{selectedName} selected • parent approval required</span></div><div className='store-grid'>{rewards.map((r,idx) => {const progress=Math.min(100,Math.round((state.children[selected].coins/r[2])*100)); const need=Math.max(0,r[2]-state.children[selected].coins); return <article className={`store-card ${need === 0 ? 'unlocked' : 'locked'}`} key={r[1]} style={{borderColor:'#'+((idx*123456)%0xffffff).toString(16).padStart(6,'0')+'88'}}><div className='reward-icon'>{r[0]}</div><h4>{r[1]}</h4><p className='cost'>{r[2]} coins</p><div className='xp'><span style={{width:`${progress}%`}}/></div><p>{need === 0 ? 'Ready to request' : `${need} coins to go`}</p><small>Requires parent approval</small><button onClick={() => requestReward(selected, r)}>Request Reward</button></article>;})}</div></section>}
       {state.activeTab === 'Grant Prize' && <section><h2>Grant Prize</h2><button onClick={claimGrant}>Claim Daily Grant Prize</button><p>{state.grant.message}</p></section>}
@@ -376,3 +472,4 @@ export default function App() {
       </section>}
     </main><div className="card">Selected child: {selected} | Active tab: {state.activeTab} | Active mission: {state.activeMission ? 'yes' : 'no'}</div></div>;
 }
+
