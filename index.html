@@ -317,6 +317,19 @@ body {
 .q-text { font-size: 29px; font-weight: 700; line-height: 1.45; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
 #ms-answer { width: 100%; font-family: var(--orb); font-size: 30px; font-weight: 800; color: var(--text); background: rgba(255,255,255,.05); border: 2px solid var(--line); border-radius: 16px; padding: 16px; text-align: center; outline: none; margin-bottom: 8px; }
 #ms-answer:focus { border-color: var(--acc); box-shadow: 0 0 18px var(--accSoft); }
+/* Answer row: an optional +/- toggle next to the answer field. Neither the
+   iOS "numeric" nor "decimal" software keyboard has a minus-sign key, so
+   negative-answer questions (Alex's integers topic) need an explicit,
+   reliable way to enter one that doesn't depend on OS keyboard quirks. */
+.answer-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; }
+.answer-row #ms-answer, .answer-row #b-answer { flex: 1; width: auto; margin-bottom: 0; }
+.sign-toggle {
+  flex-shrink: 0; width: 56px; font-family: var(--orb); font-size: 24px; font-weight: 800;
+  color: var(--text); background: rgba(255,255,255,.05); border: 2px solid var(--line);
+  border-radius: 16px; cursor: pointer; transition: all .15s;
+}
+.sign-toggle:hover, .sign-toggle:focus { border-color: var(--acc); box-shadow: 0 0 14px var(--accSoft); }
+.sign-toggle.active { color: var(--acc); border-color: var(--acc); background: var(--accDim); }
 .ms-submit { color: var(--acc); border: 2px solid var(--accSoft); box-shadow: 0 0 16px var(--accDim); text-shadow: 0 0 10px var(--accSoft); font-size: 17px; padding: 16px; }
 .ms-submit:hover { background: var(--accDim); box-shadow: 0 0 26px var(--accSoft); }
 .ms-submit:disabled { opacity: .45; cursor: default; }
@@ -1363,7 +1376,10 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
         </div>
         <div class="combo" id="ms-combo"></div>
         <div id="ms-choices" class="ms-choices"></div>
-        <input id="ms-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        <div class="answer-row">
+          <button type="button" class="sign-toggle" id="ms-sign-btn" onclick="toggleSign('ms-answer')" style="display:none" aria-label="Toggle negative sign">&#177;</button>
+          <input id="ms-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        </div>
         <div class="feedback" id="ms-fb"></div>
         <button class="btn ms-submit" id="ms-submit" onclick="submitQ()">&#9876; &nbsp;SUBMIT ANSWER</button>
       </div>
@@ -1454,7 +1470,10 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
           <button class="hint-btn" onclick="bShowHint()">&#128161; HINT</button>
           <span class="hint-text" id="b-hint"></span>
         </div>
-        <input id="b-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        <div class="answer-row">
+          <button type="button" class="sign-toggle" id="b-sign-btn" onclick="toggleSign('b-answer')" style="display:none" aria-label="Toggle negative sign">&#177;</button>
+          <input id="b-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        </div>
         <div class="feedback" id="b-fb"></div>
         <button class="btn ms-submit" id="b-submit" onclick="bSubmit()">&#9876; &nbsp;LOCK IN ANSWER</button>
       </div>
@@ -2001,7 +2020,7 @@ alex: {
     () => { const x=R(2,12), m=R(2,9), c=R(1,19); return { s:'🧠 The Logic Guardian seals the door with an equation.', q:`Solve for x:   ${m}x + ${c} = ${m*x+c}`, a:x }; },
     () => { const x=R(3,12), m=R(2,8), c=R(1,15); return { s:"🧠 Crack the guardian's second seal!", q:`Solve for x:   ${m}x − ${c} = ${m*x-c}`, a:x }; },
     () => { const n=R(5,15); return { s:'🧠 Power surge! Square the energy core.', q:`${n}² = ?`, a:n*n }; },
-    () => { const st=RNZ(-9,9), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st }; }
+    () => { const st=RNZ(2,9), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st }; }
   ],
   money: [
     () => { const p=pick([10,15,20,25,30,40,50,75]), n=R(2,15)*20; return { s:pick(['💰 Mr-Beast-style challenge: split the prize pool!','💰 Money Lab: calculate your creator earnings!']), q:`${p}% of $${n} = ?`, a:p*n/100 }; },
@@ -2082,7 +2101,7 @@ alex: {
     (d)=>{ const a=R(2,9), b=R(2,9), c=R(2,5+d*2); return { s:'🧠 Brackets guard this gate.', q:`(${a} + ${b}) × ${c} = ?`, a:(a+b)*c, hint:'Solve everything inside the brackets first, then multiply.' }; },
     (d)=>{ const a=R(2,9+d*2), b=R(2,9), c=R(2,9), e=R(2,9); return { s:'⚡ Double strike — two operations before you add!', q:`${a} × ${b} + ${c} × ${e} = ?`, a:a*b+c*e, hint:'Do both multiplications first, then add the two results together.' }; },
     (d)=>{ const n=R(4,8+d*3); return { s:'🧠 Power surge — square the energy core.', q:`${n}² = ?`, a:n*n, hint:'A squared number is multiplied by itself: n × n.' }; },
-    (d)=>{ const a=R(15,40+d*10), b=R(2,9), c=R(2,9); return { s:'⚡ Subtract the combo damage!', q:`${a} − ${b} × ${c} = ?`, a:a-b*c, hint:'Multiply first, then subtract that result from the front number.' }; }
+    (d)=>{ const b=R(2,9), c=R(2,9), a=b*c+R(2,30+d*10); return { s:'⚡ Subtract the combo damage!', q:`${a} − ${b} × ${c} = ?`, a:a-b*c, hint:'Multiply first, then subtract that result from the front number.' }; }
   ],
   fractions: [
     (d)=>{ const den=pick([3,4,5,6,8,10,12]), num=R(1,den-1), whole=den*R(2,4+d); return { s:'🕵 Decode the fraction of loot.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
@@ -2096,8 +2115,8 @@ alex: {
     (d)=>{ const div=RNZ(2,9), quot=R(2,12+d*3); const dividend=Math.round(div*quot*10)/10; return { s:'💰 Split the decimal loot.', q:`${dividend} ÷ ${div} = ?`, a: Math.round((dividend/div)*100)/100, mode:'decimal', hint:'Think of it as a whole-number division, then place the decimal point back.' }; }
   ],
   percent: [
-    (d)=>{ const p=pick([5,10,15,20,25,30,40,50,60,75]), n=R(2,20+d*10)*10; return { s:'💰 Percent of the prize pool.', q:`${p}% of $${n} = ?`, a: p*n/100, mode:'decimal', hint:`10% of ${n} is ${n/10} — build up from there.` }; },
-    (d)=>{ const n=R(3,9+d)*20, p=pick([10,20,25,50]); return { s:'💰 Flash sale markdown.', q:`A $${n} item is ${p}% off. What is the SALE price?`, a: n-p*n/100, mode:'decimal', hint:`Find ${p}% of ${n} first, then subtract it from ${n}.` }; },
+    (d)=>{ const p=pick([5,10,15,20,25,30,40,50,60,75]), n=R(2,15+d*6)*20; return { s:'💰 Percent of the prize pool.', q:`${p}% of $${n} = ?`, a: p*n/100, hint:`10% of ${n} is ${n/10} — build up from there.` }; },
+    (d)=>{ const n=R(3,9+d)*20, p=pick([10,20,25,50]); return { s:'💰 Flash sale markdown.', q:`A $${n} item is ${p}% off. What is the SALE price?`, a: n-p*n/100, hint:`Find ${p}% of ${n} first, then subtract it from ${n}.` }; },
     (d)=>{ const part=R(5,20+d*5), whole=part+R(5,20+d*5); const pct=Math.round(part/whole*1000)/10; return { s:'💰 What share of the loot?', q:`${part} out of ${whole} — what PERCENT is that? (round to 1 decimal)`, a: pct, mode:'decimal', hint:'Percent = (part ÷ whole) × 100.' }; },
     (d)=>{ const price=R(15,60+d*10), tax=pick([5,8,13,15]); return { s:'💰 Add the tax to the total.', q:`A $${price} item plus ${tax}% tax. TOTAL cost?`, a: Math.round(price*(1+tax/100)*100)/100, mode:'decimal', hint:`Find ${tax}% of ${price}, then add it to ${price}.` }; }
   ],
@@ -2121,7 +2140,7 @@ alex: {
   geometry: [
     (d)=>{ const l=R(6,20+d*5), w=R(4,15+d*3); return { s:'💀 Arena floor of doom.', q:`A rectangle is ${l} m by ${w} m. What is its AREA?`, a:l*w, hint:'Area of a rectangle = length × width.' }; },
     (d)=>{ const l=R(6,18), w=R(4,14); return { s:'🛡 Fortify the perimeter wall.', q:`A rectangle is ${l} m by ${w} m. What is its PERIMETER?`, a:2*(l+w), hint:'Perimeter = 2 × (length + width) — add ALL the sides.' }; },
-    (d)=>{ const b=R(4,16+d*4), h=R(3,15+d*3); return { s:'💀 Triangular shield panel.', q:`A triangle has base ${b} cm and height ${h} cm. What is its AREA?`, a:b*h/2, hint:'Triangle area = base × height ÷ 2.' }; },
+    (d)=>{ const b=R(2,8+d*2)*2, h=R(3,15+d*3); return { s:'💀 Triangular shield panel.', q:`A triangle has base ${b} cm and height ${h} cm. What is its AREA?`, a:b*h/2, hint:'Triangle area = base × height ÷ 2.' }; },
     (d)=>{ const l=R(3,8+d), w=R(2,6+d), h=R(2,5+d); return { s:'📦 Supply crate volume.', q:`A box is ${l} m long, ${w} m wide, ${h} m tall. What is its VOLUME?`, a:l*w*h, hint:'Volume of a box = length × width × height.' }; },
     (d)=>{ const a=R(30,80), b=R(30,120-a-10); return { s:'⚔️ Triangle angle puzzle.', q:`A triangle has angles ${a}° and ${b}°. What is the third angle?`, a:180-a-b, hint:'The three angles of a triangle always add up to 180°.' }; },
     (d)=>{ const r=pick([2,3,4,5,6,7]); return { s:'🔵 Circular energy shield.', q:`A circle has radius ${r} cm. What is its CIRCUMFERENCE? Use π ≈ 3.14, round to 1 decimal.`, a: Math.round(2*3.14*r*10)/10, mode:'decimal', hint:'Circumference = 2 × π × radius.' }; }
@@ -2135,10 +2154,10 @@ alex: {
     (d)=>{ const r=R(3,9+d*2), w=R(6,15+d*3); return { s:'💰 Grinding coins in the arena.', q:`You earn ${r} coins per win. Coins after ${w} wins?`, a:r*w, hint:'Multiply coins-per-win by the number of wins.' }; },
     (d)=>{ const week=pick([5,8,10,12,15]), wks=R(3,8+d*2); return { s:'🏦 Saving toward a goal.', q:`You save $${week} a week. How many weeks to reach $${week*wks}?`, a:wks, hint:'Divide the goal amount by how much you save each week.' }; },
     (d)=>{ const price=pick([40,60,80,100+d*20]), pct=pick([10,20,25]); const down=Math.round(price*pct/100); return { s:'💵 Layaway plan.', q:`A $${price} item needs a ${pct}% deposit. How much is the deposit?`, a: down, mode:'decimal', hint:'Deposit = percent × total price.' }; },
-    (d)=>{ const total=R(20,60+d*20); return { s:'🧾 Split the winnings evenly.', q:`Two teammates split $${total} in prize coins equally. How much does EACH get?`, a: Math.round((total/2)*100)/100, mode:'decimal', hint:'Divide the total by 2 for an equal split.' }; }
+    (d)=>{ const total=R(10,30+d*10)*2; return { s:'🧾 Split the winnings evenly.', q:`Two teammates split $${total} in prize coins equally. How much does EACH get?`, a: total/2, hint:'Divide the total by 2 for an equal split.' }; }
   ],
   logic: [
-    (d)=>{ const st=RNZ(-9-d*2,9+d*2), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st, hint:'Find the constant jump between terms, then add it repeatedly (or multiply by how many jumps).' }; },
+    (d)=>{ const st=R(2,9+d*2), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st, hint:'Find the constant jump between terms, then add it repeatedly (or multiply by how many jumps).' }; },
     (d)=>{ const a=R(4,12+d*3), b=R(3,9+d*2), c=R(5,40+d*10); return { s:'🕵 Intel intercepted! Decode the cipher.', q:`The cipher key is (${a} × ${b}) + ${c}. What number unlocks it?`, a:a*b+c, hint:'Brackets first: multiply, then add.' }; },
     (d)=>{ const start=R(2,9), ratio=pick([2,3]); const terms=[start, start*ratio, start*ratio*ratio, start*ratio*ratio*ratio]; return { s:'🧠 Doubling (or tripling) trap!', q:`Pattern: ${terms[0]}, ${terms[1]}, ${terms[2]}, ${terms[3]}, ... What is the next term?`, a: terms[3]*ratio, hint:`Each term is multiplied by ${ratio} to get the next one.` }; }
   ],
@@ -2195,7 +2214,7 @@ katya: {
     (d)=>{ let n=R(31,489); if (n%10===5) n++; return { s:'🛡 Round the clue number.', q:`Round ${n} to the nearest 10.`, a: Math.round(n/10)*10, hint:'Look at the ones digit: 5 or more rounds UP, 4 or less stays DOWN.' }; }
   ],
   wordproblems: [
-    (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,40+d*5); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
+    (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,Math.min(40+d*5,a+b-5)); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
     (d)=>{ const price=R(4,9), qty=R(2,5+d); return { s:'🛍 Word problem.', q:`A toy costs $${price}. You buy ${qty}. What is the TOTAL cost?`, a: price*qty, hint:'Multiply the cost of one toy by how many you buy.' }; },
     (d)=>{ const f=pick(FRIENDS), t=R(3,7+d), c=R(4,9); return { s:`🔍 Flashlights on! You and ${f} search the rooms.`, q:`${t} rooms with ${c} clues in each. Total clues?`, a: t*c, hint:'Multiply the number of rooms by the clues in each room.' }; }
   ],
@@ -2251,8 +2270,36 @@ function genQuestion(who, topic, diff) {
   const pool = TOPIC_BANK[who][topic];
   const item = pick(pool)(diff);
   item.topic = topic;
-  if (!item.mode && !item.choices) item.mode = 'numeric';
+  if (!item.choices) {
+    // Defensive net: whatever a generator computes, the keyboard the child
+    // gets must be able to type it. A whole-number answer gets the plain
+    // numeric pad; anything with a fractional part gets the decimal pad
+    // (which also has a "." or "," key depending on device locale) even if
+    // the generator forgot to say so.
+    const n = Number(item.a);
+    const isWhole = Number.isFinite(n) && Math.abs(n - Math.round(n)) < 1e-9;
+    if (!item.mode) item.mode = isWhole ? 'numeric' : 'decimal';
+  }
   return item;
+}
+
+// Every other topic is designed so its answer can never be negative (see the
+// generator fixes throughout TOPIC_BANK/BANK). Integers is the one lesson
+// that is explicitly about negative numbers, so it's the only place the
+// child needs a way to enter a minus sign.
+function topicAllowsNegative(topic) { return topic === 'integers'; }
+
+// Neither inputmode="numeric" nor inputmode="decimal" gives iOS or Android a
+// minus-sign key, so a software keyboard alone can never produce a negative
+// answer. This toggle is the reliable, platform-independent way to do it.
+function toggleSign(inputId) {
+  const inp = $(inputId);
+  if (!inp) return;
+  if (inp.value.startsWith('-')) inp.value = inp.value.slice(1);
+  else inp.value = '-' + inp.value;
+  inp.focus();
+  const btn = $(inputId === 'ms-answer' ? 'ms-sign-btn' : 'b-sign-btn');
+  if (btn) btn.classList.toggle('active', inp.value.startsWith('-'));
 }
 
 /* ---- Mastery tracking: per-topic accuracy drives selection weight + difficulty ---- */
@@ -2476,6 +2523,8 @@ function nextQ() {
   const choices = $('ms-choices');
   const inp = $('ms-answer');
   inp.value = ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
+  const signBtn = $('ms-sign-btn');
+  if (signBtn) { signBtn.style.display = (!M.q.choices && topicAllowsNegative(M.q.topic)) ? '' : 'none'; signBtn.classList.remove('active'); }
   if (M.q.choices) {
     choices.style.display = 'grid';
     choices.innerHTML = M.q.choices.map(c => '<button class="choice-answer" onclick="chooseMissionAnswer(\'' + c + '\')">' + c + '</button>').join('');
@@ -3137,8 +3186,8 @@ function mlGen() {
   const ALEX = [
     () => { const items = R(2, 4), price = pick([4, 5, 6, 7, 8]); return { s: '🛒 Stocking up on bubble tea for the squad.', q: `${items} bubble teas at $${price} each. Total cost?`, a: items * price, unit: '$' }; },
     () => { const bill = 50, spent = R(31, 47); return { s: '💵 You pay with a $50 bill at the game store.', q: `You spend $${spent}. How much change do you get back?`, a: bill - spent, unit: '$' }; },
-    () => { const price = pick([20, 25, 30, 40, 50]), off = pick([10, 20, 25, 50]); return { s: '🏷️ Flash sale on a new controller!', q: `A $${price} item is ${off}% off. What is the discount in dollars?`, a: money2(price * off / 100), unit: '$' }; },
-    () => { const price = pick([20, 30, 40, 60]), off = pick([10, 25, 50]); return { s: '🏷️ Big creator-merch discount!', q: `A $${price} hoodie is ${off}% off. What is the SALE price?`, a: money2(price * (1 - off / 100)), unit: '$' }; },
+    () => { const price = pick([20, 40, 60, 80]), off = pick([10, 20, 25, 50]); return { s: '🏷️ Flash sale on a new controller!', q: `A $${price} item is ${off}% off. What is the discount in dollars?`, a: money2(price * off / 100), unit: '$' }; },
+    () => { const price = pick([20, 40, 60, 80]), off = pick([10, 25, 50]); return { s: '🏷️ Big creator-merch discount!', q: `A $${price} hoodie is ${off}% off. What is the SALE price?`, a: money2(price * (1 - off / 100)), unit: '$' }; },
     () => { const week = pick([5, 8, 10, 12]), wks = R(3, 8); return { s: '🏦 Saving your allowance every week.', q: `You save $${week} a week for ${wks} weeks. How much saved?`, a: week * wks, unit: '$' }; },
     () => { const a = pick([6, 7, 8, 9]), b = pick([3, 4, 5]), pay = 20; return { s: '🧾 Splitting a snack run.', q: `Snacks cost $${a} and $${b}. Change from $${pay}?`, a: pay - a - b, unit: '$' }; }
   ];
@@ -3405,7 +3454,7 @@ const GUIDED = {
       ],
       hint:`Don't list all ${term} terms! Use: term = first + (n − 1) × step.`
     }; },
-    () => { const price=pick([20,25,40,50,60,80]), off=pick([10,20,25,50]); const disc=price*off/100; return {
+    () => { const price=pick([20,40,60,80,100]), off=pick([10,20,25,50]); const disc=price*off/100; return {
       eyebrow:'💰 MONEY LAB',
       text:`A $${price} headset is ${off}% off in a flash sale. How many dollars do you SAVE (the discount amount)?`,
       strategy:'percent', wrongStrats:['equation','addsub','area'],
@@ -4004,6 +4053,10 @@ function bNextQ() {
   B.lastQ[B.turn] = B.q.q;
   $('b-story').textContent = B.q.s;
   $('b-q').textContent = B.q.q;
+  const signBtn = $('b-sign-btn');
+  // Alex's "speed" category is the only Battle category that can require a
+  // negative answer (integer add/sub/multiply); Katya's never does.
+  if (signBtn) { signBtn.style.display = (B.turn === 'alex' && topic === 'speed') ? '' : 'none'; signBtn.classList.remove('active'); }
   const inp = $('b-answer');
   inp.value = ''; inp.disabled = false; inp.focus();
   $('b-fb').textContent = ''; $('b-fb').className = 'feedback';
