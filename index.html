@@ -29,7 +29,7 @@
   --orb: 'Orbitron', sans-serif;
   --raj: 'Rajdhani', sans-serif;
 }
-html, body { background: var(--bg); color: var(--text); font-family: var(--raj); min-height: 100%; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--raj); min-height: 100%; overflow-x: hidden; }
 body {
   background:
     radial-gradient(900px 500px at 8% 0%, rgba(25,120,255,0.10), transparent 60%),
@@ -231,7 +231,7 @@ body {
 .badges-row { display: flex; gap: 18px; justify-content: space-around; align-items: flex-start; padding: 6px 4px 2px; }
 .badge { text-align: center; cursor: pointer; transition: transform .18s; width: 76px; }
 .badge:hover { transform: translateY(-4px) scale(1.05); }
-.badge .bname { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin-top: 6px; text-transform: uppercase; }
+.badge .bname { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin-top: 6px; text-transform: uppercase; overflow-wrap: break-word; }
 .evt-item { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; margin-bottom: 8px; }
 .evt-item .t { font-weight: 700; font-size: 14px; }
 .evt-item .d { font-size: 12px; color: var(--muted); font-weight: 600; }
@@ -823,25 +823,36 @@ body {
   .grid { grid-template-columns: 1fr; }
   .grid > main { grid-column: 1; }
   .hud { flex-wrap: wrap; gap: 10px; }
-  .hud-right { flex-wrap: wrap; gap: 10px; row-gap: 8px; justify-content: flex-start; }
+  .hud-right { flex-wrap: wrap; flex-shrink: 1; width: 100%; gap: 10px; row-gap: 8px; justify-content: flex-start; }
   .switch-profile { font-size: 0; padding: 8px 10px; }
   .switch-profile::before { content: '⇄'; font-size: 15px; }
   .tabs { width: 100%; justify-content: space-between; }
   .tab { flex: 1; min-width: 0; font-size: 0; padding: 14px 8px; }
   .tab svg { width: 28px; height: 28px; }
   .hero-name { font-size: 28px; }
-  .event { flex-direction: column; text-align: center; gap: 12px; padding: 18px; }
+  .event { flex-direction: column; text-align: center; gap: 12px; padding: 18px; width: 100%; min-width: 0; box-sizing: border-box; }
+  .event-mid, .event-right { min-width: 0; width: 100%; }
   .event-title { font-size: 26px; }
   .s-grid, .goal-pick, .g-rewards { grid-template-columns: 1fr 1fr; }
   .dash-grid { grid-template-columns: 1fr; }
   .b-score { font-size: 32px; }
   .b-face { width: 64px; height: 64px; }
   .res-btns, .res-btns .btn { flex-direction: column; width: 100%; }
+  /* Home screen dashboard rows had no mobile fallback at all — their fixed
+     multi-column grids refused to shrink below content min-width, which
+     forced real phone browsers to render the whole page zoomed out (a much
+     bigger bug than it looks: it made the profile-picker cards effectively
+     untappable). Stack them like everything else below this breakpoint. */
+  .status-row, .mid-row, .bottom-row { grid-template-columns: minmax(0, 1fr); }
+  .scard, .panel-card { min-width: 0; }
+  .vs-grid { grid-template-columns: minmax(0,1fr) 60px minmax(0,1fr); }
+  .vs-name, .vs-xp { overflow-wrap: break-word; }
 }
 
 /* Phones (≤480px) */
 @media (max-width: 480px) {
   .s-grid, .goal-pick, .g-rewards, .dash-stats { grid-template-columns: 1fr; }
+  .land-players { grid-template-columns: 1fr; }
   .ms-title { font-size: 18px; }
   .q-text { font-size: 19px; }
   .b-board { padding: 14px 10px; }
@@ -996,7 +1007,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 <div class="picker" id="picker">
   <div class="picker-inner">
     <div class="picker-eyebrow">SUMMER KIDS APP</div>
-    <h1 class="picker-title">Who\u2019s playing?</h1>
+    <h1 class="picker-title">Who&rsquo;s playing?</h1>
     <p class="picker-sub">Tap your card to jump into your own adventure.</p>
     <div class="picker-cards">
       <button class="pcard pcard-alex" onclick="pickProfile('alex')" style="--pd:0ms">
@@ -1050,7 +1061,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
   <nav class="tabs" id="tabs">
     <button class="tab active" data-screen="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10"/></svg>HOME</button>
-    <button class="tab" data-screen="Missions"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>DAILY MISSION</button>
+    <button class="tab" data-screen="Missions"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>GUIDED MISSION</button>
     <button class="tab" data-screen="Battle"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM4 20l4 0M4 20l0-4M20 20 10 6 7 4 4 7l2 3 10 10ZM20 20l-4 0M20 20l0-4"/></svg>BATTLE</button>
     <button class="tab" data-screen="Store"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>STORE</button>
     <button class="tab" data-screen="Grant Prize"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11M12 9C9 9 7 7.8 7 6a2.2 2.2 0 0 1 4-1.2L12 7l1-2.2A2.2 2.2 0 0 1 17 6c0 1.8-2 3-5 3Z"/></svg>GRANT PRIZE</button>
@@ -1172,12 +1183,12 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <circle cx="106" cy="20" r="14" fill="rgba(255,59,59,.35)"/>
     </svg>
     <div class="event-mid">
-      <div class="event-eyebrow">WEEKEND EVENT</div>
-      <div class="event-title">DOUBLE XP</div>
-      <div class="event-sub">2X XP ALL WEEKEND!</div>
+      <div class="event-eyebrow" id="event-eyebrow">WEEKEND EVENT</div>
+      <div class="event-title" id="event-title">DOUBLE XP</div>
+      <div class="event-sub" id="event-sub">2X XP ALL WEEKEND!</div>
     </div>
     <div class="event-right">
-      <div class="event-ends">ENDS IN</div>
+      <div class="event-ends" id="event-ends">ENDS IN</div>
       <div class="event-timer" id="event-timer">2d 14h 26m</div>
     </div>
   </div>
@@ -1194,7 +1205,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     </div>
     <div class="scard s-team">
       <svg class="ico" viewBox="0 0 50 44"><circle cx="18" cy="14" r="8" fill="#C77DFF"/><path d="M4 40 q1-14 14-14 q13 0 14 14Z" fill="#C77DFF"/><circle cx="36" cy="16" r="6.4" fill="#7D3DD9"/><path d="M28 40 q1-11 8-11 q9 0 10 11Z" fill="#7D3DD9"/></svg>
-      <div><div class="k" style="color:#C77DFF">TEAM BONUS</div><div class="enc" style="font-size:14px;color:var(--text)">Work together for</div><div class="big" style="color:#C77DFF">+15% XP!</div></div>
+      <div><div class="k" style="color:#C77DFF">TEAM BONUS</div><div class="enc" style="font-size:14px;color:var(--text)" id="team-bonus-sub">Both play today for</div><div class="big" style="color:#C77DFF">+15% XP!</div></div>
     </div>
   </div>
 
@@ -1275,18 +1286,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     </div>
     <div class="panel-card" style="border-color:var(--line)">
       <div class="pc-title" style="color:#EAF2FF;margin-bottom:12px">UPCOMING EVENTS</div>
-      <div class="evt-item">
-        <div class="evt-ico" style="background:rgba(155,48,255,.18);border:1.5px solid #9B30FF;color:#C77DFF">2X</div>
-        <div><div class="t">Double XP Weekend</div><div class="d">June 13 – June 14</div></div>
-      </div>
-      <div class="evt-item">
-        <div class="evt-ico" style="background:rgba(255,46,126,.15);border:1.5px solid #FF2E7E;color:#FF6FA5">?</div>
-        <div><div class="t">Mystery Challenge</div><div class="d">June 21</div></div>
-      </div>
-      <div class="evt-item">
-        <div class="evt-ico" style="background:rgba(255,201,60,.15);border:1.5px solid #FFC93C;color:#FFD166">🏆</div>
-        <div><div class="t">Monthly Champion Crowning</div><div class="d">June 30</div></div>
-      </div>
+      <div id="upcoming-events"></div>
     </div>
   </div>
 </main>
@@ -1525,12 +1525,19 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="dash-xplabel" id="dash-summary"></div>
     </div>
 
+    <div class="s-sec-title">&#127919; LEARNING INSIGHTS</div>
+    <div class="mgr-note">Weak and strong subjects, based on recent mission accuracy (needs at least 3 questions on a topic).</div>
+    <div class="dash-grid" id="p-insights"></div>
+
+    <div class="s-sec-title">&#128220; RECENT ACTIVITY</div>
+    <div class="s-pending" id="p-activity" style="border-color:rgba(155,48,255,.4)"></div>
+
     <div class="s-sec-title">&#127873; REWARDS MANAGER</div>
-    <div class="mgr-note">Edit prices, or disable a reward to hide it from the kids\u2019 store.</div>
+    <div class="mgr-note">Edit prices, or disable a reward to hide it from the kids&rsquo; store.</div>
     <div class="mgr-box" id="p-rewards-mgr"></div>
 
     <div class="s-sec-title">&#9874;&#65039; ADJUSTMENTS</div>
-    <div class="mgr-note">Manually adjust balances or log a mission on a child\u2019s behalf.</div>
+    <div class="mgr-note">Manually adjust balances or log a mission on a child&rsquo;s behalf.</div>
     <div class="adj-box" id="p-adjust"></div>
 
     <div class="s-sec-title">&#128197; WEEKLY SUMMARY</div>
@@ -1868,7 +1875,7 @@ function paint() {
   $('c-streak').textContent = p.streak;
   $('reward-xp').textContent = fmt(p.totalXP);
   $('reward-bar').style.width = Math.min(100, p.totalXP/1500*100) + '%';
-  const dc = (state.daily && state.daily.date === todayStr()) ? state.daily.count : 0;
+  const dc = dailyCountFor(state.activePlayer);
   $('c-goal').textContent = dc;
   $('c-goal-bar').style.width = Math.min(100, dc/3*100) + '%';
   const isA = state.activePlayer === 'alex';
@@ -1879,6 +1886,8 @@ function paint() {
   const tag = $('playing-tag');
   tag.textContent = isA ? '⚡ ALEX · ' + GRADE.alex : '🔍 KATYA · ' + GRADE.katya;
   tag.className = 'playing-tag ' + (isA ? 'pt-alex' : 'pt-katya');
+  const tb = $('team-bonus-sub');
+  if (tb) tb.textContent = (dailyCountFor('alex') >= 1 && dailyCountFor('katya') >= 1) ? '✓ Bonus active today!' : 'Both play today for';
   paintLanding(p, isA);
   paintBell();
   Store.set('smbt-state-v2', state);
@@ -1905,7 +1914,7 @@ function paintLanding(p, isA) {
     // compact stat strip reflects the ACTIVE player
     $('land-lvl').textContent = p.lvl;
     $('land-streak').textContent = p.streak + '🔥';
-    const dc = (state.daily && state.daily.date === todayStr()) ? state.daily.count : 0;
+    const dc = dailyCountFor(state.activePlayer);
     $('land-goal').textContent = dc + '/3';
     $('land-coins').textContent = fmt(p.coins);
     // theme the featured tile to the active player
@@ -2048,57 +2057,309 @@ katya: {
   ]
 }};
 
-const DAILY_BANK = {
-  katya: [
-    { s:'Daily Grade 5 prep: multiplication facts.', q:'6 x 7 = ?', a:42, hint:'Think 6 groups of 7.', mode:'numeric' },
-    { s:'Daily Grade 5 prep: division facts.', q:'56 / 8 = ?', a:7, hint:'Ask: 8 times what makes 56?', mode:'numeric' },
-    { s:'Long division basics.', q:'84 / 4 = ?', a:21, hint:'Split 80, then split 4.', mode:'numeric' },
-    { s:'Multi-digit multiplication.', q:'23 x 14 = ?', a:322, hint:'23 x 10 plus 23 x 4.', mode:'numeric' },
-    { s:'Fractions basics.', q:'What is 1/4 of 20?', a:5, hint:'Divide 20 into 4 equal parts.', mode:'numeric' },
-    { s:'Decimals introduction.', q:'Which is equal to 1/2?', a:'0.5', choices:['0.25','0.5','0.75'], hint:'Half is two equal parts.' },
-    { s:'Money math.', q:'Katya has $12.50 and spends $3.25. How much is left?', a:9.25, hint:'Subtract dollars and cents carefully.', mode:'decimal' },
-    { s:'Patterns.', q:'Pattern: 4, 8, 12, 16, __', a:20, hint:'The pattern adds 4 each time.', mode:'numeric' },
-    { s:'Geometry basics.', q:'A rectangle has 4 sides. How many sides do 3 rectangles have?', a:12, hint:'3 groups of 4 sides.', mode:'numeric' },
-    { s:'Measurement.', q:'How many centimeters are in 1 meter?', a:100, hint:'1 meter equals 100 centimeters.', mode:'numeric' },
-    { s:'Multiplication facts.', q:'9 x 8 = ?', a:72, hint:'Try 10 x 8, then subtract 8.', mode:'numeric' },
-    { s:'Division facts.', q:'63 / 9 = ?', a:7, hint:'9 times what makes 63?', mode:'numeric' },
-    { s:'Long division basics.', q:'126 / 3 = ?', a:42, hint:'Split 120 and 6 into 3 groups.', mode:'numeric' },
-    { s:'Multi-digit multiplication.', q:'34 x 12 = ?', a:408, hint:'34 x 10 plus 34 x 2.', mode:'numeric' },
-    { s:'Fractions basics.', q:'Which fraction means 3 out of 4 equal parts?', a:'3/4', choices:['1/4','3/4','4/3'], hint:'The top number counts the parts you have.' },
-    { s:'Decimals introduction.', q:'Write four and six tenths as a decimal.', a:4.6, hint:'Tenths go one place after the decimal.', mode:'decimal' },
-    { s:'Word problem.', q:'A toy costs $7. Katya buys 3. What is the total cost?', a:21, hint:'Cost each times number bought.', mode:'numeric' },
-    { s:'Geometry basics.', q:'A square has side length 5 cm. What is its perimeter?', a:20, hint:'Add all 4 equal sides.', mode:'numeric' },
-    { s:'Measurement.', q:'2 liters = how many milliliters?', a:2000, hint:'1 liter is 1000 milliliters.', mode:'numeric' },
-    { s:'Money math.', q:'Katya has $20. She saves $6 and earns $4 more. How much money now?', a:30, hint:'Start with 20, add 6, add 4.', mode:'numeric' }
-  ],
-  alex: [
-    { s:'Fractions.', q:'3/4 + 1/8 = ?', a:'7/8', choices:['5/8','7/8','4/12'], hint:'Change 3/4 to 6/8 first.' },
-    { s:'Decimals.', q:'7.2 / 0.6 = ?', a:12, hint:'Think 72 divided by 6.', mode:'decimal' },
-    { s:'Percentages.', q:'What is 15% of 80?', a:12, hint:'10% is 8 and 5% is 4.', mode:'numeric' },
-    { s:'Ratios and rates.', q:'A recipe uses 2 cups flour for 5 pancakes. How many cups for 20 pancakes?', a:8, hint:'20 is 4 times 5, so multiply cups by 4.', mode:'numeric' },
-    { s:'Integers.', q:'-6 + 14 = ?', a:8, hint:'Move 14 steps right from -6.', mode:'numeric' },
-    { s:'Equations.', q:'If x + 7 = 19, what is x?', a:12, hint:'Undo plus 7 by subtracting 7.', mode:'numeric' },
-    { s:'BEDMAS.', q:'3 + 4 x 5 = ?', a:23, hint:'Multiply before adding.', mode:'numeric' },
-    { s:'Geometry.', q:'A triangle has angles 50 and 60 degrees. What is the third angle?', a:70, hint:'Triangle angles total 180 degrees.', mode:'numeric' },
-    { s:'Area.', q:'Area of a rectangle 9 cm by 6 cm?', a:54, hint:'Area equals length times width.', mode:'numeric' },
-    { s:'Volume.', q:'Volume of a box 4 x 3 x 5?', a:60, hint:'Multiply length, width, and height.', mode:'numeric' },
-    { s:'Probability.', q:'A bag has 3 red and 2 blue marbles. Probability of red?', a:'3/5', choices:['2/5','3/5','3/2'], hint:'Red marbles over total marbles.' },
-    { s:'Money math.', q:'A $48 hoodie is 25% off. What is the sale price?', a:36, hint:'25% of 48 is 12, then subtract.', mode:'decimal' },
-    { s:'Algebra basics.', q:'Solve: 2x = 18.', a:9, hint:'Divide both sides by 2.', mode:'numeric' },
-    { s:'Integers.', q:'(-4) x (-7) = ?', a:28, hint:'Negative times negative is positive.', mode:'numeric' },
-    { s:'Decimals.', q:'0.45 + 1.8 = ?', a:2.25, hint:'Line up the decimal points.', mode:'decimal' },
-    { s:'Ratios.', q:'Simplify the ratio 12:18.', a:'2:3', choices:['2:3','3:2','6:9'], hint:'Divide both numbers by 6.' },
-    { s:'BEDMAS.', q:'5^2 + 3^2 = ?', a:34, hint:'5 squared is 25 and 3 squared is 9.', mode:'numeric' },
-    { s:'Rates.', q:'A car travels 180 km in 3 hours. Speed in km/h?', a:60, hint:'Speed equals distance divided by time.', mode:'numeric' },
-    { s:'Financial math.', q:'A game card costs $25 plus 13% tax. Total cost?', a:28.25, hint:'13% of 25 is 3.25.', mode:'decimal' },
-    { s:'Speed and accuracy.', q:'Speed check: 12 x 15 = ?', a:180, hint:'12 x 10 plus 12 x 5.', mode:'numeric' }
-  ]
+/* ============ ADAPTIVE DAILY MISSION ENGINE ============
+   Fixes the "same 20 questions every day" bug: every generator below
+   produces a fresh, randomized question every call. Topics rotate,
+   difficulty scales with per-topic mastery, and recently-seen question
+   text is remembered so the SAME question rarely repeats back to back. */
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a || 1; }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=R(0,i); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','ratios','algebra','geometry','probability','money','logic','wordproblems'];
+const KATYA_TOPICS = ['multiplication','division','longdivision','fractions','decimals','money','time','measurement','patterns','wordproblems','reading','grammar','french'];
+const TOPIC_LABEL = {
+  bedmas:'BEDMAS', fractions:'Fractions', decimals:'Decimals', percent:'Percentages', integers:'Integers',
+  ratios:'Ratios', algebra:'Algebra', geometry:'Geometry', probability:'Probability', money:'Money & Finance',
+  logic:'Logic', wordproblems:'Word Problems', multiplication:'Multiplication', division:'Division',
+  longdivision:'Long Division', time:'Time', measurement:'Measurement', patterns:'Patterns', reading:'Reading',
+  grammar:'Grammar', french:'French'
 };
+
+const TOPIC_BANK = {
+alex: {
+  bedmas: [
+    (d)=>{ const a=R(2,10+d*4), b=R(2,9), c=R(2,9); return { s:pick(['⚡ Order-of-operations checkpoint!','🧠 BEDMAS gate ahead — sequence matters.']), q:`${a} + ${b} × ${c} = ?`, a:a+b*c, hint:'Multiply before you add — BEDMAS puts × and ÷ before + and −.' }; },
+    (d)=>{ const a=R(2,9), b=R(2,9), c=R(2,5+d*2); return { s:'🧠 Brackets guard this gate.', q:`(${a} + ${b}) × ${c} = ?`, a:(a+b)*c, hint:'Solve everything inside the brackets first, then multiply.' }; },
+    (d)=>{ const a=R(2,9+d*2), b=R(2,9), c=R(2,9), e=R(2,9); return { s:'⚡ Double strike — two operations before you add!', q:`${a} × ${b} + ${c} × ${e} = ?`, a:a*b+c*e, hint:'Do both multiplications first, then add the two results together.' }; },
+    (d)=>{ const n=R(4,8+d*3); return { s:'🧠 Power surge — square the energy core.', q:`${n}² = ?`, a:n*n, hint:'A squared number is multiplied by itself: n × n.' }; },
+    (d)=>{ const a=R(15,40+d*10), b=R(2,9), c=R(2,9); return { s:'⚡ Subtract the combo damage!', q:`${a} − ${b} × ${c} = ?`, a:a-b*c, hint:'Multiply first, then subtract that result from the front number.' }; }
+  ],
+  fractions: [
+    (d)=>{ const den=pick([3,4,5,6,8,10,12]), num=R(1,den-1), whole=den*R(2,4+d); return { s:'🕵 Decode the fraction of loot.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
+    (d)=>{ const den=pick([4,6,8,10,12]); const n1=R(1,den-2), n2=RNZ(1,den-1-n1); const sumN=n1+n2; const g=gcd(sumN,den); const rn=sumN/g, rd=den/g; const wrong1=`${sumN}/${den*2}`, wrong2=`${n1}/${den}`; return { s:'🕵 Same-denominator fraction clue.', q:`${n1}/${den} + ${n2}/${den} = ?`, a:`${rn}/${rd}`, choices: shuffle([`${rn}/${rd}`, wrong1, wrong2]), hint:'Same denominator: just add the top numbers (numerators) and keep the denominator.' }; },
+    (d)=>{ const pairs=[[1,2,3,4],[2,3,3,4],[1,3,2,5],[3,5,2,3],[1,4,1,3],[5,6,3,4]]; const [n1,d1,n2,d2]=pick(pairs); const v1=n1/d1, v2=n2/d2; const bigger = v1>v2 ? `${n1}/${d1}` : `${n2}/${d2}`; return { s:'🕵 Which clue fraction is bigger?', q:`Which is greater: ${n1}/${d1} or ${n2}/${d2}?`, a:bigger, choices: shuffle([`${n1}/${d1}`,`${n2}/${d2}`,'They are equal']), hint:'Turn both into decimals (divide top by bottom) to compare easily.' }; }
+  ],
+  decimals: [
+    (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'💰 Decimal supply count.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
+    (d)=>{ const a=R(20,99)/10, b=R(10, Math.max(10,a*10-10))/10; return { s:'💰 Decimal supply spent.', q:`${a} − ${b} = ?`, a: Math.round((a-b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then subtract like whole numbers.' }; },
+    (d)=>{ const whole=R(10,20+d*10)/10, mult=RNZ(2,9); return { s:'💰 Scale the decimal blueprint.', q:`${whole} × ${mult} = ?`, a: Math.round(whole*mult*100)/100, mode:'decimal', hint:'Multiply as if there were no decimal point, then count the decimal places back in.' }; },
+    (d)=>{ const div=RNZ(2,9), quot=R(2,12+d*3); const dividend=Math.round(div*quot*10)/10; return { s:'💰 Split the decimal loot.', q:`${dividend} ÷ ${div} = ?`, a: Math.round((dividend/div)*100)/100, mode:'decimal', hint:'Think of it as a whole-number division, then place the decimal point back.' }; }
+  ],
+  percent: [
+    (d)=>{ const p=pick([5,10,15,20,25,30,40,50,60,75]), n=R(2,20+d*10)*10; return { s:'💰 Percent of the prize pool.', q:`${p}% of $${n} = ?`, a: p*n/100, mode:'decimal', hint:`10% of ${n} is ${n/10} — build up from there.` }; },
+    (d)=>{ const n=R(3,9+d)*20, p=pick([10,20,25,50]); return { s:'💰 Flash sale markdown.', q:`A $${n} item is ${p}% off. What is the SALE price?`, a: n-p*n/100, mode:'decimal', hint:`Find ${p}% of ${n} first, then subtract it from ${n}.` }; },
+    (d)=>{ const part=R(5,20+d*5), whole=part+R(5,20+d*5); const pct=Math.round(part/whole*1000)/10; return { s:'💰 What share of the loot?', q:`${part} out of ${whole} — what PERCENT is that? (round to 1 decimal)`, a: pct, mode:'decimal', hint:'Percent = (part ÷ whole) × 100.' }; },
+    (d)=>{ const price=R(15,60+d*10), tax=pick([5,8,13,15]); return { s:'💰 Add the tax to the total.', q:`A $${price} item plus ${tax}% tax. TOTAL cost?`, a: Math.round(price*(1+tax/100)*100)/100, mode:'decimal', hint:`Find ${tax}% of ${price}, then add it to ${price}.` }; }
+  ],
+  integers: [
+    (d)=>{ const a=R(-20-d*5,20+d*5), b=RNZ(-20-d*5,20+d*5); return { s:'⚡ Integer strike!', q:`${sgn(a)} + ${sgn(b)} = ?`, a:a+b, hint:'Same signs add and keep the sign; different signs subtract and keep the sign of the bigger one.' }; },
+    (d)=>{ const a=R(-25-d*5,25+d*5), b=RNZ(-20-d*5,20+d*5); return { s:'⚡ Subtract before the gate locks!', q:`${sgn(a)} − ${sgn(b)} = ?`, a:a-b, hint:'Subtracting a negative is the same as adding a positive.' }; },
+    (d)=>{ const a=RNZ(-9-d*2,9+d*2), b=RNZ(-9-d*2,9+d*2); return { s:'⚡ Double-strike multiplication!', q:`${sgn(a)} × ${sgn(b)} = ?`, a:a*b, hint:'Same signs → positive answer. Different signs → negative answer.' }; },
+    (d)=>{ const b=RNZ(-9-d,-2), mQ=R(2,9); const a=b*mQ; return { s:'⚡ Divide the integer squad.', q:`${sgn(a)} ÷ ${sgn(b)} = ?`, a:a/b, hint:'Divide the numbers like normal, then apply the sign rule.' }; }
+  ],
+  ratios: [
+    (d)=>{ const cups=R(2,6), pancakes=R(2,9), k=R(2,4+d); return { s:'💰 Scale the recipe.', q:`A recipe uses ${cups} cups flour for ${pancakes} pancakes. How many cups for ${pancakes*k} pancakes?`, a: cups*k, hint:`${pancakes*k} is ${k} times ${pancakes}, so multiply the cups by ${k} too.` }; },
+    (d)=>{ const pairs=[[2,3],[3,4],[1,2],[3,5],[2,5],[4,5],[1,3],[3,7]]; const [x,y]=pick(pairs); const g=R(2,5+d); const a=x*g, b=y*g; return { s:'🕵 Simplify the ratio clue.', q:`Simplify the ratio ${a}:${b}.`, a:`${x}:${y}`, choices: shuffle([`${x}:${y}`, `${y}:${x}`, `${a}:${b}`]), hint:`Divide both numbers by their greatest common factor (${g}).` }; },
+    (d)=>{ const rate=R(20,60+d*20), hrs=R(2,6); return { s:'🏎 Rate check!', q:`A car travels ${rate*hrs} km in ${hrs} hours. Speed in km/h?`, a:rate, hint:'Speed = distance ÷ time.' }; }
+  ],
+  algebra: [
+    (d)=>{ const x=R(2,9+d*2), m=R(2,9), c=R(1,9+d*3); return { s:"🧠 Crack the guardian's seal.", q:`Solve for x:   ${m}x + ${c} = ${m*x+c}`, a:x, hint:'Subtract the number from BOTH sides first, then divide by the number in front of x.' }; },
+    (d)=>{ const x=R(2,9+d*2), m=R(2,8), c=R(1,9+d*2); return { s:'🧠 Second seal — reverse it!', q:`Solve for x:   ${m}x − ${c} = ${m*x-c}`, a:x, hint:'Add the number to BOTH sides first, then divide by the number in front of x.' }; },
+    (d)=>{ const x=R(3,9+d*2), m=R(2,6); return { s:'🧠 Balance the equation.', q:`Solve for x:   ${m}x = ${m*x}`, a:x, hint:'Divide both sides by the number in front of x.' }; },
+    (d)=>{ const x=R(2,9), m=R(2,6), c=R(1,10); return { s:'🧠 Two-term equation gate.', q:`Solve for x:   ${m}(x + ${c}) = ${m*(x+c)}`, a:x, hint:'Divide both sides by the outside number first, then subtract.' }; }
+  ],
+  geometry: [
+    (d)=>{ const l=R(6,20+d*5), w=R(4,15+d*3); return { s:'💀 Arena floor of doom.', q:`A rectangle is ${l} m by ${w} m. What is its AREA?`, a:l*w, hint:'Area of a rectangle = length × width.' }; },
+    (d)=>{ const l=R(6,18), w=R(4,14); return { s:'🛡 Fortify the perimeter wall.', q:`A rectangle is ${l} m by ${w} m. What is its PERIMETER?`, a:2*(l+w), hint:'Perimeter = 2 × (length + width) — add ALL the sides.' }; },
+    (d)=>{ const b=R(4,16+d*4), h=R(3,15+d*3); return { s:'💀 Triangular shield panel.', q:`A triangle has base ${b} cm and height ${h} cm. What is its AREA?`, a:b*h/2, hint:'Triangle area = base × height ÷ 2.' }; },
+    (d)=>{ const l=R(3,8+d), w=R(2,6+d), h=R(2,5+d); return { s:'📦 Supply crate volume.', q:`A box is ${l} m long, ${w} m wide, ${h} m tall. What is its VOLUME?`, a:l*w*h, hint:'Volume of a box = length × width × height.' }; },
+    (d)=>{ const a=R(30,80), b=R(30,120-a-10); return { s:'⚔️ Triangle angle puzzle.', q:`A triangle has angles ${a}° and ${b}°. What is the third angle?`, a:180-a-b, hint:'The three angles of a triangle always add up to 180°.' }; },
+    (d)=>{ const r=pick([2,3,4,5,6,7]); return { s:'🔵 Circular energy shield.', q:`A circle has radius ${r} cm. What is its CIRCUMFERENCE? Use π ≈ 3.14, round to 1 decimal.`, a: Math.round(2*3.14*r*10)/10, mode:'decimal', hint:'Circumference = 2 × π × radius.' }; }
+  ],
+  probability: [
+    (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total); return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:`${red/g}/${total/g}`, choices: shuffle([`${red/g}/${total/g}`, `${blue/g}/${total/g}`, `${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
+    (d)=>{ return { s:'🎲 Dice roll probability.', q:'Rolling a standard 6-sided die, what is the probability of rolling an EVEN number?', a:'1/2', choices: shuffle(['1/2','1/3','2/3']), hint:'List the even faces on a die (2, 4, 6), count them, then write that count over the total number of faces — and simplify.' }; },
+    (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total); return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:`${green/g}/${total/g}`, choices: shuffle([`${green/g}/${total/g}`, `${yellow/g}/${total/g}`, `${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
+  ],
+  money: [
+    (d)=>{ const r=R(3,9+d*2), w=R(6,15+d*3); return { s:'💰 Grinding coins in the arena.', q:`You earn ${r} coins per win. Coins after ${w} wins?`, a:r*w, hint:'Multiply coins-per-win by the number of wins.' }; },
+    (d)=>{ const week=pick([5,8,10,12,15]), wks=R(3,8+d*2); return { s:'🏦 Saving toward a goal.', q:`You save $${week} a week. How many weeks to reach $${week*wks}?`, a:wks, hint:'Divide the goal amount by how much you save each week.' }; },
+    (d)=>{ const price=pick([40,60,80,100+d*20]), pct=pick([10,20,25]); const down=Math.round(price*pct/100); return { s:'💵 Layaway plan.', q:`A $${price} item needs a ${pct}% deposit. How much is the deposit?`, a: down, mode:'decimal', hint:'Deposit = percent × total price.' }; },
+    (d)=>{ const total=R(20,60+d*20); return { s:'🧾 Split the winnings evenly.', q:`Two teammates split $${total} in prize coins equally. How much does EACH get?`, a: Math.round((total/2)*100)/100, mode:'decimal', hint:'Divide the total by 2 for an equal split.' }; }
+  ],
+  logic: [
+    (d)=>{ const st=RNZ(-9-d*2,9+d*2), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st, hint:'Find the constant jump between terms, then add it repeatedly (or multiply by how many jumps).' }; },
+    (d)=>{ const a=R(4,12+d*3), b=R(3,9+d*2), c=R(5,40+d*10); return { s:'🕵 Intel intercepted! Decode the cipher.', q:`The cipher key is (${a} × ${b}) + ${c}. What number unlocks it?`, a:a*b+c, hint:'Brackets first: multiply, then add.' }; },
+    (d)=>{ const start=R(2,9), ratio=pick([2,3]); const terms=[start, start*ratio, start*ratio*ratio, start*ratio*ratio*ratio]; return { s:'🧠 Doubling (or tripling) trap!', q:`Pattern: ${terms[0]}, ${terms[1]}, ${terms[2]}, ${terms[3]}, ... What is the next term?`, a: terms[3]*ratio, hint:`Each term is multiplied by ${ratio} to get the next one.` }; }
+  ],
+  wordproblems: [
+    (d)=>{ const hp=R(7,15+d*5)*10, dmg=R(7,14+d*3); return { s:`💀 BOSS FIGHT! The Number Reaper has ${hp} HP. Each hit deals ${dmg} damage.`, q:'How many hits to defeat it? (round up)', a: Math.ceil(hp/dmg), hint:"Divide HP by damage — if there's a remainder, you need one MORE hit." }; },
+    (d)=>{ const price=R(15,40+d*10), qty=R(2,5), coupon=pick([5,10,15]); return { s:'🛒 Multi-step shopping run.', q:`${qty} items at $${price} each, then a $${coupon} coupon is applied. What is the FINAL total?`, a: price*qty-coupon, mode:'decimal', hint:'Multiply price by quantity FIRST, then subtract the coupon.' }; },
+    (d)=>{ const speed=R(40,80+d*10), t1=R(2,4), t2=R(1,3); return { s:'🏎 Two-leg journey.', q:`A car drives at ${speed} km/h for ${t1} hours, then the same speed for ${t2} more hours. Total distance?`, a: speed*(t1+t2), hint:'Add the hours together, then multiply by the speed.' }; },
+    (d)=>{ const d1=pick([4,5,8,10]), m=d1*R(3,12+d*3); return { s:'🛡 Divide the supplies evenly.', q:`${m} energy cells shared by ${d1} squads. Each squad gets?`, a: m/d1, hint:'Division = sharing into equal groups.' }; }
+  ]
+},
+katya: {
+  multiplication: [
+    (d)=>{ const a=R(3,12), b=R(3,12); return { s:'⚡ Times-table lightning!', q:`${a} × ${b} = ?`, a:a*b, hint:`Break it up: ${a}×${b} is the same as ${a}×${Math.floor(b/2)} doubled${b%2? (' plus one more '+a) : ''}.` }; },
+    (d)=>{ const a=R(11,29+d*10), b=R(3,9); return { s:'⚡ Two-digit times-table!', q:`${a} × ${b} = ?`, a:a*b, hint:`Try ${Math.floor(a/10)*10} × ${b} plus ${a%10} × ${b}.` }; },
+    (d)=>{ const a=R(12,49+d*10), b=R(11,19); return { s:'⚡ Multi-digit multiplication.', q:`${a} × ${b} = ?`, a:a*b, hint:`${a} × ${Math.floor(b/10)*10} plus ${a} × ${b%10}.` }; }
+  ],
+  division: [
+    (d)=>{ const b=R(3,9), q=R(3,12); return { s:'⚡ Division facts.', q:`${b*q} ÷ ${b} = ?`, a:q, hint:`Ask: ${b} times what makes ${b*q}?` }; },
+    (d)=>{ const b=R(3,9), q=R(6,12+d*3); return { s:'🔍 Share the evidence photos fairly.', q:`${b*q} photos shared equally among ${b} detectives. Each gets?`, a:q, hint:'Division = sharing into equal groups. Think times tables backward.' }; }
+  ],
+  longdivision: [
+    (d)=>{ const b=R(2,9), q=R(11,39+d*15); return { s:'🔍 Long division decode.', q:`${b*q} ÷ ${b} = ?`, a:q, hint:`Split ${b*q} into easy chunks that divide evenly by ${b}, then add the pieces.` }; },
+    (d)=>{ const b=R(3,9), q=R(20,79+d*20); return { s:'🔍 Big number long division.', q:`${b*q} ÷ ${b} = ?`, a:q, hint:`Try ${Math.floor(b*q/100)*100} ÷ ${b} first, then handle what's left.` }; }
+  ],
+  fractions: [
+    (d)=>{ const den=pick([2,3,4,5,10]), num=R(1,den-1), whole=den*R(2,6+d); return { s:'🔍 Fraction of the clue stash.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
+    (d)=>{ const den=pick([3,4,5,6,8]); const nums=Array.from({length:den-1},(_,i)=>i+1); const correct=pick(nums); const wrong1=pick(nums.filter(n=>n!==correct)) || correct; return { s:'🔍 Fraction clue match.', q:`Which fraction means ${correct} out of ${den} equal parts?`, a:`${correct}/${den}`, choices: shuffle([`${correct}/${den}`, `${wrong1}/${den}`, `${den}/${correct}`]), hint:'The top number (numerator) counts the parts you have; the bottom counts the total equal parts.' }; },
+    (d)=>{ const pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5]]; const [n,dd]=pick(pairs); const correct = String(Math.round((n/dd)*100)/100); const w1 = String(Math.round((n/dd+0.1)*100)/100), w2 = String(Math.round((n/dd-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:`Which decimal equals ${n}/${dd}?`, a: correct, choices: shuffle([correct, w1, w2]), hint:'Divide the top number by the bottom number to get the decimal.' }; }
+  ],
+  decimals: [
+    (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'🔍 Decimal clue combine.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
+    (d)=>{ const a=R(20,99)/10, b=R(10, Math.max(10,a*10-10))/10; return { s:'💰 Decimal spending.', q:`${a} − ${b} = ?`, a: Math.round((a-b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then subtract carefully.' }; },
+    (d)=>{ const whole=R(1,9), tenth=R(1,9); return { s:'🔍 Write the decimal clue.', q:`Write ${whole} and ${tenth} tenths as a decimal.`, a: Math.round((whole+tenth/10)*10)/10, mode:'decimal', hint:'Tenths go one place after the decimal point.' }; }
+  ],
+  money: [
+    (d)=>{ const c=R(3,7), p=R(4,9+d*2), f=pick(FRIENDS); return { s:`💰 Shopping trip with ${f}!`, q:`${c} items at $${p} each. Total cost?`, a: c*p, hint:'Multiply the number of items by the price of each.' }; },
+    (d)=>{ const p=R(4,17); return { s:'💰 Change from a $20 bill.', q:`A treat costs $${p}. How much change from $20?`, a: 20-p, mode:'decimal', hint:'Count UP from the price to $20, or subtract.' }; },
+    (d)=>{ const start=R(10,30), spend=R(2,Math.max(2,start-5)), earn=R(2,10+d*3); return { s:'🔍 Detective savings plan.', q:`You have $${start}. You spend $${spend} and earn $${earn} more. How much do you have now?`, a: start-spend+earn, hint:'Subtract what you spend, then add what you earn.' }; }
+  ],
+  time: [
+    (d)=>{ const h=R(1,4+d), m=R(1,59); return { s:'🔍 Time clue conversion.', q:`How many minutes are in ${h} hour${h>1?'s':''} and ${m} minutes?`, a: h*60+m, hint:'1 hour = 60 minutes. Multiply the hours by 60, then add the extra minutes.' }; },
+    (d)=>{ const startMin=R(0,600), durMin=pick([15,20,25,30,40,45,50,60,75,90]); const endMin=startMin+durMin; const fmtT = m => { const hh=Math.floor(m/60)%24, mm=m%60; return `${hh}:${String(mm).padStart(2,'0')}`; }; return { s:'🔍 Elapsed-time clue.', q:`A movie starts at ${fmtT(startMin)} and ends at ${fmtT(endMin)}. How many MINUTES long is it?`, a: durMin, hint:'Count the minutes from the start time to the end time.' }; },
+    (d)=>{ const days=R(2,4+d); return { s:'🔍 Days-to-hours conversion.', q:`How many hours are in ${days} days?`, a: days*24, hint:'1 day = 24 hours. Multiply the number of days by 24.' }; }
+  ],
+  measurement: [
+    (d)=>{ const m=R(1,9+d*2); return { s:'🔍 Metric clue conversion.', q:`${m} meters = how many centimeters?`, a: m*100, hint:'1 meter = 100 centimeters.' }; },
+    (d)=>{ const l=R(1,9+d*2); return { s:'🔍 Liters to milliliters.', q:`${l} liters = how many milliliters?`, a: l*1000, hint:'1 liter = 1000 milliliters.' }; },
+    (d)=>{ const kg=R(1,9+d*2); return { s:'🔍 Kilograms to grams.', q:`${kg} kilograms = how many grams?`, a: kg*1000, hint:'1 kilogram = 1000 grams.' }; },
+    (d)=>{ const side=R(3,12+d*3); return { s:'🔍 Perimeter of the secret garden.', q:`A square garden has side length ${side} m. What is its PERIMETER?`, a: side*4, hint:'A square has 4 equal sides — add them all, or multiply the side by 4.' }; }
+  ],
+  patterns: [
+    (d)=>{ const st=R(3,9+d*2), f=R(2,12), k=R(5,8); return { s:'🧠 The clue numbers follow a secret pattern...', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is number ${k}?`, a: f+(k-1)*st, hint:'Find the jump between numbers, then keep adding it to reach the term you need.' }; },
+    (d)=>{ const a=R(15,60+d*20), x=R(8,40+d*10); return { s:"🧠 A number is hiding in the detective's notebook.", q:`${a} + ? = ${a+x}.   What is the missing number?`, a:x, hint:'Flip it around: take the big number and subtract the one you know.' }; },
+    (d)=>{ let n=R(31,489); if (n%10===5) n++; return { s:'🛡 Round the clue number.', q:`Round ${n} to the nearest 10.`, a: Math.round(n/10)*10, hint:'Look at the ones digit: 5 or more rounds UP, 4 or less stays DOWN.' }; }
+  ],
+  wordproblems: [
+    (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,40+d*5); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
+    (d)=>{ const price=R(4,9), qty=R(2,5+d); return { s:'🛍 Word problem.', q:`A toy costs $${price}. You buy ${qty}. What is the TOTAL cost?`, a: price*qty, hint:'Multiply the cost of one toy by how many you buy.' }; },
+    (d)=>{ const f=pick(FRIENDS), t=R(3,7+d), c=R(4,9); return { s:`🔍 Flashlights on! You and ${f} search the rooms.`, q:`${t} rooms with ${c} clues in each. Total clues?`, a: t*c, hint:'Multiply the number of rooms by the clues in each room.' }; }
+  ],
+  reading: [
+    ()=>({ s:'Maya planted tomato seeds in April. By July, the plants were taller than her little brother. She picked the first ripe tomato in August.', q:'In what month did Maya PLANT the seeds?', a:'April', choices: shuffle(['April','July','August']), hint:'Look back at the passage — the answer is stated directly in the text.' }),
+    ()=>({ s:"The old lighthouse had guided ships safely to shore for over a hundred years. One stormy night, its light suddenly went dark. The town's sailors quickly organized a rescue team.", q:'What happened to the lighthouse on the stormy night?', a:'Its light went dark', choices: shuffle(['Its light went dark','It fell into the sea','A ship crashed into it']), hint:'Re-read the second sentence carefully.' }),
+    ()=>({ s:'Diego forgot his umbrella at school on Monday. It rained all week, so he had to borrow one from his teacher every single day.', q:'Why did Diego need to borrow an umbrella?', a:'He forgot his own umbrella at school', choices: shuffle(["He forgot his own umbrella at school","He didn't like his umbrella","He gave his umbrella away"]), hint:'The first sentence explains why.' }),
+    ()=>({ s:"The science fair judges were impressed by Priya's volcano model. It bubbled over with fizzy orange lava made from baking soda and vinegar.", q:'What ingredients made the fizzy lava?', a:'Baking soda and vinegar', choices: shuffle(['Baking soda and vinegar','Ketchup and salt','Orange juice and sugar']), hint:'The last part of the passage names the ingredients.' }),
+    ()=>({ s:'Before the hikers reached the summit, thick fog rolled in and hid the trail. They used a compass and a map to find their way safely back down.', q:'How did the hikers find their way down?', a:'With a compass and a map', choices: shuffle(['With a compass and a map','By following footprints','By calling for help']), hint:'The answer is stated directly in the last sentence.' }),
+    ()=>({ s:"Katya's class is raising monarch butterflies. First the caterpillars ate milkweed leaves, then they formed chrysalises, and finally they emerged as butterflies.", q:"What is the correct ORDER of the butterfly's life stages in the story?", a:'Caterpillar, chrysalis, butterfly', choices: shuffle(['Caterpillar, chrysalis, butterfly','Butterfly, caterpillar, chrysalis','Chrysalis, butterfly, caterpillar']), hint:'Look for the order words: first, then, finally.' }),
+    ()=>({ s:'The librarian arranged a mystery-book display for the winter reading challenge. Any student who read five mystery books earned a bookmark shaped like a magnifying glass.', q:'How many books did a student need to read to earn the bookmark?', a:'Five', choices: shuffle(['Three','Five','Ten']), hint:'The number is stated right before "mystery books."' }),
+    ()=>({ s:'A sudden power outage stopped the roller coaster at the very top of the hill. Riders stayed calm because the operator explained the ride would restart safely in a few minutes.', q:'Why did the riders stay calm?', a:'The operator explained the ride would restart safely', choices: shuffle(['The operator explained the ride would restart safely','They were used to power outages','The ride was almost over anyway']), hint:'The second sentence gives the reason with the word "because."' }),
+    ()=>({ s:"Grandpa's garden grows the biggest pumpkins in the county every autumn. His secret, he says, is talking to them every morning.", q:"WHEN does Grandpa's garden grow the biggest pumpkins?", a:'Autumn (fall)', choices: shuffle(['Autumn (fall)','Spring','Winter']), hint:'The season is named in the first sentence.' }),
+    ()=>({ s:'The robotics team spent three weekends building their robot before the competition. On the big day, their robot completed the obstacle course fastest of all.', q:'What did the robotics team do BEFORE the competition?', a:'Spent three weekends building their robot', choices: shuffle(['Spent three weekends building their robot','Watched other teams compete','Bought a robot online']), hint:'Look for what happened before the word "before."' }),
+    ()=>({ s:'Because the bridge was under repair, the school bus took a longer route through the forest. Students spotted deer and a red fox along the way.', q:'Why did the bus take a longer route?', a:'The bridge was under repair', choices: shuffle(['The bridge was under repair','The driver got lost','There was a parade downtown']), hint:'The very first word of the passage, "Because," gives the reason.' }),
+    ()=>({ s:'Nina practiced her violin for twenty minutes every day after school. By the spring concert, she could play the hardest song in the book.', q:'What helped Nina play the hardest song by spring?', a:'Daily practice', choices: shuffle(['Daily practice','A new violin','A famous teacher']), hint:'Think about what she did every single day.' })
+  ],
+  grammar: [
+    ()=>({ s:'Grammar check.', q:"Which word is a NOUN in this sentence: 'The brave dog rescued the kitten.'", a:'dog', choices: shuffle(['dog','brave','rescued']), hint:'A noun names a person, place, animal, or thing.' }),
+    ()=>({ s:'Grammar check.', q:"Which word is a VERB in this sentence: 'Katya quickly finished her homework.'", a:'finished', choices: shuffle(['quickly','finished','homework']), hint:'A verb shows the action.' }),
+    ()=>({ s:'Grammar check.', q:'Choose the correctly punctuated sentence.', a:"Let's go to the park.", choices: shuffle(["Lets go to the park.","Let's go to the park.","Lets go to the park"]), hint:"Contractions use an apostrophe to show missing letters (let us → let's)." }),
+    ()=>({ s:'Grammar check.', q:"What is the plural of 'child'?", a:'children', choices: shuffle(['childs','children','childes']), hint:"Some plurals are irregular and don't just add -s." }),
+    ()=>({ s:'Grammar check.', q:'Which sentence uses the correct verb tense for something that already happened?', a:'I ate breakfast yesterday.', choices: shuffle(['I eat breakfast yesterday.','I ate breakfast yesterday.','I eating breakfast yesterday.']), hint:'Past tense often changes the verb form entirely (eat → ate).' }),
+    ()=>({ s:'Grammar check.', q:"Which word is an ADJECTIVE in: 'The tiny puppy slept peacefully.'", a:'tiny', choices: shuffle(['tiny','puppy','slept']), hint:'An adjective describes a noun.' }),
+    ()=>({ s:'Grammar check.', q:'Choose the correctly spelled word.', a:'definitely', choices: shuffle(['definately','definitely','definitly']), hint:'Sound it out: "finite" is hiding inside "definitely."' }),
+    ()=>({ s:'Grammar check.', q:'Which sentence is a QUESTION?', a:'Is the cat sleeping?', choices: shuffle(['The cat is sleeping.','Is the cat sleeping?','The cat sleeping.']), hint:'Questions end with a question mark and often start with a helping verb.' }),
+    ()=>({ s:'Grammar check.', q:"What is the plural of 'mouse'?", a:'mice', choices: shuffle(['mouses','mice','mouse']), hint:'This is an irregular plural — it changes the vowel sound.' }),
+    ()=>({ s:'Grammar check.', q:"Which word is a PRONOUN in: 'She gave the book to him.'", a:'She', choices: shuffle(['She','book','gave']), hint:'A pronoun replaces a noun (she, he, it, they).' }),
+    ()=>({ s:'Grammar check.', q:'Choose the sentence with correct capitalization.', a:'We visited Paris in June.', choices: shuffle(['we visited Paris in june.','We visited Paris in June.','We Visited paris in June.']), hint:'Capitalize the first word of a sentence and proper nouns like place and month names.' }),
+    ()=>({ s:'Grammar check.', q:"Which is the correct contraction for 'do not'?", a:"don't", choices: shuffle(["dont","don't","do'nt"]), hint:'The apostrophe replaces the missing "o" in "not."' }),
+    ()=>({ s:'Grammar check.', q:"Which word means the OPPOSITE of 'happy'?", a:'sad', choices: shuffle(['joyful','sad','excited']), hint:'Opposites are called antonyms.' }),
+    ()=>({ s:'Grammar check.', q:"Which word means almost the SAME as 'quick'?", a:'fast', choices: shuffle(['slow','fast','quiet']), hint:'Words with similar meanings are called synonyms.' })
+  ],
+  french: [
+    ()=>({ s:'French review.', q:"How do you say 'hello' (informal) in French?", a:'Salut', choices: shuffle(['Salut','Merci','Au revoir']), hint:'"Salut" is a casual way to say hi or bye.' }),
+    ()=>({ s:'French review.', q:"What does 'merci' mean in English?", a:'thank you', choices: shuffle(['please','thank you','sorry']), hint:'You say this after receiving a gift.' }),
+    ()=>({ s:'French review.', q:"How do you say 'cat' in French?", a:'chat', choices: shuffle(['chien','chat','oiseau']), hint:'chat = cat, chien = dog.' }),
+    ()=>({ s:'French review.', q:"Choose the correct French word for 'one' (1).", a:'un', choices: shuffle(['deux','un','trois']), hint:'un, deux, trois = one, two, three.' }),
+    ()=>({ s:'French review.', q:"What is 'the red apple' in French: 'la pomme ___'?", a:'rouge', choices: shuffle(['rouge','bleu','vert']), hint:'rouge = red.' }),
+    ()=>({ s:'French review.', q:"How do you say 'good morning' in French?", a:'Bonjour', choices: shuffle(['Bonsoir','Bonjour','Bonne nuit']), hint:'Bonjour is used for hello/good morning during the day.' }),
+    ()=>({ s:'French review.', q:"What does 'au revoir' mean?", a:'goodbye', choices: shuffle(['hello','goodbye','please']), hint:'You say this when leaving.' }),
+    ()=>({ s:'French review.', q:"How do you say 'dog' in French?", a:'chien', choices: shuffle(['chat','chien','poisson']), hint:'chien = dog, chat = cat.' }),
+    ()=>({ s:'French review.', q:"Choose the correct French word for 'five' (5).", a:'cinq', choices: shuffle(['cinq','quatre','six']), hint:'quatre, cinq, six = four, five, six.' }),
+    ()=>({ s:'French review.', q:"How do you say 'please' in French?", a:"s'il vous plaît", choices: shuffle(["s'il vous plaît","merci","pardon"]), hint:'This phrase literally means "if it pleases you."' }),
+    ()=>({ s:'French review.', q:"What is 'blue' in French?", a:'bleu', choices: shuffle(['rouge','bleu','jaune']), hint:'bleu = blue, rouge = red, jaune = yellow.' }),
+    ()=>({ s:'French review.', q:"'Je m'appelle...' means what in English?", a:'My name is...', choices: shuffle(['My name is...','I am happy','I live in...']), hint:'"appelle" relates to naming or calling.' }),
+    ()=>({ s:'French review.', q:"Choose the French word for 'book'.", a:'livre', choices: shuffle(['livre','table','porte']), hint:'A "livre" is something you read.' }),
+    ()=>({ s:'French review.', q:"Which pair correctly means 'yes / no'?", a:'Oui / Non', choices: shuffle(['Oui / Non','Si / Ne','Ja / Nein']), hint:'"Oui" sounds like "we" — that’s French for yes.' })
+  ]
+}};
+
+function genQuestion(who, topic, diff) {
+  const pool = TOPIC_BANK[who][topic];
+  const item = pick(pool)(diff);
+  item.topic = topic;
+  if (!item.mode && !item.choices) item.mode = 'numeric';
+  return item;
+}
+
+/* ---- Mastery tracking: per-topic accuracy drives selection weight + difficulty ---- */
+if (!state.mastery) state.mastery = { alex:{}, katya:{} };
+if (!state.recentQ) state.recentQ = { alex: [], katya: [] };
+if (!state.log) state.log = [];
+
+function logEvent(who, icon, text) {
+  state.log.unshift({ t: Date.now(), who, icon, text });
+  if (state.log.length > 60) state.log.length = 60;
+}
+function getMastery(who, topic) {
+  if (!state.mastery[who]) state.mastery[who] = {};
+  if (!state.mastery[who][topic]) state.mastery[who][topic] = { seen:0, correct:0, recent:[] };
+  return state.mastery[who][topic];
+}
+function topicAccuracy(m) {
+  if (!m.recent.length) return 0.6;
+  return m.recent.reduce((a,b)=>a+b,0) / m.recent.length;
+}
+function recordAnswer(who, topic, correct) {
+  if (!topic) return;
+  const m = getMastery(who, topic);
+  m.seen++;
+  if (correct) m.correct++;
+  m.recent.push(correct ? 1 : 0);
+  if (m.recent.length > 10) m.recent.shift();
+}
+function topicWeight(who, topic) {
+  const m = getMastery(who, topic);
+  if (m.seen < 4) return 3; // explore under-practiced topics
+  const acc = topicAccuracy(m);
+  if (acc < 0.6) return 4;  // struggling -> more practice
+  if (acc < 0.85) return 2; // solid but keep practicing
+  return 1;                 // mastered -> occasional review only
+}
+function topicDifficulty(who, topic) {
+  const m = getMastery(who, topic);
+  if (m.seen < 4) return 1;
+  const acc = topicAccuracy(m);
+  if (acc >= 0.85) return 3;
+  if (acc >= 0.6) return 2;
+  return 1;
+}
+function weakStrongSubjects(who) {
+  const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
+  const rows = topics.map(t => {
+    const m = getMastery(who, t);
+    return { topic: t, label: TOPIC_LABEL[t], seen: m.seen, acc: m.seen ? Math.round(topicAccuracy(m)*100) : null };
+  }).filter(r => r.seen >= 3);
+  const weak = rows.filter(r => r.acc < 70).sort((a,b)=>a.acc-b.acc).slice(0,3);
+  const strong = rows.filter(r => r.acc >= 85).sort((a,b)=>b.acc-a.acc).slice(0,3);
+  return { weak, strong };
+}
+
+/* ---- Build a fresh, shuffled, topic-balanced 20-question mission ---- */
+function buildTopicSequence(who, count) {
+  const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
+  const weights = topics.map(t => topicWeight(who, t));
+  const totalW = weights.reduce((a,b)=>a+b,0);
+  const slots = topics.map((t,i) => Math.max(1, Math.round(weights[i] / totalW * count)));
+  let diff = count - slots.reduce((a,b)=>a+b,0);
+  let guard = 0;
+  while (diff !== 0 && guard++ < 200) {
+    if (diff > 0) { slots[R(0, slots.length-1)]++; diff--; }
+    else {
+      const candidates = slots.map((s,i)=>i).filter(i=>slots[i]>1);
+      if (!candidates.length) break;
+      slots[pick(candidates)]--; diff++;
+    }
+  }
+  let seq = [];
+  topics.forEach((t,i) => { for (let j=0;j<slots[i];j++) seq.push(t); });
+  seq = shuffle(seq);
+  for (let i = 2; i < seq.length; i++) {
+    if (seq[i] === seq[i-1] && seq[i] === seq[i-2]) {
+      for (let j = i+1; j < seq.length; j++) {
+        if (seq[j] !== seq[i-1]) { const tmp=seq[i]; seq[i]=seq[j]; seq[j]=tmp; break; }
+      }
+    }
+  }
+  return seq;
+}
+function generateDailyMission(who) {
+  const seq = buildTopicSequence(who, QCOUNT);
+  const recent = state.recentQ[who] || (state.recentQ[who] = []);
+  const questions = seq.map(topic => {
+    const diff = topicDifficulty(who, topic);
+    let item, tries = 0;
+    do { item = genQuestion(who, topic, diff); tries++; } while (recent.includes(item.q) && tries < 10);
+    recent.push(item.q);
+    return item;
+  });
+  if (recent.length > 60) recent.splice(0, recent.length - 60);
+  return questions;
+}
 
 /* ============ HELPERS: dates, confetti, hints ============ */
 const todayStr = () => new Date().toISOString().slice(0,10);
 const yestStr = () => new Date(Date.now() - 864e5).toISOString().slice(0,10);
-if (!state.daily) state.daily = { date: '', count: 0 };
+if (!state.daily || !state.daily.alex || !state.daily.katya) {
+  state.daily = { alex: { date: '', count: 0 }, katya: { date: '', count: 0 } };
+}
+function dailyCountFor(who) {
+  const d = state.daily[who];
+  return d && d.date === todayStr() ? d.count : 0;
+}
 
 function burst(n) {
   const colors = ['#FFC93C','#19C9FF','#FF2E7E','#3DFF8B','#C77DFF','#FF8C28'];
@@ -2111,19 +2372,31 @@ function burst(n) {
   }
 }
 
-function bumpDaily() {
+function bumpDaily(who) {
   const t = todayStr();
-  if (state.daily.date !== t) { state.daily.date = t; state.daily.count = 0; }
-  state.daily.count++;
-  if (state.daily.count === 3) { burst(70); playCue('streak'); toast('🎯 DAILY GOAL SMASHED! 3 missions today!'); }
+  const d = state.daily[who];
+  if (d.date !== t) { d.date = t; d.count = 0; }
+  d.count++;
+  if (d.count === 3) { burst(70); playCue('streak'); toast('🎯 DAILY GOAL SMASHED! 3 missions today!'); }
 }
 
 const KEY_MILESTONES = [3, 7, 14, 30];
 
+/* Weekend freeze: the most recent day that HAD to be played to keep the
+   streak alive, walking back from today and skipping Saturday/Sunday. So
+   playing Friday keeps the streak alive all through the weekend into Monday. */
+function lastRequiredDay(todayDateStr) {
+  const d = new Date(todayDateStr + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0,10);
+}
+
 function bumpStreak(p, name) {
   const t = todayStr();
   if (p.lastDay === t) return;
-  p.streak = (p.lastDay === yestStr()) ? p.streak + 1 : 1;
+  const req = lastRequiredDay(t);
+  p.streak = (p.lastDay && p.lastDay >= req) ? p.streak + 1 : 1;
   p.lastDay = t;
   toast('🔥 ' + name + ' streak: Day ' + p.streak + '!');
   // Adventure Keys come ONLY from long-term consistency (streak milestones)
@@ -2139,6 +2412,7 @@ function awardKeyMoment(name, streak) {
   playCue('key');
   keyBurstFx();
   toast('🗝️ ' + name + ' earned an Adventure Key! ' + streak + '-day streak milestone 🔓');
+  logEvent(name.toLowerCase(), '🗝️', `Earned an Adventure Key! ${streak}-day streak milestone.`);
 }
 
 function hintFor() {
@@ -2166,7 +2440,7 @@ function hintFor() {
 }
 function showHint() {
   const h = $('ms-hint');
-  h.textContent = '💡 ' + hintFor();
+  h.textContent = '💡 ' + (M && M.q && M.q.hint ? M.q.hint : hintFor());
   h.classList.add('show');
 }
 
@@ -2175,7 +2449,7 @@ let M = null;
 const QCOUNT = 20, XP_PER_Q = 8;
 function startMission(id) {
   const def = MISSIONS[0];
-  M = { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: DAILY_BANK[state.activePlayer].slice() };
+  M = { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   const sc = $('mission-screen');
   sc.classList.add('on');
@@ -2243,6 +2517,7 @@ function submitQ() {
       cb.classList.remove('pop'); void cb.offsetWidth; cb.classList.add('pop');
     }
     burst(M.combo >= 3 ? 26 : 12);
+    recordAnswer(M.player, M.q.topic, M.attempts === 0);
     M.i++; lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
@@ -2258,14 +2533,19 @@ function lockThen(f) { $('ms-answer').disabled = true; $('ms-submit').disabled =
 function showResult() {
   const accuracy = Math.round((M.correct / QCOUNT) * 100);
   const bonus = Math.round(accuracy / 3);
-  const xp = M.xpEarned + M.def.xp + bonus, coins = 35 + Math.round(accuracy / 5);
+  const baseXp = M.xpEarned + M.def.xp + bonus, coins = 35 + Math.round(accuracy / 5);
+  const sibling = M.player === 'alex' ? 'katya' : 'alex';
+  const teamBonus = dailyCountFor(sibling) >= 1;
+  const wMult = weekendXpMult();
+  const xp = Math.round(baseXp * wMult * (teamBonus ? 1.15 : 1));
   const who = state[M.player];
   who.xp += xp; who.totalXP += xp; who.coins += coins;
   let leveled = false;
   while (who.xp >= who.xpMax) { who.xp -= who.xpMax; who.lvl++; who.xpMax += 50; leveled = true; }
   bumpStreak(who, M.player === 'alex' ? 'ALEX' : 'KATYA');
-  bumpDaily();
+  bumpDaily(M.player);
   state.activity[M.player].missions++;
+  logEvent(M.player, '🎯', `Completed Daily Mission — ${M.correct}/${QCOUNT} (${accuracy}%), +${xp} XP, +${coins} coins`);
   burst(leveled ? 90 : (accuracy >= 90 ? 60 : 25));
   playCue('task');
   if (coins > 0) playCue('coin');
@@ -2276,7 +2556,12 @@ function showResult() {
   $('res-score').textContent = M.correct + ' / ' + QCOUNT + ' (' + accuracy + '%)';
   $('res-xp').textContent = '+' + xp + ' XP';
   $('res-coins').textContent = '+' + coins + ' coins';
-  $('res-bonus').textContent = (accuracy >= 90 ? 'Excellent accuracy bonus!' : accuracy >= 70 ? 'Good work. Retry helped build the steps.' : 'You finished the mission. Tomorrow we build accuracy.') + (M.best >= 3 ? '   🏆 Best combo x' + M.best : '');
+  const notes = [];
+  if (wMult > 1) notes.push('🔥 Weekend Double XP applied!');
+  if (teamBonus) notes.push('🤝 Team Bonus +15% — both of you played today!');
+  notes.push(accuracy >= 90 ? 'Excellent accuracy bonus!' : accuracy >= 70 ? 'Good work. Retry helped build the steps.' : 'You finished the mission. Tomorrow we build accuracy.');
+  if (M.best >= 3) notes.push('🏆 Best combo x' + M.best);
+  $('res-bonus').textContent = notes.join('   ');
   segs();
 }
 function closeMission() {
@@ -2449,6 +2734,7 @@ function requestPrize(id) {
   paint();
   renderStore();
   playCue('request');
+  logEvent(who, '🎁', `Requested reward: ${c.name}`);
   toast('🎁 Reward requested! Now it\u2019s Pending Parent Approval.');
 }
 
@@ -2469,10 +2755,12 @@ function decideRequest(rid, ok) {
     r.decidedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     playCue('approve');
     toast('✅ Approved — enjoy, ' + (r.who === 'alex' ? 'Alex' : 'Katya') + '!');
+    logEvent(r.who, '✅', `Reward approved: ${r.name}`);
   } else {
     r.status = 'declined';
     r.decidedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     toast('Request declined. Nothing was deducted.');
+    logEvent(r.who, '🚫', `Reward declined: ${r.name}`);
   }
   paint();
   const card = $('preq-' + r.id);
@@ -2573,7 +2861,46 @@ function renderParent() {
   renderAdjustments();
   renderWeekly();
   renderDashboard();
+  renderInsights();
+  renderActivity();
   syncMuteBtn();
+}
+
+/* ---- Learning Insights: weak/strong subjects from mastery tracking ---- */
+function renderInsights() {
+  const box = $('p-insights');
+  if (!box) return;
+  const card = who => {
+    const name = who === 'alex' ? '⚡ Alex' : '🔍 Katya';
+    const { weak, strong } = weakStrongSubjects(who);
+    const line = r => `<div class="wk-line"><span>${r.label}</span><b>${r.acc}%</b></div>`;
+    return `<div class="wk-card">
+      <div class="wk-name">${name}</div>
+      <div style="color:var(--pink);font-weight:700;font-size:12px;margin:6px 0 2px">NEEDS PRACTICE</div>
+      ${weak.length ? weak.map(line).join('') : '<div class="s-empty" style="padding:6px 0">Not enough data yet.</div>'}
+      <div style="color:var(--green);font-weight:700;font-size:12px;margin:10px 0 2px">STRONG SUBJECTS</div>
+      ${strong.length ? strong.map(line).join('') : '<div class="s-empty" style="padding:6px 0">Keep practicing to build strengths.</div>'}
+    </div>`;
+  };
+  box.innerHTML = card('alex') + card('katya');
+}
+
+/* ---- Recent Activity feed: missions, rewards, streaks, battles ---- */
+function renderActivity() {
+  const box = $('p-activity');
+  if (!box) return;
+  if (!state.log.length) { box.innerHTML = '<div class="s-empty">No activity yet.</div>'; return; }
+  box.innerHTML = state.log.slice(0, 20).map(e => {
+    const who = e.who === 'alex' ? '⚡ Alex' : e.who === 'katya' ? '🔍 Katya' : '';
+    const when = new Date(e.t).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    return `<div class="s-req">
+      <span class="rq-em">${e.icon || '•'}</span>
+      <div class="rq-info">
+        <div class="rq-n">${who ? who + ' — ' : ''}${e.text}</div>
+        <div class="rq-meta">${when}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 /* ---- Rewards Manager: edit prices, enable/disable ---- */
@@ -2649,8 +2976,9 @@ function markMissionDone(who) {
   state.activity[who].missions += 1;
   p.coins += 20; p.totalXP += 20; p.xp += 20;
   while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl += 1; p.xpMax = Math.round(p.xpMax * 1.15); }
-  bumpDaily();
+  bumpDaily(who);
   bumpStreak(p, who === 'alex' ? 'Alex' : 'Katya');
+  logEvent(who, '✓', 'Parent logged a completed mission');
   paint();
   renderParent();
   toast('✓ Logged a completed mission for ' + (who==='alex'?'Alex':'Katya') + '.');
@@ -2759,7 +3087,7 @@ function mlTab(which) {
 /* --- Savings Goal (goals = real Store prizes) --- */
 function renderGoalPicker() {
   const who = state.activePlayer;
-  const items = CATALOG.filter(c => c.who === 'both' || c.who === who);
+  const items = catalogFor(who);
   $('goal-pick').innerHTML = items.map(c =>
     `<div class="goal-opt${mlGoalId === c.id ? ' on' : ''}" onclick="setGoal('${c.id}')">
        <div class="ge">${c.em}</div>
@@ -2780,7 +3108,7 @@ function renderGoalTrack() {
   if (state.goals && state.goals[who] && !mlGoalId) mlGoalId = state.goals[who];
   const card = $('goal-track-card');
   if (!mlGoalId) { card.style.display = 'none'; return; }
-  const c = CATALOG.find(x => x.id === mlGoalId);
+  const c = state.rewards.find(x => x.id === mlGoalId);
   if (!c) { card.style.display = 'none'; return; }
   card.style.display = 'block';
   const have = state[who].coins;
@@ -2843,9 +3171,10 @@ function mlCheck() {
   if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
     const reward = 15;
+    const mlXp = 5 * weekendXpMult();
     state[state.activePlayer].coins += reward;
-    state[state.activePlayer].totalXP += 5;
-    state[state.activePlayer].xp += 5;
+    state[state.activePlayer].totalXP += mlXp;
+    state[state.activePlayer].xp += mlXp;
     while (state[state.activePlayer].xp >= state[state.activePlayer].xpMax) { state[state.activePlayer].xp -= state[state.activePlayer].xpMax; state[state.activePlayer].lvl++; state[state.activePlayer].xpMax += 50; }
     mlStats.solved++; mlStats.earned += reward;
     state.activity[state.activePlayer].money++;
@@ -3378,11 +3707,12 @@ function gmFinish() {
   if (GM.solveOk) xp += 20;
   if (GM.explainOk) xp += 20;
   const coins = Math.round(xp / 3);
+  xp *= weekendXpMult();
   p.xp += xp; p.totalXP += xp; p.coins += coins;
   let leveled = false;
   while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
-  bumpDaily();
+  bumpDaily(who);
   state.activity[who].missions++;
   paint();
 
@@ -3571,11 +3901,12 @@ function erSolved() {
   // reward scales with clean (first-try, no-hint) moves
   let xp = 50 + ER.cleanMoves * 25;
   const coins = Math.round(xp / 3);
+  xp *= weekendXpMult();
   p.xp += xp; p.totalXP += xp; p.coins += coins;
   let leveled = false;
   while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
-  bumpDaily();
+  bumpDaily(who);
   state.activity[who].missions++;
   paint();
 
@@ -3732,7 +4063,8 @@ function endBattle() {
   const aWin = B.score.alex > B.score.katya;
   const winner = aWin ? 'alex' : 'katya';
   // award XP to both — winner gets more, both improve totals
-  const winXP = 80, loseXP = 40;
+  const bMult = weekendXpMult();
+  const winXP = 80 * bMult, loseXP = 40 * bMult;
   state.alex.totalXP += aWin ? winXP : loseXP;
   state.alex.xp += aWin ? winXP : loseXP;
   state.katya.totalXP += aWin ? loseXP : winXP;
@@ -3740,6 +4072,7 @@ function endBattle() {
   [state.alex, state.katya].forEach(p => { while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; } });
   state[winner].coins += 25;
   state.activity[winner].battles++;
+  logEvent(null, '⚔️', `Battle Arena: ${aWin ? 'Alex' : 'Katya'} won ${B.score.alex}-${B.score.katya}`);
   paint();
   const wf = $('b-win-face');
   wf.src = aWin ? wf.dataset.alex : wf.dataset.katya;
@@ -3777,16 +4110,49 @@ function goTab(name) {
   toast('🚧 ' + name + ' screen — next build step!');
 }
 
-/* ============ COUNTDOWN ============ */
-const eventEnd = Date.now() + (2*24*3600 + 14*3600 + 26*60) * 1000;
+/* ============ WEEKEND DOUBLE XP (real — actually applied to XP, not decorative) ============ */
+function isWeekendToday() { const d = new Date().getDay(); return d === 0 || d === 6; }
+function weekendXpMult() { return isWeekendToday() ? 2 : 1; }
+function currentOrNextWeekend() {
+  const now = new Date();
+  const day = now.getDay();
+  let sat = new Date(now);
+  if (day === 6) { /* today is Saturday */ }
+  else if (day === 0) { sat.setDate(sat.getDate() - 1); }
+  else { sat.setDate(sat.getDate() + ((6 - day + 7) % 7 || 7)); }
+  sat.setHours(0,0,0,0);
+  const sun = new Date(sat); sun.setDate(sun.getDate() + 1);
+  return { sat, sun };
+}
+function weekendEventTarget() {
+  const { sat, sun } = currentOrNextWeekend();
+  if (isWeekendToday()) { const end = new Date(sun); end.setHours(23,59,59,999); return end; }
+  return sat;
+}
+function fmtEventDate(d) { return d.toLocaleDateString('en-US', { month:'short', day:'numeric' }); }
+function renderUpcomingEvents() {
+  const box = $('upcoming-events');
+  if (!box) return;
+  const { sat, sun } = currentOrNextWeekend();
+  box.innerHTML = `<div class="evt-item">
+    <div class="evt-ico" style="background:rgba(155,48,255,.18);border:1.5px solid #9B30FF;color:#C77DFF">2X</div>
+    <div><div class="t">Double XP Weekend</div><div class="d">${fmtEventDate(sat)} – ${fmtEventDate(sun)}</div></div>
+  </div>`;
+}
 function tick() {
-  let s = Math.max(0, Math.floor((eventEnd - Date.now())/1000));
+  const target = weekendEventTarget();
+  let s = Math.max(0, Math.floor((target - Date.now())/1000));
   const d = Math.floor(s/86400); s %= 86400;
   const h = Math.floor(s/3600); s %= 3600;
   const m = Math.floor(s/60);
   $('event-timer').textContent = `${d}d ${h}h ${m}m`;
+  const active = isWeekendToday();
+  $('event-eyebrow').textContent = active ? 'WEEKEND EVENT · ACTIVE NOW' : 'WEEKEND EVENT';
+  $('event-sub').textContent = active ? '2X XP IS LIVE — PLAY TODAY!' : '2X XP EVERY SATURDAY & SUNDAY!';
+  $('event-ends').textContent = active ? 'ENDS IN' : 'STARTS IN';
 }
 tick(); setInterval(tick, 30000);
+renderUpcomingEvents();
 
 /* ============ TOAST + STARS ============ */
 let toastT;
