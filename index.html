@@ -29,7 +29,7 @@
   --orb: 'Orbitron', sans-serif;
   --raj: 'Rajdhani', sans-serif;
 }
-html, body { background: var(--bg); color: var(--text); font-family: var(--raj); min-height: 100%; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--raj); min-height: 100%; overflow-x: hidden; }
 body {
   background:
     radial-gradient(900px 500px at 8% 0%, rgba(25,120,255,0.10), transparent 60%),
@@ -231,7 +231,7 @@ body {
 .badges-row { display: flex; gap: 18px; justify-content: space-around; align-items: flex-start; padding: 6px 4px 2px; }
 .badge { text-align: center; cursor: pointer; transition: transform .18s; width: 76px; }
 .badge:hover { transform: translateY(-4px) scale(1.05); }
-.badge .bname { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin-top: 6px; text-transform: uppercase; }
+.badge .bname { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin-top: 6px; text-transform: uppercase; overflow-wrap: break-word; }
 .evt-item { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; margin-bottom: 8px; }
 .evt-item .t { font-weight: 700; font-size: 14px; }
 .evt-item .d { font-size: 12px; color: var(--muted); font-weight: 600; }
@@ -823,25 +823,36 @@ body {
   .grid { grid-template-columns: 1fr; }
   .grid > main { grid-column: 1; }
   .hud { flex-wrap: wrap; gap: 10px; }
-  .hud-right { flex-wrap: wrap; gap: 10px; row-gap: 8px; justify-content: flex-start; }
+  .hud-right { flex-wrap: wrap; flex-shrink: 1; width: 100%; gap: 10px; row-gap: 8px; justify-content: flex-start; }
   .switch-profile { font-size: 0; padding: 8px 10px; }
   .switch-profile::before { content: '⇄'; font-size: 15px; }
   .tabs { width: 100%; justify-content: space-between; }
   .tab { flex: 1; min-width: 0; font-size: 0; padding: 14px 8px; }
   .tab svg { width: 28px; height: 28px; }
   .hero-name { font-size: 28px; }
-  .event { flex-direction: column; text-align: center; gap: 12px; padding: 18px; }
+  .event { flex-direction: column; text-align: center; gap: 12px; padding: 18px; width: 100%; min-width: 0; box-sizing: border-box; }
+  .event-mid, .event-right { min-width: 0; width: 100%; }
   .event-title { font-size: 26px; }
   .s-grid, .goal-pick, .g-rewards { grid-template-columns: 1fr 1fr; }
   .dash-grid { grid-template-columns: 1fr; }
   .b-score { font-size: 32px; }
   .b-face { width: 64px; height: 64px; }
   .res-btns, .res-btns .btn { flex-direction: column; width: 100%; }
+  /* Home screen dashboard rows had no mobile fallback at all — their fixed
+     multi-column grids refused to shrink below content min-width, which
+     forced real phone browsers to render the whole page zoomed out (a much
+     bigger bug than it looks: it made the profile-picker cards effectively
+     untappable). Stack them like everything else below this breakpoint. */
+  .status-row, .mid-row, .bottom-row { grid-template-columns: minmax(0, 1fr); }
+  .scard, .panel-card { min-width: 0; }
+  .vs-grid { grid-template-columns: minmax(0,1fr) 60px minmax(0,1fr); }
+  .vs-name, .vs-xp { overflow-wrap: break-word; }
 }
 
 /* Phones (≤480px) */
 @media (max-width: 480px) {
   .s-grid, .goal-pick, .g-rewards, .dash-stats { grid-template-columns: 1fr; }
+  .land-players { grid-template-columns: 1fr; }
   .ms-title { font-size: 18px; }
   .q-text { font-size: 19px; }
   .b-board { padding: 14px 10px; }
@@ -996,7 +1007,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 <div class="picker" id="picker">
   <div class="picker-inner">
     <div class="picker-eyebrow">SUMMER KIDS APP</div>
-    <h1 class="picker-title">Who\u2019s playing?</h1>
+    <h1 class="picker-title">Who&rsquo;s playing?</h1>
     <p class="picker-sub">Tap your card to jump into your own adventure.</p>
     <div class="picker-cards">
       <button class="pcard pcard-alex" onclick="pickProfile('alex')" style="--pd:0ms">
@@ -1050,7 +1061,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
   <nav class="tabs" id="tabs">
     <button class="tab active" data-screen="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10"/></svg>HOME</button>
-    <button class="tab" data-screen="Missions"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>DAILY MISSION</button>
+    <button class="tab" data-screen="Missions"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>GUIDED MISSION</button>
     <button class="tab" data-screen="Battle"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM4 20l4 0M4 20l0-4M20 20 10 6 7 4 4 7l2 3 10 10ZM20 20l-4 0M20 20l0-4"/></svg>BATTLE</button>
     <button class="tab" data-screen="Store"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>STORE</button>
     <button class="tab" data-screen="Grant Prize"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11M12 9C9 9 7 7.8 7 6a2.2 2.2 0 0 1 4-1.2L12 7l1-2.2A2.2 2.2 0 0 1 17 6c0 1.8-2 3-5 3Z"/></svg>GRANT PRIZE</button>
@@ -1172,12 +1183,12 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <circle cx="106" cy="20" r="14" fill="rgba(255,59,59,.35)"/>
     </svg>
     <div class="event-mid">
-      <div class="event-eyebrow">WEEKEND EVENT</div>
-      <div class="event-title">DOUBLE XP</div>
-      <div class="event-sub">2X XP ALL WEEKEND!</div>
+      <div class="event-eyebrow" id="event-eyebrow">WEEKEND EVENT</div>
+      <div class="event-title" id="event-title">DOUBLE XP</div>
+      <div class="event-sub" id="event-sub">2X XP ALL WEEKEND!</div>
     </div>
     <div class="event-right">
-      <div class="event-ends">ENDS IN</div>
+      <div class="event-ends" id="event-ends">ENDS IN</div>
       <div class="event-timer" id="event-timer">2d 14h 26m</div>
     </div>
   </div>
@@ -1194,7 +1205,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     </div>
     <div class="scard s-team">
       <svg class="ico" viewBox="0 0 50 44"><circle cx="18" cy="14" r="8" fill="#C77DFF"/><path d="M4 40 q1-14 14-14 q13 0 14 14Z" fill="#C77DFF"/><circle cx="36" cy="16" r="6.4" fill="#7D3DD9"/><path d="M28 40 q1-11 8-11 q9 0 10 11Z" fill="#7D3DD9"/></svg>
-      <div><div class="k" style="color:#C77DFF">TEAM BONUS</div><div class="enc" style="font-size:14px;color:var(--text)">Work together for</div><div class="big" style="color:#C77DFF">+15% XP!</div></div>
+      <div><div class="k" style="color:#C77DFF">TEAM BONUS</div><div class="enc" style="font-size:14px;color:var(--text)" id="team-bonus-sub">Both play today for</div><div class="big" style="color:#C77DFF">+15% XP!</div></div>
     </div>
   </div>
 
@@ -1275,18 +1286,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     </div>
     <div class="panel-card" style="border-color:var(--line)">
       <div class="pc-title" style="color:#EAF2FF;margin-bottom:12px">UPCOMING EVENTS</div>
-      <div class="evt-item">
-        <div class="evt-ico" style="background:rgba(155,48,255,.18);border:1.5px solid #9B30FF;color:#C77DFF">2X</div>
-        <div><div class="t">Double XP Weekend</div><div class="d">June 13 – June 14</div></div>
-      </div>
-      <div class="evt-item">
-        <div class="evt-ico" style="background:rgba(255,46,126,.15);border:1.5px solid #FF2E7E;color:#FF6FA5">?</div>
-        <div><div class="t">Mystery Challenge</div><div class="d">June 21</div></div>
-      </div>
-      <div class="evt-item">
-        <div class="evt-ico" style="background:rgba(255,201,60,.15);border:1.5px solid #FFC93C;color:#FFD166">🏆</div>
-        <div><div class="t">Monthly Champion Crowning</div><div class="d">June 30</div></div>
-      </div>
+      <div id="upcoming-events"></div>
     </div>
   </div>
 </main>
@@ -1533,11 +1533,11 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="s-pending" id="p-activity" style="border-color:rgba(155,48,255,.4)"></div>
 
     <div class="s-sec-title">&#127873; REWARDS MANAGER</div>
-    <div class="mgr-note">Edit prices, or disable a reward to hide it from the kids\u2019 store.</div>
+    <div class="mgr-note">Edit prices, or disable a reward to hide it from the kids&rsquo; store.</div>
     <div class="mgr-box" id="p-rewards-mgr"></div>
 
     <div class="s-sec-title">&#9874;&#65039; ADJUSTMENTS</div>
-    <div class="mgr-note">Manually adjust balances or log a mission on a child\u2019s behalf.</div>
+    <div class="mgr-note">Manually adjust balances or log a mission on a child&rsquo;s behalf.</div>
     <div class="adj-box" id="p-adjust"></div>
 
     <div class="s-sec-title">&#128197; WEEKLY SUMMARY</div>
@@ -1875,7 +1875,7 @@ function paint() {
   $('c-streak').textContent = p.streak;
   $('reward-xp').textContent = fmt(p.totalXP);
   $('reward-bar').style.width = Math.min(100, p.totalXP/1500*100) + '%';
-  const dc = (state.daily && state.daily.date === todayStr()) ? state.daily.count : 0;
+  const dc = dailyCountFor(state.activePlayer);
   $('c-goal').textContent = dc;
   $('c-goal-bar').style.width = Math.min(100, dc/3*100) + '%';
   const isA = state.activePlayer === 'alex';
@@ -1886,6 +1886,8 @@ function paint() {
   const tag = $('playing-tag');
   tag.textContent = isA ? '⚡ ALEX · ' + GRADE.alex : '🔍 KATYA · ' + GRADE.katya;
   tag.className = 'playing-tag ' + (isA ? 'pt-alex' : 'pt-katya');
+  const tb = $('team-bonus-sub');
+  if (tb) tb.textContent = (dailyCountFor('alex') >= 1 && dailyCountFor('katya') >= 1) ? '✓ Bonus active today!' : 'Both play today for';
   paintLanding(p, isA);
   paintBell();
   Store.set('smbt-state-v2', state);
@@ -1912,7 +1914,7 @@ function paintLanding(p, isA) {
     // compact stat strip reflects the ACTIVE player
     $('land-lvl').textContent = p.lvl;
     $('land-streak').textContent = p.streak + '🔥';
-    const dc = (state.daily && state.daily.date === todayStr()) ? state.daily.count : 0;
+    const dc = dailyCountFor(state.activePlayer);
     $('land-goal').textContent = dc + '/3';
     $('land-coins').textContent = fmt(p.coins);
     // theme the featured tile to the active player
@@ -2126,7 +2128,7 @@ alex: {
   ],
   probability: [
     (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total); return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:`${red/g}/${total/g}`, choices: shuffle([`${red/g}/${total/g}`, `${blue/g}/${total/g}`, `${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
-    (d)=>{ return { s:'🎲 Dice roll probability.', q:'Rolling a standard 6-sided die, what is the probability of rolling an EVEN number?', a:'1/2', choices: shuffle(['1/2','1/3','2/3']), hint:'3 of the 6 faces are even (2,4,6) — that simplifies to 1/2.' }; },
+    (d)=>{ return { s:'🎲 Dice roll probability.', q:'Rolling a standard 6-sided die, what is the probability of rolling an EVEN number?', a:'1/2', choices: shuffle(['1/2','1/3','2/3']), hint:'List the even faces on a die (2, 4, 6), count them, then write that count over the total number of faces — and simplify.' }; },
     (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total); return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:`${green/g}/${total/g}`, choices: shuffle([`${green/g}/${total/g}`, `${yellow/g}/${total/g}`, `${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
   ],
   money: [
@@ -2351,7 +2353,13 @@ function generateDailyMission(who) {
 /* ============ HELPERS: dates, confetti, hints ============ */
 const todayStr = () => new Date().toISOString().slice(0,10);
 const yestStr = () => new Date(Date.now() - 864e5).toISOString().slice(0,10);
-if (!state.daily) state.daily = { date: '', count: 0 };
+if (!state.daily || !state.daily.alex || !state.daily.katya) {
+  state.daily = { alex: { date: '', count: 0 }, katya: { date: '', count: 0 } };
+}
+function dailyCountFor(who) {
+  const d = state.daily[who];
+  return d && d.date === todayStr() ? d.count : 0;
+}
 
 function burst(n) {
   const colors = ['#FFC93C','#19C9FF','#FF2E7E','#3DFF8B','#C77DFF','#FF8C28'];
@@ -2364,11 +2372,12 @@ function burst(n) {
   }
 }
 
-function bumpDaily() {
+function bumpDaily(who) {
   const t = todayStr();
-  if (state.daily.date !== t) { state.daily.date = t; state.daily.count = 0; }
-  state.daily.count++;
-  if (state.daily.count === 3) { burst(70); playCue('streak'); toast('🎯 DAILY GOAL SMASHED! 3 missions today!'); }
+  const d = state.daily[who];
+  if (d.date !== t) { d.date = t; d.count = 0; }
+  d.count++;
+  if (d.count === 3) { burst(70); playCue('streak'); toast('🎯 DAILY GOAL SMASHED! 3 missions today!'); }
 }
 
 const KEY_MILESTONES = [3, 7, 14, 30];
@@ -2524,13 +2533,17 @@ function lockThen(f) { $('ms-answer').disabled = true; $('ms-submit').disabled =
 function showResult() {
   const accuracy = Math.round((M.correct / QCOUNT) * 100);
   const bonus = Math.round(accuracy / 3);
-  const xp = M.xpEarned + M.def.xp + bonus, coins = 35 + Math.round(accuracy / 5);
+  const baseXp = M.xpEarned + M.def.xp + bonus, coins = 35 + Math.round(accuracy / 5);
+  const sibling = M.player === 'alex' ? 'katya' : 'alex';
+  const teamBonus = dailyCountFor(sibling) >= 1;
+  const wMult = weekendXpMult();
+  const xp = Math.round(baseXp * wMult * (teamBonus ? 1.15 : 1));
   const who = state[M.player];
   who.xp += xp; who.totalXP += xp; who.coins += coins;
   let leveled = false;
   while (who.xp >= who.xpMax) { who.xp -= who.xpMax; who.lvl++; who.xpMax += 50; leveled = true; }
   bumpStreak(who, M.player === 'alex' ? 'ALEX' : 'KATYA');
-  bumpDaily();
+  bumpDaily(M.player);
   state.activity[M.player].missions++;
   logEvent(M.player, '🎯', `Completed Daily Mission — ${M.correct}/${QCOUNT} (${accuracy}%), +${xp} XP, +${coins} coins`);
   burst(leveled ? 90 : (accuracy >= 90 ? 60 : 25));
@@ -2543,7 +2556,12 @@ function showResult() {
   $('res-score').textContent = M.correct + ' / ' + QCOUNT + ' (' + accuracy + '%)';
   $('res-xp').textContent = '+' + xp + ' XP';
   $('res-coins').textContent = '+' + coins + ' coins';
-  $('res-bonus').textContent = (accuracy >= 90 ? 'Excellent accuracy bonus!' : accuracy >= 70 ? 'Good work. Retry helped build the steps.' : 'You finished the mission. Tomorrow we build accuracy.') + (M.best >= 3 ? '   🏆 Best combo x' + M.best : '');
+  const notes = [];
+  if (wMult > 1) notes.push('🔥 Weekend Double XP applied!');
+  if (teamBonus) notes.push('🤝 Team Bonus +15% — both of you played today!');
+  notes.push(accuracy >= 90 ? 'Excellent accuracy bonus!' : accuracy >= 70 ? 'Good work. Retry helped build the steps.' : 'You finished the mission. Tomorrow we build accuracy.');
+  if (M.best >= 3) notes.push('🏆 Best combo x' + M.best);
+  $('res-bonus').textContent = notes.join('   ');
   segs();
 }
 function closeMission() {
@@ -2958,7 +2976,7 @@ function markMissionDone(who) {
   state.activity[who].missions += 1;
   p.coins += 20; p.totalXP += 20; p.xp += 20;
   while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl += 1; p.xpMax = Math.round(p.xpMax * 1.15); }
-  bumpDaily();
+  bumpDaily(who);
   bumpStreak(p, who === 'alex' ? 'Alex' : 'Katya');
   logEvent(who, '✓', 'Parent logged a completed mission');
   paint();
@@ -3069,7 +3087,7 @@ function mlTab(which) {
 /* --- Savings Goal (goals = real Store prizes) --- */
 function renderGoalPicker() {
   const who = state.activePlayer;
-  const items = CATALOG.filter(c => c.who === 'both' || c.who === who);
+  const items = catalogFor(who);
   $('goal-pick').innerHTML = items.map(c =>
     `<div class="goal-opt${mlGoalId === c.id ? ' on' : ''}" onclick="setGoal('${c.id}')">
        <div class="ge">${c.em}</div>
@@ -3090,7 +3108,7 @@ function renderGoalTrack() {
   if (state.goals && state.goals[who] && !mlGoalId) mlGoalId = state.goals[who];
   const card = $('goal-track-card');
   if (!mlGoalId) { card.style.display = 'none'; return; }
-  const c = CATALOG.find(x => x.id === mlGoalId);
+  const c = state.rewards.find(x => x.id === mlGoalId);
   if (!c) { card.style.display = 'none'; return; }
   card.style.display = 'block';
   const have = state[who].coins;
@@ -3153,9 +3171,10 @@ function mlCheck() {
   if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
     const reward = 15;
+    const mlXp = 5 * weekendXpMult();
     state[state.activePlayer].coins += reward;
-    state[state.activePlayer].totalXP += 5;
-    state[state.activePlayer].xp += 5;
+    state[state.activePlayer].totalXP += mlXp;
+    state[state.activePlayer].xp += mlXp;
     while (state[state.activePlayer].xp >= state[state.activePlayer].xpMax) { state[state.activePlayer].xp -= state[state.activePlayer].xpMax; state[state.activePlayer].lvl++; state[state.activePlayer].xpMax += 50; }
     mlStats.solved++; mlStats.earned += reward;
     state.activity[state.activePlayer].money++;
@@ -3688,11 +3707,12 @@ function gmFinish() {
   if (GM.solveOk) xp += 20;
   if (GM.explainOk) xp += 20;
   const coins = Math.round(xp / 3);
+  xp *= weekendXpMult();
   p.xp += xp; p.totalXP += xp; p.coins += coins;
   let leveled = false;
   while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
-  bumpDaily();
+  bumpDaily(who);
   state.activity[who].missions++;
   paint();
 
@@ -3881,11 +3901,12 @@ function erSolved() {
   // reward scales with clean (first-try, no-hint) moves
   let xp = 50 + ER.cleanMoves * 25;
   const coins = Math.round(xp / 3);
+  xp *= weekendXpMult();
   p.xp += xp; p.totalXP += xp; p.coins += coins;
   let leveled = false;
   while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
-  bumpDaily();
+  bumpDaily(who);
   state.activity[who].missions++;
   paint();
 
@@ -4042,7 +4063,8 @@ function endBattle() {
   const aWin = B.score.alex > B.score.katya;
   const winner = aWin ? 'alex' : 'katya';
   // award XP to both — winner gets more, both improve totals
-  const winXP = 80, loseXP = 40;
+  const bMult = weekendXpMult();
+  const winXP = 80 * bMult, loseXP = 40 * bMult;
   state.alex.totalXP += aWin ? winXP : loseXP;
   state.alex.xp += aWin ? winXP : loseXP;
   state.katya.totalXP += aWin ? loseXP : winXP;
@@ -4088,16 +4110,49 @@ function goTab(name) {
   toast('🚧 ' + name + ' screen — next build step!');
 }
 
-/* ============ COUNTDOWN ============ */
-const eventEnd = Date.now() + (2*24*3600 + 14*3600 + 26*60) * 1000;
+/* ============ WEEKEND DOUBLE XP (real — actually applied to XP, not decorative) ============ */
+function isWeekendToday() { const d = new Date().getDay(); return d === 0 || d === 6; }
+function weekendXpMult() { return isWeekendToday() ? 2 : 1; }
+function currentOrNextWeekend() {
+  const now = new Date();
+  const day = now.getDay();
+  let sat = new Date(now);
+  if (day === 6) { /* today is Saturday */ }
+  else if (day === 0) { sat.setDate(sat.getDate() - 1); }
+  else { sat.setDate(sat.getDate() + ((6 - day + 7) % 7 || 7)); }
+  sat.setHours(0,0,0,0);
+  const sun = new Date(sat); sun.setDate(sun.getDate() + 1);
+  return { sat, sun };
+}
+function weekendEventTarget() {
+  const { sat, sun } = currentOrNextWeekend();
+  if (isWeekendToday()) { const end = new Date(sun); end.setHours(23,59,59,999); return end; }
+  return sat;
+}
+function fmtEventDate(d) { return d.toLocaleDateString('en-US', { month:'short', day:'numeric' }); }
+function renderUpcomingEvents() {
+  const box = $('upcoming-events');
+  if (!box) return;
+  const { sat, sun } = currentOrNextWeekend();
+  box.innerHTML = `<div class="evt-item">
+    <div class="evt-ico" style="background:rgba(155,48,255,.18);border:1.5px solid #9B30FF;color:#C77DFF">2X</div>
+    <div><div class="t">Double XP Weekend</div><div class="d">${fmtEventDate(sat)} – ${fmtEventDate(sun)}</div></div>
+  </div>`;
+}
 function tick() {
-  let s = Math.max(0, Math.floor((eventEnd - Date.now())/1000));
+  const target = weekendEventTarget();
+  let s = Math.max(0, Math.floor((target - Date.now())/1000));
   const d = Math.floor(s/86400); s %= 86400;
   const h = Math.floor(s/3600); s %= 3600;
   const m = Math.floor(s/60);
   $('event-timer').textContent = `${d}d ${h}h ${m}m`;
+  const active = isWeekendToday();
+  $('event-eyebrow').textContent = active ? 'WEEKEND EVENT · ACTIVE NOW' : 'WEEKEND EVENT';
+  $('event-sub').textContent = active ? '2X XP IS LIVE — PLAY TODAY!' : '2X XP EVERY SATURDAY & SUNDAY!';
+  $('event-ends').textContent = active ? 'ENDS IN' : 'STARTS IN';
 }
 tick(); setInterval(tick, 30000);
+renderUpcomingEvents();
 
 /* ============ TOAST + STARS ============ */
 let toastT;
