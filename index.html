@@ -312,7 +312,8 @@ body {
 .ms-segs i.done { background: var(--acc); box-shadow: 0 0 12px var(--accSoft); }
 .ms-segs i.cur { background: rgba(255,255,255,.22); outline: 1.5px solid var(--accSoft); }
 .ms-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 14px; }
-.q-card { background: var(--panel); border: 1.5px solid var(--accSoft); border-radius: 20px; padding: 22px 24px; box-shadow: 0 0 24px rgba(0,0,0,.4); }
+.ms-grid > * { min-width: 0; }
+.q-card { background: var(--panel); border: 1.5px solid var(--accSoft); border-radius: 20px; padding: 22px 24px; box-shadow: 0 0 24px rgba(0,0,0,.4); min-width: 0; }
 .q-story { font-size: 17px; font-weight: 600; color: var(--muted); font-style: italic; margin-bottom: 14px; line-height: 1.5; }
 .q-text { font-size: 29px; font-weight: 700; line-height: 1.45; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
 #ms-answer { width: 100%; font-family: var(--orb); font-size: 30px; font-weight: 800; color: var(--text); background: rgba(255,255,255,.05); border: 2px solid var(--line); border-radius: 16px; padding: 16px; text-align: center; outline: none; margin-bottom: 8px; }
@@ -321,8 +322,8 @@ body {
    iOS "numeric" nor "decimal" software keyboard has a minus-sign key, so
    negative-answer questions (Alex's integers topic) need an explicit,
    reliable way to enter one that doesn't depend on OS keyboard quirks. */
-.answer-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; }
-.answer-row #ms-answer, .answer-row #b-answer { flex: 1; width: auto; margin-bottom: 0; }
+.answer-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; min-width: 0; }
+.answer-row #ms-answer, .answer-row #b-answer { flex: 1; width: auto; min-width: 0; margin-bottom: 0; }
 .sign-toggle {
   flex-shrink: 0; width: 56px; font-family: var(--orb); font-size: 24px; font-weight: 800;
   color: var(--text); background: rgba(255,255,255,.05); border: 2px solid var(--line);
@@ -371,19 +372,20 @@ body {
 .hint-text.show { opacity: 1; }
 
 /* Brain Boost progressive strategy coach */
-.bb-wrap { margin: -4px 0 12px; }
+.bb-wrap { margin: -4px 0 12px; max-width: 100%; }
 .bb-btn { display: inline-flex; align-items: center; gap: 6px; }
 .bb-btn:disabled { opacity: .5; cursor: default; }
 .bb-progress { font-size: 10px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; }
-.bb-panel { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-.bb-card { background: rgba(255,201,60,.08); border: 1px solid rgba(255,201,60,.32); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.5; color: #FFE3A0; font-weight: 600; opacity: 0; animation: bbFadeIn .35s ease forwards; }
-.bb-card .bb-label { display: block; font-family: var(--raj); font-weight: 800; font-size: 11px; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 5px; text-transform: uppercase; }
+.bb-panel { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-width: 100%; min-width: 0; }
+.bb-card { background: rgba(255,201,60,.08); border: 1px solid rgba(255,201,60,.32); border-radius: 12px; padding: 12px 14px; font-size: 15px; line-height: 1.58; color: #FFE3A0; font-weight: 600; opacity: 0; animation: bbFadeIn .35s ease forwards; max-width: 100%; min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+.bb-card .bb-label { display: block; font-family: var(--raj); font-weight: 800; font-size: 13px; letter-spacing: 1px; color: var(--gold); margin-bottom: 6px; text-transform: uppercase; }
 .bb-card.bb-mistake { background: rgba(255,46,126,.08); border-color: rgba(255,46,126,.32); color: #FFC2DA; }
 .bb-card.bb-mistake .bb-label { color: var(--pink); }
 .bb-card.bb-example { background: rgba(25,201,255,.08); border-color: rgba(25,201,255,.32); color: #C9EEFF; }
 .bb-card.bb-example .bb-label { color: var(--blue); }
 @keyframes bbFadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
 .estimate-nudge { font-size: 12px; font-weight: 600; color: var(--muted); margin: -6px 0 8px; font-style: italic; }
+.pad-toggle-btn { display: none; }
 .combo { font-family: var(--orb); font-weight: 900; font-size: 16px; letter-spacing: 2px; color: var(--gold); text-shadow: 0 0 14px rgba(255,201,60,.75); height: 22px; margin-bottom: 4px; }
 .combo.pop { animation: combo-pop .5s cubic-bezier(.34,1.56,.64,1); }
 @keyframes combo-pop { 0%{transform:scale(.5)} 55%{transform:scale(1.3)} 100%{transform:scale(1)} }
@@ -956,6 +958,8 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   .ms-choices { grid-template-columns: 1fr; }
   .choice-answer { min-height: 68px; font-size: 22px; }
   .pad-card { display: none; }
+  .pad-card.mobile-open { display: flex; margin-top: 4px; }
+  .pad-toggle-btn { display: block !important; }
 }
 @media (orientation: landscape) and (max-height: 760px) {
   .ms-top { position: relative; }
@@ -1399,8 +1403,9 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
         </div>
         <div class="feedback" id="ms-fb"></div>
         <button class="btn ms-submit" id="ms-submit" onclick="submitQ()">&#9876; &nbsp;SUBMIT ANSWER</button>
+        <button class="hint-btn pad-toggle-btn" id="pad-toggle-btn" onclick="toggleScratchpad()" style="margin-top:10px;width:100%">&#9999;&#65039; SCRATCHPAD</button>
       </div>
-      <div class="pad-card">
+      <div class="pad-card" id="pad-card">
         <div class="pad-head"><span>&#128221; SCRATCHPAD</span>
           <span class="pad-tools">
             <i class="dot on" style="background:#3FD9FF" onclick="setColor('#3FD9FF',this)"></i>
@@ -2349,65 +2354,65 @@ const STRATEGY_LIBRARY = {
     memoryHook:'BEDMAS: Brackets, Exponents, Divide/Multiply, Add/Subtract — follow the steps in order like a recipe, don’t skip ahead.',
     commonMistake:'solving strictly left to right instead of doing multiplication/division before addition/subtraction' },
   fractions: { name:'Fractions', icon:'🍕',
-    strategy:'Think of a fraction as pizza slices. "3/4" means the pizza is cut into 4 equal slices and you have 3. To find a fraction OF a number: divide by the bottom number first, then multiply by the top number.',
-    example:'Try: 3/5 of 20 — Step 1: divide 20 by 5 = 4 (one slice). Step 2: multiply by 3 = 12.',
+    strategy:'Think of a fraction as pizza slices. "3/4" means the pizza is cut into 4 equal slices and you have 3. To find a fraction OF a number: divide by the bottom number first, then multiply by the top number. To compare two fractions, turn each into a decimal (divide top by bottom) — whichever decimal is bigger, that fraction is bigger.',
+    example:'Try: 3/5 of 20 — Step 1: divide 20 by 5 = 4 (one slice). Step 2: multiply by 3 = 12. (Comparing: 3/4 vs 2/3 → 0.75 vs 0.67 → 3/4 is bigger.)',
     memoryHook:'Picture a pizza or chocolate bar cut into equal pieces — the bottom number is the total pieces, the top number is how many you have.',
     commonMistake:'adding the bottom numbers (denominators) together instead of only adding the top numbers when the bottoms already match' },
   decimals: { name:'Decimals', icon:'🔢',
-    strategy:'Line up the decimal points — ones under ones, tenths under tenths — before adding or subtracting. For multiplying, ignore the decimal point, multiply as whole numbers, then count the decimal places back in.',
-    example:'Try: 2.4 + 1.35 — line up the points: 2.40 + 1.35 = 3.75.',
+    strategy:'Line up the decimal points — ones under ones, tenths under tenths — before adding or subtracting. For multiplying, ignore the decimal point, multiply as whole numbers, then count the decimal places back in. For dividing, it often helps to think of the decimal as a whole number first, then place the decimal point back in the answer.',
+    example:'Try: 2.4 + 1.35 — line up the points: 2.40 + 1.35 = 3.75. (Dividing: 4.8 ÷ 4 — think 48 ÷ 4 = 12, then place the point back → 1.2.)',
     memoryHook:'Decimal points are like belt buckles lined up in a photo — they must always stay in a column.',
     commonMistake:'lining up the digits on the right instead of lining up the decimal points, which throws the whole answer off' },
   percent: { name:'Percentages', icon:'💯',
-    strategy:'Build percentages from 10% blocks: 10% = divide by 10. Then: 20% = 10% ×2, 5% = half of 10%, 15% = 10% + 5%, 25% = divide by 4 (a quarter), 50% = divide by 2 (half), 75% = 50% + 25%.',
-    example:'Try: 15% of 80 — 10% of 80 = 8. 5% is half of that = 4. 15% = 8 + 4 = 12.',
+    strategy:'Build percentages from 10% blocks: 10% = divide by 10. Then: 20% = 10% ×2, 5% = half of 10%, 15% = 10% + 5%, 25% = divide by 4 (a quarter), 50% = divide by 2 (half), 75% = 50% + 25%. Going backward — "what PERCENT is this part of the whole?" — use (part ÷ whole) × 100 instead.',
+    example:'Try: 15% of 80 — 10% of 80 = 8. 5% is half of that = 4. 15% = 8 + 4 = 12. (Backward version: 12 out of 80 as a percent = 12÷80×100 = 15%.)',
     memoryHook:'25% means one quarter — like 15 minutes on a clock or a quarter (25 cents) of a dollar.',
-    commonMistake:'dividing by 2 instead of 4 when finding 25%, which actually gives 50%' },
+    commonMistake:'dividing by 2 instead of 4 when finding 25%, or forgetting to multiply by 100 when going from a fraction to a percent' },
   integers: { name:'Integers (Positive & Negative)', icon:'🌡️',
-    strategy:'Think of a thermometer or elevator. Adding a positive moves UP; adding a negative (or subtracting a positive) moves DOWN. Subtracting a negative is the same as adding a positive.',
-    example:'Try: -3 + (-4) — a thermometer at -3° drops another 4° → -7°.',
-    memoryHook:'Think temperature (below zero), elevators (below ground floor), or money owed (a debt) — negatives are the "below zero" world.',
-    commonMistake:'forgetting the sign flip when subtracting a negative number, or mixing up which sign "wins" when adding opposite signs' },
-  ratios: { name:'Ratios', icon:'⚖️',
-    strategy:'A ratio compares two amounts. To simplify, divide both numbers by their greatest common factor. To scale up or down (like a recipe), multiply or divide BOTH numbers by the same amount.',
-    example:'Try: simplify 8:12 — both divide evenly by 4 → 2:3.',
-    memoryHook:'A ratio is a recipe — double the pancakes means doubling EVERY ingredient, not just one.',
-    commonMistake:'changing only one side of the ratio instead of scaling both sides by the same amount' },
+    strategy:'Think of a thermometer or elevator. Adding a positive moves UP; adding a negative (or subtracting a positive) moves DOWN. Subtracting a negative is the same as adding a positive. For multiplying or dividing: same signs give a POSITIVE answer, different signs give a NEGATIVE answer.',
+    example:'Try: -3 + (-4) — a thermometer at -3° drops another 4° → -7°. (Multiply/divide version: -3 × 4 — different signs, so the answer is negative → -12.)',
+    memoryHook:'Think temperature (below zero), elevators (below ground floor), or money owed (a debt) — negatives are the "below zero" world. For × and ÷: same signs = happy (+), different signs = grumpy (-).',
+    commonMistake:'forgetting the sign flip when subtracting a negative number, or forgetting to check the signs at all before multiplying/dividing' },
+  ratios: { name:'Ratios & Rates', icon:'⚖️',
+    strategy:'A ratio compares two amounts. To simplify, divide both numbers by their greatest common factor. To scale up or down (like a recipe), multiply or divide BOTH numbers by the same amount. A RATE compares two DIFFERENT units (like distance and time) — find the amount for just ONE unit by dividing: rate = total ÷ how many units.',
+    example:'Try: simplify 8:12 — both divide evenly by 4 → 2:3. (Rate version: a car travels 300 km in 5 hours — speed = 300 ÷ 5 = 60 km/h.)',
+    memoryHook:'A ratio is a recipe — double the pancakes means doubling EVERY ingredient. A rate is "how much for ONE" — like km per ONE hour, or dollars per ONE item.',
+    commonMistake:'changing only one side of a ratio instead of scaling both sides, or dividing the wrong number by the wrong one in a rate problem (always total ÷ units, not the other way around)' },
   algebra: { name:'Algebra (Solving for x)', icon:'⚡',
-    strategy:'Whatever you do to one side of the equation, do to the other side too — keep it balanced like a scale. Undo addition/subtraction first, then multiplication/division.',
-    example:'Try: 3x + 4 = 19 — Step 1: subtract 4 from both sides → 3x = 15. Step 2: divide both sides by 3 → x = 5.',
+    strategy:'Whatever you do to one side of the equation, do to the other side too — keep it balanced like a scale. Undo addition/subtraction first, then multiplication/division. If there are brackets like m(x + c), divide by the outside number FIRST, then subtract.',
+    example:'Try: 3x + 4 = 19 — Step 1: subtract 4 from both sides → 3x = 15. Step 2: divide both sides by 3 → x = 5. (Bracket version: 2(x + 3) = 16 — divide by 2 first → x + 3 = 8, then subtract 3 → x = 5.)',
     memoryHook:'An equation is a balance scale — whatever you add or remove from one side, do the same to the other.',
-    commonMistake:'dividing before subtracting (or only changing one side), which unbalances the equation' },
-  geometry: { name:'Geometry (Area, Perimeter, Volume)', icon:'📐',
-    strategy:'Perimeter is the fence AROUND a shape (add up all the sides). Area is the paint INSIDE a shape (length × width, or base × height ÷ 2 for a triangle). Volume is what fits INSIDE a box (length × width × height).',
-    example:'Try: a 5m × 3m rectangle — Perimeter (fence) = 2 × (5+3) = 16m. Area (paint) = 5 × 3 = 15m².',
-    memoryHook:'Perimeter = fence around it. Area = paint inside it. Volume = water that fills it.',
-    commonMistake:'mixing up area and perimeter — multiplying the sides when the question actually asks for the distance around the shape' },
+    commonMistake:'dividing before subtracting (or only changing one side), or subtracting inside the brackets before dividing by the outside number' },
+  geometry: { name:'Geometry (Area, Perimeter, Volume & More)', icon:'📐',
+    strategy:'Perimeter is the fence AROUND a shape (add up all the sides). Area is the paint INSIDE a shape (length × width, or base × height ÷ 2 for a triangle). Volume is what fits INSIDE a box (length × width × height). The angles inside any triangle always add up to 180°. A circle’s distance around (circumference) = 2 × π × radius.',
+    example:'Try: a 5m × 3m rectangle — Perimeter (fence) = 2 × (5+3) = 16m. Area (paint) = 5 × 3 = 15m². (Triangle angles: two angles are 50° and 70° — the third is 180 − 50 − 70 = 60°.)',
+    memoryHook:'Perimeter = fence around it. Area = paint inside it. Volume = water that fills it. Triangle angles always total 180° — like three friends splitting a whole pizza of degrees.',
+    commonMistake:'mixing up area and perimeter, or forgetting that ALL three triangle angles (not just two) must add to 180°' },
   probability: { name:'Probability', icon:'🎲',
     strategy:'Probability is always: (ways to get what you want) ÷ (total possible outcomes). Count the favorable outcomes first, then count everything that could happen, and write it as a fraction.',
     example:'Try: a bag has 3 red and 2 blue marbles — probability of red = 3 (favorable) ÷ 5 (total) = 3/5.',
     memoryHook:'Probability = good outcomes ÷ total outcomes — what you want on top, everything possible on the bottom.',
     commonMistake:'comparing the two groups to each other (like red vs blue) instead of comparing what you want to the TOTAL' },
   money: { name:'Money Math', icon:'💰',
-    strategy:'Find the cost of ONE item first, then multiply by how many. For change, count UP from the price to the amount paid instead of subtracting in your head.',
-    example:'Try: change from $20 for a $13 item — count up: 13→15 is +2, 15→20 is +5, total change = $7.',
-    memoryHook:'Counting change is like a cash register — count UP from the price to the bill.',
-    commonMistake:'forgetting to multiply by the quantity, or doing the steps of a multi-step money problem out of order' },
+    strategy:'Find the cost of ONE item first, then multiply by how many. For change, count UP from the price to the amount paid instead of subtracting in your head. For "how many weeks/items to reach a goal" or "split evenly" problems, that\'s usually just division: total ÷ each share.',
+    example:'Try: change from $20 for a $13 item — count up: 13→15 is +2, 15→20 is +5, total change = $7. (Goal version: saving $10 a week to reach $80 — 80 ÷ 10 = 8 weeks.)',
+    memoryHook:'Counting change is like a cash register — count UP from the price to the bill. "How many groups fit in this total" always means divide.',
+    commonMistake:'forgetting to multiply by the quantity, or dividing the goal by the wrong number' },
   logic: { name:'Logic & Patterns', icon:'🧠',
-    strategy:'For number patterns, find the constant "jump" between terms first. Then find any term by multiplying the jump by how many JUMPS you need (one less than the term number) and adding it to the first term.',
-    example:'Try: 3, 7, 11, 15, ... term 6? The jump is +4. Term 6 = 3 + 4×5 = 23 (5 jumps from term 1 to term 6).',
-    memoryHook:'Find the jump, then jump your way there — count how many JUMPS, not how many terms.',
-    commonMistake:'multiplying the jump by the term number instead of by the number of jumps (one less than the term number)' },
+    strategy:'For number patterns, find the constant "jump" between terms first. Then find any term by multiplying the jump by how many JUMPS you need (one less than the term number) and adding it to the first term. For cipher/code problems with brackets like (a × b) + c, solve the brackets first (BEDMAS), then finish the rest.',
+    example:'Try: 3, 7, 11, 15, ... term 6? The jump is +4. Term 6 = 3 + 4×5 = 23 (5 jumps from term 1 to term 6). (Cipher version: (4 × 6) + 9 — brackets first: 4×6=24, then +9 = 33.)',
+    memoryHook:'Find the jump, then jump your way there — count how many JUMPS, not how many terms. For codes with brackets: brackets always go first.',
+    commonMistake:'multiplying the jump by the term number instead of by the number of jumps, or adding before multiplying in a bracket expression' },
   wordproblems: { name:'Word Problems', icon:'📖',
     strategy:'Read the problem carefully. Highlight the important numbers and what’s being asked. Draw a quick picture if it helps. Plan which operations you need and in what order. Solve step by step. Check that your answer makes sense.',
     example:'Try: "3 friends share 18 stickers evenly, then find 6 more." Plan: divide first (18÷3=6), then add (6+6=12) — follow the order the story happens in.',
     memoryHook:'Read → Highlight → Draw → Plan → Solve → Check — like a detective solving a case step by step.',
     commonMistake:'jumping straight to a calculation without reading the whole problem, or doing the operations in the wrong order' },
   multiplication: { name:'Multiplication', icon:'✖️',
-    strategy:'Break big multiplications into easier chunks. For ×9: multiply by 10, then subtract one group. For doubling: split into two halves, double each, add together.',
-    example:'Try: 8 × 9 — think 8 × 10 = 80, then subtract one 8 → 80 − 8 = 72.',
-    memoryHook:'The 9 Trick: multiply by 10, then take one group away.',
-    commonMistake:'forgetting to subtract the extra group after multiplying by 10 in the 9 Trick' },
+    strategy:'For any bigger multiplication, break the second number into tens and ones and multiply each part separately, then add the results — this works for EVERY multiplication, not just special numbers. Special shortcuts: for ×9, multiply by 10 then subtract one group; for ×5, multiply by 10 then divide by 2.',
+    example:'Try: 23 × 6 — split 23 into 20 + 3: (20×6) + (3×6) = 120 + 18 = 138. (×9 shortcut: 8 × 9 = 8×10 − 8 = 72.)',
+    memoryHook:'Split the bigger number into friendly chunks, multiply each chunk, then add the pieces back together — that always works, even when there\'s no special trick.',
+    commonMistake:'trying to force a special trick (like the 9 Trick) onto a number it doesn\'t apply to, instead of just splitting into tens and ones' },
   division: { name:'Division', icon:'➗',
     strategy:'Division is the reverse of multiplication — ask "what number times the divisor gives me this?" Use times tables backward, or think of it as sharing a total into equal groups.',
     example:'Try: 56 ÷ 8 — ask: 8 times what makes 56? 8×7=56, so the answer is 7.',
@@ -2428,11 +2433,11 @@ const STRATEGY_LIBRARY = {
     example:'Try: 3 meters to centimeters — 3 × 100 = 300 cm.',
     memoryHook:'Bigger unit → smaller unit means MORE of them, so multiply. Smaller → bigger means fewer, so divide.',
     commonMistake:'multiplying and dividing backwards — dividing when converting to a smaller unit instead of multiplying' },
-  patterns: { name:'Patterns', icon:'🔁',
-    strategy:'Find what changes from one term to the next. If the same amount is always added, repeat the jump. If each term is multiplied, it’s a growing pattern — repeat the multiplication.',
-    example:'Try: 2, 6, 18, 54, ... next? Each term is ×3. Next = 54 × 3 = 162.',
-    memoryHook:'Ask "what happened to get from one number to the next?" — that’s the rule for the whole pattern.',
-    commonMistake:'assuming every pattern is addition, when some patterns actually multiply (and grow much faster)' },
+  patterns: { name:'Patterns & Missing Numbers', icon:'🔁',
+    strategy:'Find what changes from one term to the next. If the same amount is always added, repeat the jump. If each term is multiplied, it\'s a growing pattern — repeat the multiplication. If a number is MISSING from an equation, work backward using the opposite operation. For rounding, look at the digit right after the place you\'re rounding to: 5 or more rounds up, 4 or less stays down.',
+    example:'Try: 2, 6, 18, 54, ... next? Each term is ×3. Next = 54 × 3 = 162. (Missing-number version: 45 + ? = 72 — work backward: 72 − 45 = 27.)',
+    memoryHook:'Ask "what happened to get from one number to the next?" — that\'s the rule for the whole pattern. Missing number: flip the operation and work backward.',
+    commonMistake:'assuming every pattern is addition when some multiply, or adding instead of subtracting to find a missing number' },
   mentalmath: { name:'Mental Math Shortcuts', icon:'⚡',
     strategy:'×5: multiply by 10, then divide by 2. ×25: multiply by 100, then divide by 4. ×9: multiply by 10, then subtract one group. 10% = move the decimal one place; 5% = half of 10%; 1% = move the decimal two places; 15% = 10% + 5%; 75% = 50% + 25%.',
     example:'Try: 24 × 5 — 24 × 10 = 240, then ÷ 2 = 120.',
@@ -2835,6 +2840,9 @@ function startMission(id) {
   $('ms-xp-pill').textContent = '? +' + def.xp + ' XP + accuracy coins';
   $('ms-result').style.display = 'none';
   $('ms-play').style.display = 'block';
+  const padCard = $('pad-card'), padToggle = $('pad-toggle-btn');
+  if (padCard) padCard.classList.remove('mobile-open');
+  if (padToggle) padToggle.textContent = '✏️ SCRATCHPAD';
   initPad();
   nextQ();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2983,6 +2991,21 @@ function clearPad() {
   for (let y = 0; y < r.height; y += 26) { pctx.beginPath(); pctx.moveTo(0, y); pctx.lineTo(r.width, y); pctx.stroke(); }
 }
 function setColor(c, el) { padColor = c; document.querySelectorAll('.dot').forEach(d => d.classList.remove('on')); el.classList.add('on'); }
+// On narrow phones the scratchpad is collapsed by default (see @media max-width:820px)
+// to leave room for the question and Brain Boost panel; this toggles it open on demand.
+// The canvas is 0x0 while hidden, so it must be re-measured via initPad() once shown.
+function toggleScratchpad() {
+  const pc = $('pad-card');
+  const btn = $('pad-toggle-btn');
+  if (!pc || !btn) return;
+  const opening = !pc.classList.contains('mobile-open');
+  pc.classList.toggle('mobile-open', opening);
+  btn.textContent = opening ? '✏️ HIDE SCRATCHPAD' : '✏️ SCRATCHPAD';
+  if (opening) {
+    initPad();
+    setTimeout(() => pc.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
 $('ms-answer').addEventListener('keydown', e => { if (e.key === 'Enter') submitQ(); });
 $('ms-answer').addEventListener('focus', () => setTimeout(() => $('ms-answer').scrollIntoView({ behavior: 'smooth', block: 'center' }), 120));
 
