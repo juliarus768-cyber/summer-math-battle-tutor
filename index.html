@@ -1574,6 +1574,30 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
         <button class="mgr-toggle" id="mute-toggle" onclick="toggleMute()">On</button>
       </div>
     </div>
+
+    <div class="s-sec-title">&#128241; DEVICE &amp; DATA</div>
+    <div class="s-pending" style="border-style:solid;border-color:rgba(255,140,40,.4)">
+      <div class="mgr-note" style="margin-bottom:14px;color:var(--text);line-height:1.5">
+        &#128241; <b>Progress is saved on THIS DEVICE only</b> (in the browser's local storage). If Alex or Katya play on a different phone, tablet, or browser, they'll see different coins, XP, and streaks there &mdash; nothing is synced between devices yet. Cross-device sync is a planned future update.
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <span style="font-weight:700">App version:</span>
+        <span id="app-version-display" style="font-family:var(--orb);color:var(--muted);font-size:13px"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="rq-ok" style="border-color:var(--blue);color:var(--blue);background:rgba(25,201,255,.1)" onclick="checkForUpdates()">&#128260; CHECK FOR UPDATES / REFRESH APP</button>
+      </div>
+      <div id="reset-progress-zone">
+        <button class="rq-no" onclick="confirmResetProgress()">&#128465;&#65039; RESET LOCAL PROGRESS</button>
+        <div id="reset-warning" style="display:none;margin-top:12px;padding:14px;border:1.5px solid var(--pink);border-radius:14px;background:rgba(255,46,126,.08)">
+          <div style="font-weight:700;color:var(--pink);margin-bottom:10px">&#9888;&#65039; This erases ALL coins, XP, streaks, rewards, and progress for BOTH Alex and Katya on THIS device. This cannot be undone.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="rq-no" onclick="doResetProgress()">YES, ERASE EVERYTHING</button>
+            <button class="mgr-toggle" onclick="cancelResetProgress()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1775,13 +1799,20 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
 <div class="footer">
   <span>Summer Math Battle Tutor © 2026</span>
-  <span>v1.0.0&nbsp; | &nbsp;Built for Champions ❤</span>
+  <span>v1.1.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
 </div>
 </div><!-- /wrap -->
 
 <div class="toast" id="toast"></div>
 
 <script>
+/* ============ APP VERSION / BUILD ============
+   __BUILD_ID__ is stamped in by vite.config.js at build time (see
+   injectBuildInfo). If you ever see "__BUILD_ID__" literally on screen, the
+   page was opened from raw source rather than a built/deployed copy. */
+const APP_VERSION = '1.1.0';
+const APP_BUILD = '__BUILD_ID__';
+
 /* ============ SAFE STORAGE (localStorage with in-memory fallback) ============ */
 const Store = (() => {
   let mem = {}, ok = false;
@@ -2873,6 +2904,50 @@ function syncMuteBtn() {
   const b = $('mute-toggle');
   if (b) b.textContent = state.settings.muted ? 'Off' : 'On';
 }
+
+/* ---- Device & data: version display, forced refresh, local reset ---- */
+function syncVersionDisplay() {
+  const el = $('app-version-display');
+  if (el) el.textContent = `v${APP_VERSION} · build ${APP_BUILD}`;
+}
+// Clears any Cache Storage entries and service worker registrations (there
+// isn't one today, but this stays correct if one is ever added later), then
+// forces a real network fetch of index.html — a plain location.reload() can
+// still be served from a cache layer that Cache-Control alone didn't clear
+// on some mobile browsers, so we also cache-bust the URL itself.
+function checkForUpdates() {
+  toast('🔄 Checking for the latest version…');
+  (async () => {
+    try {
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+    } catch (e) {}
+    location.href = location.pathname + '?refresh=' + Date.now();
+  })();
+}
+function confirmResetProgress() {
+  const w = $('reset-warning');
+  if (w) w.style.display = 'block';
+}
+function cancelResetProgress() {
+  const w = $('reset-warning');
+  if (w) w.style.display = 'none';
+}
+// Parent Zone already requires the PIN to reach this screen, so this button
+// is inherently PIN-protected; the extra click-through warning guards
+// against an accidental tap on a destructive, unrecoverable action.
+function doResetProgress() {
+  try { localStorage.removeItem('smbt-state-v2'); } catch (e) {}
+  toast('🗑️ Local progress reset — reloading…');
+  setTimeout(() => { location.href = location.pathname + '?reset=' + Date.now(); }, 500);
+}
+
 function renderParent() {
   const reqs = state.requests.slice().reverse();
   const pending = reqs.filter(r => r.status === 'pending');
@@ -2913,6 +2988,7 @@ function renderParent() {
   renderInsights();
   renderActivity();
   syncMuteBtn();
+  syncVersionDisplay();
 }
 
 /* ---- Learning Insights: weak/strong subjects from mastery tracking ---- */
