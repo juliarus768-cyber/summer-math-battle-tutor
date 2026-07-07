@@ -312,11 +312,25 @@ body {
 .ms-segs i.done { background: var(--acc); box-shadow: 0 0 12px var(--accSoft); }
 .ms-segs i.cur { background: rgba(255,255,255,.22); outline: 1.5px solid var(--accSoft); }
 .ms-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 14px; }
-.q-card { background: var(--panel); border: 1.5px solid var(--accSoft); border-radius: 20px; padding: 22px 24px; box-shadow: 0 0 24px rgba(0,0,0,.4); }
+.ms-grid > * { min-width: 0; }
+.q-card { background: var(--panel); border: 1.5px solid var(--accSoft); border-radius: 20px; padding: 22px 24px; box-shadow: 0 0 24px rgba(0,0,0,.4); min-width: 0; }
 .q-story { font-size: 17px; font-weight: 600; color: var(--muted); font-style: italic; margin-bottom: 14px; line-height: 1.5; }
 .q-text { font-size: 29px; font-weight: 700; line-height: 1.45; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
 #ms-answer { width: 100%; font-family: var(--orb); font-size: 30px; font-weight: 800; color: var(--text); background: rgba(255,255,255,.05); border: 2px solid var(--line); border-radius: 16px; padding: 16px; text-align: center; outline: none; margin-bottom: 8px; }
 #ms-answer:focus { border-color: var(--acc); box-shadow: 0 0 18px var(--accSoft); }
+/* Answer row: an optional +/- toggle next to the answer field. Neither the
+   iOS "numeric" nor "decimal" software keyboard has a minus-sign key, so
+   negative-answer questions (Alex's integers topic) need an explicit,
+   reliable way to enter one that doesn't depend on OS keyboard quirks. */
+.answer-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; min-width: 0; }
+.answer-row #ms-answer, .answer-row #b-answer { flex: 1; width: auto; min-width: 0; margin-bottom: 0; }
+.sign-toggle {
+  flex-shrink: 0; width: 56px; font-family: var(--orb); font-size: 24px; font-weight: 800;
+  color: var(--text); background: rgba(255,255,255,.05); border: 2px solid var(--line);
+  border-radius: 16px; cursor: pointer; transition: all .15s;
+}
+.sign-toggle:hover, .sign-toggle:focus { border-color: var(--acc); box-shadow: 0 0 14px var(--accSoft); }
+.sign-toggle.active { color: var(--acc); border-color: var(--acc); background: var(--accDim); }
 .ms-submit { color: var(--acc); border: 2px solid var(--accSoft); box-shadow: 0 0 16px var(--accDim); text-shadow: 0 0 10px var(--accSoft); font-size: 17px; padding: 16px; }
 .ms-submit:hover { background: var(--accDim); box-shadow: 0 0 26px var(--accSoft); }
 .ms-submit:disabled { opacity: .45; cursor: default; }
@@ -356,6 +370,22 @@ body {
 .hint-btn:hover { background: rgba(255,201,60,.18); }
 .hint-text { font-size: 14px; font-weight: 600; color: #FFD98A; font-style: italic; opacity: 0; transition: opacity .3s; line-height: 1.4; }
 .hint-text.show { opacity: 1; }
+
+/* Brain Boost progressive strategy coach */
+.bb-wrap { margin: -4px 0 12px; max-width: 100%; }
+.bb-btn { display: inline-flex; align-items: center; gap: 6px; }
+.bb-btn:disabled { opacity: .5; cursor: default; }
+.bb-progress { font-size: 10px; letter-spacing: 1px; color: var(--muted); margin-left: 8px; }
+.bb-panel { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-width: 100%; min-width: 0; }
+.bb-card { background: rgba(255,201,60,.08); border: 1px solid rgba(255,201,60,.32); border-radius: 12px; padding: 12px 14px; font-size: 15px; line-height: 1.58; color: #FFE3A0; font-weight: 600; opacity: 0; animation: bbFadeIn .35s ease forwards; max-width: 100%; min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+.bb-card .bb-label { display: block; font-family: var(--raj); font-weight: 800; font-size: 13px; letter-spacing: 1px; color: var(--gold); margin-bottom: 6px; text-transform: uppercase; }
+.bb-card.bb-mistake { background: rgba(255,46,126,.08); border-color: rgba(255,46,126,.32); color: #FFC2DA; }
+.bb-card.bb-mistake .bb-label { color: var(--pink); }
+.bb-card.bb-example { background: rgba(25,201,255,.08); border-color: rgba(25,201,255,.32); color: #C9EEFF; }
+.bb-card.bb-example .bb-label { color: var(--blue); }
+@keyframes bbFadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
+.estimate-nudge { font-size: 12px; font-weight: 600; color: var(--muted); margin: -6px 0 8px; font-style: italic; }
+.pad-toggle-btn { display: none; }
 .combo { font-family: var(--orb); font-weight: 900; font-size: 16px; letter-spacing: 2px; color: var(--gold); text-shadow: 0 0 14px rgba(255,201,60,.75); height: 22px; margin-bottom: 4px; }
 .combo.pop { animation: combo-pop .5s cubic-bezier(.34,1.56,.64,1); }
 @keyframes combo-pop { 0%{transform:scale(.5)} 55%{transform:scale(1.3)} 100%{transform:scale(1)} }
@@ -928,6 +958,8 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   .ms-choices { grid-template-columns: 1fr; }
   .choice-answer { min-height: 68px; font-size: 22px; }
   .pad-card { display: none; }
+  .pad-card.mobile-open { display: flex; margin-top: 4px; }
+  .pad-toggle-btn { display: block !important; }
 }
 @media (orientation: landscape) and (max-height: 760px) {
   .ms-top { position: relative; }
@@ -1168,6 +1200,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   <div class="qlink" onclick="goTab('Store')"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>Reward Store</div>
   <div class="qlink" onclick="goTab('Grant Prize')"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11"/></svg>Grant Prize</div>
   <div class="qlink" onclick="goTab('Parent')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg>Parent Dashboard</div>
+  <div class="qlink" onclick="openStrategyLib()"><svg viewBox="0 0 24 24"><path d="M12 3c-4 1-7 3-7 7 0 3.5 2.5 5.5 3.5 7 .5.8 1 1.5 1 2h5c0-.5.5-1.2 1-2 1-1.5 3.5-3.5 3.5-7 0-4-3-6-7-7Z"/><path d="M10 22h4"/></svg>Strategy Library</div>
 </div>
 </aside>
 
@@ -1357,17 +1390,22 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="q-card">
         <div class="q-story" id="ms-story"></div>
         <div class="q-text" id="ms-q"></div>
-        <div class="hint-row">
-          <button class="hint-btn" id="ms-hint-btn" onclick="showHint()">💡 HINT</button>
-          <span class="hint-text" id="ms-hint"></span>
+        <div class="estimate-nudge">🎯 Try to estimate the answer first — it helps you catch mistakes!</div>
+        <div class="bb-wrap">
+          <button class="hint-btn bb-btn" id="ms-bb-btn" onclick="advanceBrainBoost('ms')">🧠 BRAIN BOOST<span class="bb-progress" id="ms-bb-progress"></span></button>
+          <div class="bb-panel" id="ms-bb-panel"></div>
         </div>
         <div class="combo" id="ms-combo"></div>
         <div id="ms-choices" class="ms-choices"></div>
-        <input id="ms-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        <div class="answer-row">
+          <button type="button" class="sign-toggle" id="ms-sign-btn" onclick="toggleSign('ms-answer')" style="display:none" aria-label="Toggle negative sign">&#177;</button>
+          <input id="ms-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        </div>
         <div class="feedback" id="ms-fb"></div>
         <button class="btn ms-submit" id="ms-submit" onclick="submitQ()">&#9876; &nbsp;SUBMIT ANSWER</button>
+        <button class="hint-btn pad-toggle-btn" id="pad-toggle-btn" onclick="toggleScratchpad()" style="margin-top:10px;width:100%">&#9999;&#65039; SCRATCHPAD</button>
       </div>
-      <div class="pad-card">
+      <div class="pad-card" id="pad-card">
         <div class="pad-head"><span>&#128221; SCRATCHPAD</span>
           <span class="pad-tools">
             <i class="dot on" style="background:#3FD9FF" onclick="setColor('#3FD9FF',this)"></i>
@@ -1450,11 +1488,14 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="q-card">
         <div class="q-story" id="b-story"></div>
         <div class="q-text" id="b-q"></div>
-        <div class="hint-row">
-          <button class="hint-btn" onclick="bShowHint()">&#128161; HINT</button>
-          <span class="hint-text" id="b-hint"></span>
+        <div class="bb-wrap">
+          <button class="hint-btn bb-btn" id="b-bb-btn" onclick="advanceBrainBoost('b')">🧠 BRAIN BOOST<span class="bb-progress" id="b-bb-progress"></span></button>
+          <div class="bb-panel" id="b-bb-panel"></div>
         </div>
-        <input id="b-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        <div class="answer-row">
+          <button type="button" class="sign-toggle" id="b-sign-btn" onclick="toggleSign('b-answer')" style="display:none" aria-label="Toggle negative sign">&#177;</button>
+          <input id="b-answer" type="text" inputmode="decimal" placeholder="Your answer" autocomplete="off">
+        </div>
         <div class="feedback" id="b-fb"></div>
         <button class="btn ms-submit" id="b-submit" onclick="bSubmit()">&#9876; &nbsp;LOCK IN ANSWER</button>
       </div>
@@ -1555,7 +1596,52 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
         <button class="mgr-toggle" id="mute-toggle" onclick="toggleMute()">On</button>
       </div>
     </div>
+
+    <div class="s-sec-title">&#128241; DEVICE &amp; DATA</div>
+    <div class="s-pending" style="border-style:solid;border-color:rgba(255,140,40,.4)">
+      <div class="mgr-note" style="margin-bottom:14px;color:var(--text);line-height:1.5">
+        &#128241; <b>Progress is saved on THIS DEVICE only</b> (in the browser's local storage). If Alex or Katya play on a different phone, tablet, or browser, they'll see different coins, XP, and streaks there &mdash; nothing is synced between devices yet. Cross-device sync is a planned future update.
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <span style="font-weight:700">App version:</span>
+        <span id="app-version-display" style="font-family:var(--orb);color:var(--muted);font-size:13px"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="rq-ok" style="border-color:var(--blue);color:var(--blue);background:rgba(25,201,255,.1)" onclick="checkForUpdates()">&#128260; CHECK FOR UPDATES / REFRESH APP</button>
+      </div>
+      <div id="reset-progress-zone">
+        <button class="rq-no" onclick="confirmResetProgress()">&#128465;&#65039; RESET LOCAL PROGRESS</button>
+        <div id="reset-warning" style="display:none;margin-top:12px;padding:14px;border:1.5px solid var(--pink);border-radius:14px;background:rgba(255,46,126,.08)">
+          <div style="font-weight:700;color:var(--pink);margin-bottom:10px">&#9888;&#65039; This erases ALL coins, XP, streaks, rewards, and progress for BOTH Alex and Katya on THIS device. This cannot be undone.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="rq-no" onclick="doResetProgress()">YES, ERASE EVERYTHING</button>
+            <button class="mgr-toggle" onclick="cancelResetProgress()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</section>
+
+<section class="sscreen" id="strategy-screen">
+  <div class="ms-top">
+    <button class="back-btn" onclick="closeStrategyLib()">&#8249; &nbsp;HQ</button>
+    <div style="flex:1">
+      <div class="ms-title-row">
+        <span class="ms-title">🧠 STRATEGY LIBRARY</span>
+      </div>
+      <div class="ms-count">Every strategy you've discovered and every trick badge you've earned</div>
+    </div>
+  </div>
+  <div class="s-pending" style="border-style:solid;border-color:rgba(155,48,255,.4);margin-bottom:18px">
+    <div class="mgr-note" style="color:var(--text);line-height:1.5">
+      💡 Tap <b>🧠 Brain Boost</b> during any question to discover the strategy behind it. Keep using a strategy correctly and you'll unlock a flashy 🏆 trick badge for it too.
+    </div>
+  </div>
+  <div class="s-sec-title">🏆 TRICK BADGES EARNED</div>
+  <div class="badges-row" id="strategy-badges" style="flex-wrap:wrap;justify-content:flex-start;gap:16px"></div>
+  <div class="s-sec-title" style="margin-top:24px">📚 STRATEGIES DISCOVERED</div>
+  <div id="strategy-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:10px"></div>
 </section>
 
 <section class="mlscreen" id="moneylab-screen">
@@ -1732,7 +1818,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="er-ask-sub">Pick the move that gets x alone. The gate only opens for the right step.</div>
       <div class="er-choices" id="er-choices"></div>
       <div class="er-fb" id="er-fb"></div>
-      <button class="er-hint-btn" id="er-hint-btn" onclick="erShowHint()">💡 NEED A HINT?</button>
+      <button class="er-hint-btn" id="er-hint-btn" onclick="erShowHint()">🧠 NEED A BRAIN BOOST?</button>
       <div class="er-hintbox" id="er-hintbox"><span>🗝️</span><span id="er-hint-text"></span></div>
     </div>
   </div>
@@ -1756,13 +1842,20 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
 <div class="footer">
   <span>Summer Math Battle Tutor © 2026</span>
-  <span>v1.0.0&nbsp; | &nbsp;Built for Champions ❤</span>
+  <span>v1.1.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
 </div>
 </div><!-- /wrap -->
 
 <div class="toast" id="toast"></div>
 
 <script>
+/* ============ APP VERSION / BUILD ============
+   __BUILD_ID__ is stamped in by vite.config.js at build time (see
+   injectBuildInfo). If you ever see "__BUILD_ID__" literally on screen, the
+   page was opened from raw source rather than a built/deployed copy. */
+const APP_VERSION = '1.1.0';
+const APP_BUILD = '__BUILD_ID__';
+
 /* ============ SAFE STORAGE (localStorage with in-memory fallback) ============ */
 const Store = (() => {
   let mem = {}, ok = false;
@@ -2001,7 +2094,7 @@ alex: {
     () => { const x=R(2,12), m=R(2,9), c=R(1,19); return { s:'🧠 The Logic Guardian seals the door with an equation.', q:`Solve for x:   ${m}x + ${c} = ${m*x+c}`, a:x }; },
     () => { const x=R(3,12), m=R(2,8), c=R(1,15); return { s:"🧠 Crack the guardian's second seal!", q:`Solve for x:   ${m}x − ${c} = ${m*x-c}`, a:x }; },
     () => { const n=R(5,15); return { s:'🧠 Power surge! Square the energy core.', q:`${n}² = ?`, a:n*n }; },
-    () => { const st=RNZ(-9,9), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st }; }
+    () => { const st=RNZ(2,9), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st }; }
   ],
   money: [
     () => { const p=pick([10,15,20,25,30,40,50,75]), n=R(2,15)*20; return { s:pick(['💰 Mr-Beast-style challenge: split the prize pool!','💰 Money Lab: calculate your creator earnings!']), q:`${p}% of $${n} = ?`, a:p*n/100 }; },
@@ -2082,7 +2175,7 @@ alex: {
     (d)=>{ const a=R(2,9), b=R(2,9), c=R(2,5+d*2); return { s:'🧠 Brackets guard this gate.', q:`(${a} + ${b}) × ${c} = ?`, a:(a+b)*c, hint:'Solve everything inside the brackets first, then multiply.' }; },
     (d)=>{ const a=R(2,9+d*2), b=R(2,9), c=R(2,9), e=R(2,9); return { s:'⚡ Double strike — two operations before you add!', q:`${a} × ${b} + ${c} × ${e} = ?`, a:a*b+c*e, hint:'Do both multiplications first, then add the two results together.' }; },
     (d)=>{ const n=R(4,8+d*3); return { s:'🧠 Power surge — square the energy core.', q:`${n}² = ?`, a:n*n, hint:'A squared number is multiplied by itself: n × n.' }; },
-    (d)=>{ const a=R(15,40+d*10), b=R(2,9), c=R(2,9); return { s:'⚡ Subtract the combo damage!', q:`${a} − ${b} × ${c} = ?`, a:a-b*c, hint:'Multiply first, then subtract that result from the front number.' }; }
+    (d)=>{ const b=R(2,9), c=R(2,9), a=b*c+R(2,30+d*10); return { s:'⚡ Subtract the combo damage!', q:`${a} − ${b} × ${c} = ?`, a:a-b*c, hint:'Multiply first, then subtract that result from the front number.' }; }
   ],
   fractions: [
     (d)=>{ const den=pick([3,4,5,6,8,10,12]), num=R(1,den-1), whole=den*R(2,4+d); return { s:'🕵 Decode the fraction of loot.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
@@ -2096,8 +2189,8 @@ alex: {
     (d)=>{ const div=RNZ(2,9), quot=R(2,12+d*3); const dividend=Math.round(div*quot*10)/10; return { s:'💰 Split the decimal loot.', q:`${dividend} ÷ ${div} = ?`, a: Math.round((dividend/div)*100)/100, mode:'decimal', hint:'Think of it as a whole-number division, then place the decimal point back.' }; }
   ],
   percent: [
-    (d)=>{ const p=pick([5,10,15,20,25,30,40,50,60,75]), n=R(2,20+d*10)*10; return { s:'💰 Percent of the prize pool.', q:`${p}% of $${n} = ?`, a: p*n/100, mode:'decimal', hint:`10% of ${n} is ${n/10} — build up from there.` }; },
-    (d)=>{ const n=R(3,9+d)*20, p=pick([10,20,25,50]); return { s:'💰 Flash sale markdown.', q:`A $${n} item is ${p}% off. What is the SALE price?`, a: n-p*n/100, mode:'decimal', hint:`Find ${p}% of ${n} first, then subtract it from ${n}.` }; },
+    (d)=>{ const p=pick([5,10,15,20,25,30,40,50,60,75]), n=R(2,15+d*6)*20; return { s:'💰 Percent of the prize pool.', q:`${p}% of $${n} = ?`, a: p*n/100, hint:`10% of ${n} is ${n/10} — build up from there.` }; },
+    (d)=>{ const n=R(3,9+d)*20, p=pick([10,20,25,50]); return { s:'💰 Flash sale markdown.', q:`A $${n} item is ${p}% off. What is the SALE price?`, a: n-p*n/100, hint:`Find ${p}% of ${n} first, then subtract it from ${n}.` }; },
     (d)=>{ const part=R(5,20+d*5), whole=part+R(5,20+d*5); const pct=Math.round(part/whole*1000)/10; return { s:'💰 What share of the loot?', q:`${part} out of ${whole} — what PERCENT is that? (round to 1 decimal)`, a: pct, mode:'decimal', hint:'Percent = (part ÷ whole) × 100.' }; },
     (d)=>{ const price=R(15,60+d*10), tax=pick([5,8,13,15]); return { s:'💰 Add the tax to the total.', q:`A $${price} item plus ${tax}% tax. TOTAL cost?`, a: Math.round(price*(1+tax/100)*100)/100, mode:'decimal', hint:`Find ${tax}% of ${price}, then add it to ${price}.` }; }
   ],
@@ -2121,7 +2214,7 @@ alex: {
   geometry: [
     (d)=>{ const l=R(6,20+d*5), w=R(4,15+d*3); return { s:'💀 Arena floor of doom.', q:`A rectangle is ${l} m by ${w} m. What is its AREA?`, a:l*w, hint:'Area of a rectangle = length × width.' }; },
     (d)=>{ const l=R(6,18), w=R(4,14); return { s:'🛡 Fortify the perimeter wall.', q:`A rectangle is ${l} m by ${w} m. What is its PERIMETER?`, a:2*(l+w), hint:'Perimeter = 2 × (length + width) — add ALL the sides.' }; },
-    (d)=>{ const b=R(4,16+d*4), h=R(3,15+d*3); return { s:'💀 Triangular shield panel.', q:`A triangle has base ${b} cm and height ${h} cm. What is its AREA?`, a:b*h/2, hint:'Triangle area = base × height ÷ 2.' }; },
+    (d)=>{ const b=R(2,8+d*2)*2, h=R(3,15+d*3); return { s:'💀 Triangular shield panel.', q:`A triangle has base ${b} cm and height ${h} cm. What is its AREA?`, a:b*h/2, hint:'Triangle area = base × height ÷ 2.' }; },
     (d)=>{ const l=R(3,8+d), w=R(2,6+d), h=R(2,5+d); return { s:'📦 Supply crate volume.', q:`A box is ${l} m long, ${w} m wide, ${h} m tall. What is its VOLUME?`, a:l*w*h, hint:'Volume of a box = length × width × height.' }; },
     (d)=>{ const a=R(30,80), b=R(30,120-a-10); return { s:'⚔️ Triangle angle puzzle.', q:`A triangle has angles ${a}° and ${b}°. What is the third angle?`, a:180-a-b, hint:'The three angles of a triangle always add up to 180°.' }; },
     (d)=>{ const r=pick([2,3,4,5,6,7]); return { s:'🔵 Circular energy shield.', q:`A circle has radius ${r} cm. What is its CIRCUMFERENCE? Use π ≈ 3.14, round to 1 decimal.`, a: Math.round(2*3.14*r*10)/10, mode:'decimal', hint:'Circumference = 2 × π × radius.' }; }
@@ -2135,10 +2228,10 @@ alex: {
     (d)=>{ const r=R(3,9+d*2), w=R(6,15+d*3); return { s:'💰 Grinding coins in the arena.', q:`You earn ${r} coins per win. Coins after ${w} wins?`, a:r*w, hint:'Multiply coins-per-win by the number of wins.' }; },
     (d)=>{ const week=pick([5,8,10,12,15]), wks=R(3,8+d*2); return { s:'🏦 Saving toward a goal.', q:`You save $${week} a week. How many weeks to reach $${week*wks}?`, a:wks, hint:'Divide the goal amount by how much you save each week.' }; },
     (d)=>{ const price=pick([40,60,80,100+d*20]), pct=pick([10,20,25]); const down=Math.round(price*pct/100); return { s:'💵 Layaway plan.', q:`A $${price} item needs a ${pct}% deposit. How much is the deposit?`, a: down, mode:'decimal', hint:'Deposit = percent × total price.' }; },
-    (d)=>{ const total=R(20,60+d*20); return { s:'🧾 Split the winnings evenly.', q:`Two teammates split $${total} in prize coins equally. How much does EACH get?`, a: Math.round((total/2)*100)/100, mode:'decimal', hint:'Divide the total by 2 for an equal split.' }; }
+    (d)=>{ const total=R(10,30+d*10)*2; return { s:'🧾 Split the winnings evenly.', q:`Two teammates split $${total} in prize coins equally. How much does EACH get?`, a: total/2, hint:'Divide the total by 2 for an equal split.' }; }
   ],
   logic: [
-    (d)=>{ const st=RNZ(-9-d*2,9+d*2), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st, hint:'Find the constant jump between terms, then add it repeatedly (or multiply by how many jumps).' }; },
+    (d)=>{ const st=R(2,9+d*2), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st, hint:'Find the constant jump between terms, then add it repeatedly (or multiply by how many jumps).' }; },
     (d)=>{ const a=R(4,12+d*3), b=R(3,9+d*2), c=R(5,40+d*10); return { s:'🕵 Intel intercepted! Decode the cipher.', q:`The cipher key is (${a} × ${b}) + ${c}. What number unlocks it?`, a:a*b+c, hint:'Brackets first: multiply, then add.' }; },
     (d)=>{ const start=R(2,9), ratio=pick([2,3]); const terms=[start, start*ratio, start*ratio*ratio, start*ratio*ratio*ratio]; return { s:'🧠 Doubling (or tripling) trap!', q:`Pattern: ${terms[0]}, ${terms[1]}, ${terms[2]}, ${terms[3]}, ... What is the next term?`, a: terms[3]*ratio, hint:`Each term is multiplied by ${ratio} to get the next one.` }; }
   ],
@@ -2195,7 +2288,7 @@ katya: {
     (d)=>{ let n=R(31,489); if (n%10===5) n++; return { s:'🛡 Round the clue number.', q:`Round ${n} to the nearest 10.`, a: Math.round(n/10)*10, hint:'Look at the ones digit: 5 or more rounds UP, 4 or less stays DOWN.' }; }
   ],
   wordproblems: [
-    (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,40+d*5); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
+    (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,Math.min(40+d*5,a+b-5)); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
     (d)=>{ const price=R(4,9), qty=R(2,5+d); return { s:'🛍 Word problem.', q:`A toy costs $${price}. You buy ${qty}. What is the TOTAL cost?`, a: price*qty, hint:'Multiply the cost of one toy by how many you buy.' }; },
     (d)=>{ const f=pick(FRIENDS), t=R(3,7+d), c=R(4,9); return { s:`🔍 Flashlights on! You and ${f} search the rooms.`, q:`${t} rooms with ${c} clues in each. Total clues?`, a: t*c, hint:'Multiply the number of rooms by the clues in each room.' }; }
   ],
@@ -2247,18 +2340,211 @@ katya: {
   ]
 }};
 
+/* ============ BRAIN BOOST STRATEGY LIBRARY ============
+   One reusable-strategy entry per topic, written to Ontario-curriculum
+   math teaching practice: a strategy (the reusable method), a worked
+   example using different numbers than any live question, a memory hook
+   (visual or phrase), and the common mistake students make. This is the
+   content behind the progressive "Brain Boost" hint ladder — it teaches
+   the METHOD, not the answer to whatever question is on screen. */
+const STRATEGY_LIBRARY = {
+  bedmas: { name:'BEDMAS (Order of Operations)', icon:'🧮',
+    strategy:'Solve in this order: Brackets, Exponents, Division & Multiplication (left to right), then Addition & Subtraction (left to right). × and ÷ are equal partners — just work left to right between them (same for + and −).',
+    example:'Try: 6 + 4 × 3 — Step 1: multiply first → 4 × 3 = 12. Step 2: add → 6 + 12 = 18.',
+    memoryHook:'BEDMAS: Brackets, Exponents, Divide/Multiply, Add/Subtract — follow the steps in order like a recipe, don’t skip ahead.',
+    commonMistake:'solving strictly left to right instead of doing multiplication/division before addition/subtraction' },
+  fractions: { name:'Fractions', icon:'🍕',
+    strategy:'Think of a fraction as pizza slices. "3/4" means the pizza is cut into 4 equal slices and you have 3. To find a fraction OF a number: divide by the bottom number first, then multiply by the top number. To compare two fractions, turn each into a decimal (divide top by bottom) — whichever decimal is bigger, that fraction is bigger.',
+    example:'Try: 3/5 of 20 — Step 1: divide 20 by 5 = 4 (one slice). Step 2: multiply by 3 = 12. (Comparing: 3/4 vs 2/3 → 0.75 vs 0.67 → 3/4 is bigger.)',
+    memoryHook:'Picture a pizza or chocolate bar cut into equal pieces — the bottom number is the total pieces, the top number is how many you have.',
+    commonMistake:'adding the bottom numbers (denominators) together instead of only adding the top numbers when the bottoms already match' },
+  decimals: { name:'Decimals', icon:'🔢',
+    strategy:'Line up the decimal points — ones under ones, tenths under tenths — before adding or subtracting. For multiplying, ignore the decimal point, multiply as whole numbers, then count the decimal places back in. For dividing, it often helps to think of the decimal as a whole number first, then place the decimal point back in the answer.',
+    example:'Try: 2.4 + 1.35 — line up the points: 2.40 + 1.35 = 3.75. (Dividing: 4.8 ÷ 4 — think 48 ÷ 4 = 12, then place the point back → 1.2.)',
+    memoryHook:'Decimal points are like belt buckles lined up in a photo — they must always stay in a column.',
+    commonMistake:'lining up the digits on the right instead of lining up the decimal points, which throws the whole answer off' },
+  percent: { name:'Percentages', icon:'💯',
+    strategy:'Build percentages from 10% blocks: 10% = divide by 10. Then: 20% = 10% ×2, 5% = half of 10%, 15% = 10% + 5%, 25% = divide by 4 (a quarter), 50% = divide by 2 (half), 75% = 50% + 25%. Going backward — "what PERCENT is this part of the whole?" — use (part ÷ whole) × 100 instead.',
+    example:'Try: 15% of 80 — 10% of 80 = 8. 5% is half of that = 4. 15% = 8 + 4 = 12. (Backward version: 12 out of 80 as a percent = 12÷80×100 = 15%.)',
+    memoryHook:'25% means one quarter — like 15 minutes on a clock or a quarter (25 cents) of a dollar.',
+    commonMistake:'dividing by 2 instead of 4 when finding 25%, or forgetting to multiply by 100 when going from a fraction to a percent' },
+  integers: { name:'Integers (Positive & Negative)', icon:'🌡️',
+    strategy:'Think of a thermometer or elevator. Adding a positive moves UP; adding a negative (or subtracting a positive) moves DOWN. Subtracting a negative is the same as adding a positive. For multiplying or dividing: same signs give a POSITIVE answer, different signs give a NEGATIVE answer.',
+    example:'Try: -3 + (-4) — a thermometer at -3° drops another 4° → -7°. (Multiply/divide version: -3 × 4 — different signs, so the answer is negative → -12.)',
+    memoryHook:'Think temperature (below zero), elevators (below ground floor), or money owed (a debt) — negatives are the "below zero" world. For × and ÷: same signs = happy (+), different signs = grumpy (-).',
+    commonMistake:'forgetting the sign flip when subtracting a negative number, or forgetting to check the signs at all before multiplying/dividing' },
+  ratios: { name:'Ratios & Rates', icon:'⚖️',
+    strategy:'A ratio compares two amounts. To simplify, divide both numbers by their greatest common factor. To scale up or down (like a recipe), multiply or divide BOTH numbers by the same amount. A RATE compares two DIFFERENT units (like distance and time) — find the amount for just ONE unit by dividing: rate = total ÷ how many units.',
+    example:'Try: simplify 8:12 — both divide evenly by 4 → 2:3. (Rate version: a car travels 300 km in 5 hours — speed = 300 ÷ 5 = 60 km/h.)',
+    memoryHook:'A ratio is a recipe — double the pancakes means doubling EVERY ingredient. A rate is "how much for ONE" — like km per ONE hour, or dollars per ONE item.',
+    commonMistake:'changing only one side of a ratio instead of scaling both sides, or dividing the wrong number by the wrong one in a rate problem (always total ÷ units, not the other way around)' },
+  algebra: { name:'Algebra (Solving for x)', icon:'⚡',
+    strategy:'Whatever you do to one side of the equation, do to the other side too — keep it balanced like a scale. Undo addition/subtraction first, then multiplication/division. If there are brackets like m(x + c), divide by the outside number FIRST, then subtract.',
+    example:'Try: 3x + 4 = 19 — Step 1: subtract 4 from both sides → 3x = 15. Step 2: divide both sides by 3 → x = 5. (Bracket version: 2(x + 3) = 16 — divide by 2 first → x + 3 = 8, then subtract 3 → x = 5.)',
+    memoryHook:'An equation is a balance scale — whatever you add or remove from one side, do the same to the other.',
+    commonMistake:'dividing before subtracting (or only changing one side), or subtracting inside the brackets before dividing by the outside number' },
+  geometry: { name:'Geometry (Area, Perimeter, Volume & More)', icon:'📐',
+    strategy:'Perimeter is the fence AROUND a shape (add up all the sides). Area is the paint INSIDE a shape (length × width, or base × height ÷ 2 for a triangle). Volume is what fits INSIDE a box (length × width × height). The angles inside any triangle always add up to 180°. A circle’s distance around (circumference) = 2 × π × radius.',
+    example:'Try: a 5m × 3m rectangle — Perimeter (fence) = 2 × (5+3) = 16m. Area (paint) = 5 × 3 = 15m². (Triangle angles: two angles are 50° and 70° — the third is 180 − 50 − 70 = 60°.)',
+    memoryHook:'Perimeter = fence around it. Area = paint inside it. Volume = water that fills it. Triangle angles always total 180° — like three friends splitting a whole pizza of degrees.',
+    commonMistake:'mixing up area and perimeter, or forgetting that ALL three triangle angles (not just two) must add to 180°' },
+  probability: { name:'Probability', icon:'🎲',
+    strategy:'Probability is always: (ways to get what you want) ÷ (total possible outcomes). Count the favorable outcomes first, then count everything that could happen, and write it as a fraction.',
+    example:'Try: a bag has 3 red and 2 blue marbles — probability of red = 3 (favorable) ÷ 5 (total) = 3/5.',
+    memoryHook:'Probability = good outcomes ÷ total outcomes — what you want on top, everything possible on the bottom.',
+    commonMistake:'comparing the two groups to each other (like red vs blue) instead of comparing what you want to the TOTAL' },
+  money: { name:'Money Math', icon:'💰',
+    strategy:'Find the cost of ONE item first, then multiply by how many. For change, count UP from the price to the amount paid instead of subtracting in your head. For "how many weeks/items to reach a goal" or "split evenly" problems, that\'s usually just division: total ÷ each share.',
+    example:'Try: change from $20 for a $13 item — count up: 13→15 is +2, 15→20 is +5, total change = $7. (Goal version: saving $10 a week to reach $80 — 80 ÷ 10 = 8 weeks.)',
+    memoryHook:'Counting change is like a cash register — count UP from the price to the bill. "How many groups fit in this total" always means divide.',
+    commonMistake:'forgetting to multiply by the quantity, or dividing the goal by the wrong number' },
+  logic: { name:'Logic & Patterns', icon:'🧠',
+    strategy:'For number patterns, find the constant "jump" between terms first. Then find any term by multiplying the jump by how many JUMPS you need (one less than the term number) and adding it to the first term. For cipher/code problems with brackets like (a × b) + c, solve the brackets first (BEDMAS), then finish the rest.',
+    example:'Try: 3, 7, 11, 15, ... term 6? The jump is +4. Term 6 = 3 + 4×5 = 23 (5 jumps from term 1 to term 6). (Cipher version: (4 × 6) + 9 — brackets first: 4×6=24, then +9 = 33.)',
+    memoryHook:'Find the jump, then jump your way there — count how many JUMPS, not how many terms. For codes with brackets: brackets always go first.',
+    commonMistake:'multiplying the jump by the term number instead of by the number of jumps, or adding before multiplying in a bracket expression' },
+  wordproblems: { name:'Word Problems', icon:'📖',
+    strategy:'Read the problem carefully. Highlight the important numbers and what’s being asked. Draw a quick picture if it helps. Plan which operations you need and in what order. Solve step by step. Check that your answer makes sense.',
+    example:'Try: "3 friends share 18 stickers evenly, then find 6 more." Plan: divide first (18÷3=6), then add (6+6=12) — follow the order the story happens in.',
+    memoryHook:'Read → Highlight → Draw → Plan → Solve → Check — like a detective solving a case step by step.',
+    commonMistake:'jumping straight to a calculation without reading the whole problem, or doing the operations in the wrong order' },
+  multiplication: { name:'Multiplication', icon:'✖️',
+    strategy:'For any bigger multiplication, break the second number into tens and ones and multiply each part separately, then add the results — this works for EVERY multiplication, not just special numbers. Special shortcuts: for ×9, multiply by 10 then subtract one group; for ×5, multiply by 10 then divide by 2.',
+    example:'Try: 23 × 6 — split 23 into 20 + 3: (20×6) + (3×6) = 120 + 18 = 138. (×9 shortcut: 8 × 9 = 8×10 − 8 = 72.)',
+    memoryHook:'Split the bigger number into friendly chunks, multiply each chunk, then add the pieces back together — that always works, even when there\'s no special trick.',
+    commonMistake:'trying to force a special trick (like the 9 Trick) onto a number it doesn\'t apply to, instead of just splitting into tens and ones' },
+  division: { name:'Division', icon:'➗',
+    strategy:'Division is the reverse of multiplication — ask "what number times the divisor gives me this?" Use times tables backward, or think of it as sharing a total into equal groups.',
+    example:'Try: 56 ÷ 8 — ask: 8 times what makes 56? 8×7=56, so the answer is 7.',
+    memoryHook:'Division and multiplication are opposites — like a rewind button for times tables.',
+    commonMistake:'dividing in the wrong direction (the smaller number by the bigger one) instead of total ÷ groups' },
+  longdivision: { name:'Long Division', icon:'🔍',
+    strategy:'Split the big number into friendly chunks that divide evenly, then add the pieces together.',
+    example:'Try: 96 ÷ 4 — split 96 into 80 + 16. 80÷4=20, 16÷4=4. Add: 20+4=24.',
+    memoryHook:'Split it into friendly chunks, divide each chunk, then add the pieces back together.',
+    commonMistake:'forgetting to add all the leftover pieces back together at the end' },
+  time: { name:'Time', icon:'⏰',
+    strategy:'Remember: 60 seconds = 1 minute, 60 minutes = 1 hour, 24 hours = 1 day. For elapsed time, count forward from the start time to the end time in convenient jumps.',
+    example:'Try: minutes in 2 hours 15 minutes? 2 × 60 = 120, plus 15 = 135 minutes.',
+    memoryHook:'60-60-24: seconds to minutes, minutes to hours, hours to a day.',
+    commonMistake:'treating time like regular decimals (thinking 1.5 hours means 1 hour 5 minutes instead of 1 hour 30 minutes)' },
+  measurement: { name:'Measurement', icon:'📏',
+    strategy:'Metric "move the decimal" pattern: meters→centimeters ×100, liters→milliliters ×1000, kilograms→grams ×1000. Bigger unit → smaller unit means multiply; smaller → bigger means divide.',
+    example:'Try: 3 meters to centimeters — 3 × 100 = 300 cm.',
+    memoryHook:'Bigger unit → smaller unit means MORE of them, so multiply. Smaller → bigger means fewer, so divide.',
+    commonMistake:'multiplying and dividing backwards — dividing when converting to a smaller unit instead of multiplying' },
+  patterns: { name:'Patterns & Missing Numbers', icon:'🔁',
+    strategy:'Find what changes from one term to the next. If the same amount is always added, repeat the jump. If each term is multiplied, it\'s a growing pattern — repeat the multiplication. If a number is MISSING from an equation, work backward using the opposite operation. For rounding, look at the digit right after the place you\'re rounding to: 5 or more rounds up, 4 or less stays down.',
+    example:'Try: 2, 6, 18, 54, ... next? Each term is ×3. Next = 54 × 3 = 162. (Missing-number version: 45 + ? = 72 — work backward: 72 − 45 = 27.)',
+    memoryHook:'Ask "what happened to get from one number to the next?" — that\'s the rule for the whole pattern. Missing number: flip the operation and work backward.',
+    commonMistake:'assuming every pattern is addition when some multiply, or adding instead of subtracting to find a missing number' },
+  mentalmath: { name:'Mental Math Shortcuts', icon:'⚡',
+    strategy:'×5: multiply by 10, then divide by 2. ×25: multiply by 100, then divide by 4. ×9: multiply by 10, then subtract one group. 10% = move the decimal one place; 5% = half of 10%; 1% = move the decimal two places; 15% = 10% + 5%; 75% = 50% + 25%.',
+    example:'Try: 24 × 5 — 24 × 10 = 240, then ÷ 2 = 120.',
+    memoryHook:'Multiply by 10 first (easy), then adjust — ÷2 for ×5, ÷4 for ×25, subtract a group for ×9.',
+    commonMistake:'forgetting the second step, like multiplying by 10 for ×5 but forgetting to divide by 2 afterward' },
+  estimation: { name:'Estimation', icon:'🎯',
+    strategy:'Before solving exactly, round the numbers to friendly values and get a rough answer first. If your exact answer is way off from your estimate, that’s a signal to check your work.',
+    example:'Try: 48 × 21 — round to 50 × 20 = 1000, so the exact answer should be close to 1000 (actual: 1008).',
+    memoryHook:'Round first, solve second, compare last — your estimate is a safety check for your exact answer.',
+    commonMistake:'skipping the estimate entirely and not noticing when an exact answer is wildly unreasonable' },
+  reading: { name:'Reading Comprehension', icon:'📖',
+    strategy:'The answer to "who/what/when/where" questions is almost always stated directly in the text — go back and re-read the matching sentence instead of answering from memory.',
+    example:'Try: if a question asks "when," scan the passage for time words like morning, April, or "the next day."',
+    memoryHook:'Detective mode: go back into the story and find the exact sentence with the clue.',
+    commonMistake:'answering from memory instead of checking back in the passage, which can mix up small details' },
+  grammar: { name:'Grammar', icon:'✏️',
+    strategy:'Identify what job a word does in the sentence: naming something (noun), showing action (verb), or describing something (adjective).',
+    example:'Try: "The fast cat ran." — "fast" describes cat (adjective), "ran" is the action (verb), "cat" is the thing (noun).',
+    memoryHook:'Noun = person/place/thing. Verb = action. Adjective = describes the noun.',
+    commonMistake:'confusing describing words (adjectives) with action words (verbs)' },
+  french: { name:'French Vocabulary', icon:'🇫🇷',
+    strategy:'Group new words with ones you already know (colors together, numbers together, greetings together) — connecting new vocabulary to a category sticks better than memorizing single words alone.',
+    example:'Try: "bleu" (blue) — group it with other colors you know like "rouge" (red) and "vert" (green).',
+    memoryHook:'Learn words in family groups, not alone — colors with colors, numbers with numbers.',
+    commonMistake:'mixing up similar-sounding words (like chat/chien) instead of pairing each with a clear picture' }
+};
+
+// Legacy Battle-mode categories (speed/logic/money/mystery/boss/streak) aren't
+// math topics themselves — map each, per child, to the closest Strategy
+// Library topic so Battle's Brain Boost button can teach a real method too.
+const BATTLE_TOPIC_MAP = {
+  alex: { speed:'integers', logic:'algebra', money:'percent', mystery:'logic', boss:'wordproblems', streak:'geometry' },
+  katya: { speed:'multiplication', logic:'patterns', money:'money', mystery:'wordproblems', boss:'wordproblems', streak:'measurement' }
+};
+
+// Named "trick" badges — flashier than a per-topic strategy unlock, earned
+// after enough correct answers in the topic that trick applies to. `rules`
+// lets the same badge map to a different topic per child where needed.
+const STRATEGY_BADGES = [
+  { id:'nine-trick', name:'The 9 Trick', icon:'🏆', rules:[{ who:'katya', topic:'multiplication', threshold:6 }] },
+  { id:'quarter-trick', name:'Quarter Trick', icon:'🏆', rules:[{ who:'alex', topic:'percent', threshold:6 }] },
+  { id:'friendly-numbers', name:'Friendly Numbers', icon:'🏆', rules:[{ who:'alex', topic:'wordproblems', threshold:6 }, { who:'katya', topic:'wordproblems', threshold:6 }] },
+  { id:'compensation', name:'Compensation', icon:'🏆', rules:[{ who:'alex', topic:'decimals', threshold:6 }, { who:'katya', topic:'decimals', threshold:6 }] },
+  { id:'doubling-halving', name:'Doubling & Halving', icon:'🏆', rules:[{ who:'alex', topic:'ratios', threshold:6 }, { who:'katya', topic:'multiplication', threshold:12 }] },
+  { id:'equivalent-fractions', name:'Equivalent Fractions', icon:'🏆', rules:[{ who:'alex', topic:'fractions', threshold:6 }, { who:'katya', topic:'fractions', threshold:6 }] }
+];
+function strategyFor(topic) { return STRATEGY_LIBRARY[topic] || null; }
+
 function genQuestion(who, topic, diff) {
   const pool = TOPIC_BANK[who][topic];
-  const item = pick(pool)(diff);
+  const idx = R(0, pool.length - 1);
+  const item = pool[idx](diff);
   item.topic = topic;
-  if (!item.mode && !item.choices) item.mode = 'numeric';
+  item.genIdx = idx;
+  item.who = who;
+  if (!item.choices) {
+    // Defensive net: whatever a generator computes, the keyboard the child
+    // gets must be able to type it. A whole-number answer gets the plain
+    // numeric pad; anything with a fractional part gets the decimal pad
+    // (which also has a "." or "," key depending on device locale) even if
+    // the generator forgot to say so.
+    const n = Number(item.a);
+    const isWhole = Number.isFinite(n) && Math.abs(n - Math.round(n)) < 1e-9;
+    if (!item.mode) item.mode = isWhole ? 'numeric' : 'decimal';
+  }
   return item;
+}
+
+// Regenerates a fresh instance of the SAME generator (same method, different
+// numbers) — used for the "Similar Example" and "Bonus Challenge" Brain
+// Boost tiers so a child can see the strategy applied without ever seeing
+// the answer to the question actually in front of them.
+function similarQuestion(who, topic, genIdx, diff) {
+  const pool = TOPIC_BANK[who] && TOPIC_BANK[who][topic];
+  if (!pool || !pool[genIdx]) return null;
+  const item = pool[genIdx](diff);
+  item.topic = topic;
+  return item;
+}
+
+// Every other topic is designed so its answer can never be negative (see the
+// generator fixes throughout TOPIC_BANK/BANK). Integers is the one lesson
+// that is explicitly about negative numbers, so it's the only place the
+// child needs a way to enter a minus sign.
+function topicAllowsNegative(topic) { return topic === 'integers'; }
+
+// Neither inputmode="numeric" nor inputmode="decimal" gives iOS or Android a
+// minus-sign key, so a software keyboard alone can never produce a negative
+// answer. This toggle is the reliable, platform-independent way to do it.
+function toggleSign(inputId) {
+  const inp = $(inputId);
+  if (!inp) return;
+  if (inp.value.startsWith('-')) inp.value = inp.value.slice(1);
+  else inp.value = '-' + inp.value;
+  inp.focus();
+  const btn = $(inputId === 'ms-answer' ? 'ms-sign-btn' : 'b-sign-btn');
+  if (btn) btn.classList.toggle('active', inp.value.startsWith('-'));
 }
 
 /* ---- Mastery tracking: per-topic accuracy drives selection weight + difficulty ---- */
 if (!state.mastery) state.mastery = { alex:{}, katya:{} };
 if (!state.recentQ) state.recentQ = { alex: [], katya: [] };
 if (!state.log) state.log = [];
+if (!state.strategy) state.strategy = {
+  alex: { viewed:{}, helped:{}, badges:[] },
+  katya: { viewed:{}, helped:{}, badges:[] }
+};
 
 function logEvent(who, icon, text) {
   state.log.unshift({ t: Date.now(), who, icon, text });
@@ -2280,6 +2566,36 @@ function recordAnswer(who, topic, correct) {
   if (correct) m.correct++;
   m.recent.push(correct ? 1 : 0);
   if (m.recent.length > 10) m.recent.shift();
+  checkStrategyUnlocks(who);
+}
+
+/* ---- Brain Boost strategy tracking: which strategies a child has
+   discovered, which ones actually helped them get a question right, and
+   which named "trick" badges they've earned through repeated correct use. ---- */
+function markStrategyViewed(who, topic) {
+  if (!topic || !strategyFor(topic)) return;
+  const s = state.strategy[who];
+  s.viewed[topic] = (s.viewed[topic] || 0) + 1;
+}
+function markStrategyHelped(who, topic) {
+  if (!topic || !strategyFor(topic)) return;
+  const s = state.strategy[who];
+  s.helped[topic] = (s.helped[topic] || 0) + 1;
+}
+function checkStrategyUnlocks(who) {
+  const s = state.strategy[who];
+  STRATEGY_BADGES.forEach(badge => {
+    if (s.badges.includes(badge.id)) return;
+    const rule = badge.rules.find(r => r.who === who);
+    if (!rule) return;
+    const m = getMastery(who, rule.topic);
+    if (m.correct >= rule.threshold && (s.viewed[rule.topic] || 0) > 0) {
+      s.badges.push(badge.id);
+      logEvent(who, '🏆', `Unlocked strategy badge: ${badge.name}`);
+      toast(`🏆 ${who === 'alex' ? 'Alex' : 'Katya'} unlocked a Strategy Badge: ${badge.name}!`);
+      burst(50);
+    }
+  });
 }
 function topicWeight(who, topic) {
   const m = getMastery(who, topic);
@@ -2438,10 +2754,75 @@ function hintFor() {
   if (q.includes('\u2212')) return 'Watch the signs! Subtracting a negative = ADDING.';
   return 'Take it step by step on the scratchpad \u2014 you got this!';
 }
-function showHint() {
-  const h = $('ms-hint');
-  h.textContent = '💡 ' + (M && M.q && M.q.hint ? M.q.hint : hintFor());
-  h.classList.add('show');
+/* ============ BRAIN BOOST: progressive hint/strategy coach ============
+   Each tap reveals one more teaching tier instead of the answer. Daily
+   Mission gets the full six-tier ladder (Brain Boost clue, Winning
+   Strategy, Similar Example, Remember This, Common Mistake, Bonus
+   Challenge); Battle gets a condensed three-tier version so it still
+   fits the pace of a turn-based speed round. */
+const BB_STEPS = {
+  ms: ['🧠 BRAIN BOOST', '⚡ WINNING STRATEGY', '🔍 SIMILAR EXAMPLE', '💡 REMEMBER THIS', '⚠️ COMMON MISTAKE', '🎯 BONUS CHALLENGE'],
+  b: ['🧠 BRAIN BOOST', '⚡ WINNING STRATEGY', '⚠️ COMMON MISTAKE']
+};
+function resetBrainBoost(prefix) {
+  const ctx = prefix === 'ms' ? M : B;
+  ctx.bbLevel = 0;
+  const panel = $(prefix + '-bb-panel'); if (panel) panel.innerHTML = '';
+  const btn = $(prefix + '-bb-btn');
+  if (btn) { btn.disabled = false; btn.innerHTML = BB_STEPS[prefix][0] + '<span class="bb-progress" id="' + prefix + '-bb-progress"></span>'; }
+}
+function bbTopicFor(prefix) {
+  if (prefix === 'ms') return M.q.topic;
+  const map = BATTLE_TOPIC_MAP[B.turn];
+  return map ? map[B.q.category] : null;
+}
+function bbHintText(prefix) {
+  if (prefix === 'ms') return M.q.hint || hintFor();
+  const saved = M; M = { q: B.q, player: B.turn }; const t = hintFor(); M = saved; return t;
+}
+function advanceBrainBoost(prefix) {
+  const ctx = prefix === 'ms' ? M : B;
+  const steps = BB_STEPS[prefix];
+  const level = (ctx.bbLevel || 0) + 1;
+  if (level > steps.length) return;
+  ctx.bbLevel = level;
+  const topic = bbTopicFor(prefix);
+  const lib = strategyFor(topic);
+  const who = prefix === 'ms' ? ctx.player : ctx.turn;
+  if (level === 1) markStrategyViewed(who, topic);
+  const panel = $(prefix + '-bb-panel');
+  const card = document.createElement('div');
+  card.className = 'bb-card';
+  if (level === 1) {
+    card.innerHTML = `<span class="bb-label">🧠 Brain Boost</span>${bbHintText(prefix)}`;
+  } else if (level === 2) {
+    card.innerHTML = `<span class="bb-label">⚡ Winning Strategy</span>${lib ? lib.strategy : 'Keep practicing this topic — its strategy will unlock here soon!'}`;
+  } else if (prefix === 'ms' && level === 3) {
+    const ex = M.q.genIdx != null ? similarQuestion(who, topic, M.q.genIdx, topicDifficulty(who, topic)) : null;
+    card.className += ' bb-example';
+    card.innerHTML = ex
+      ? `<span class="bb-label">🔍 Similar Example</span>Same method, different numbers — try this one in your head or on the scratchpad: <b>${ex.q}</b><br>Worked answer: <b>${ex.a}</b>${ex.hint ? ' — ' + ex.hint : ''}`
+      : `<span class="bb-label">🔍 Similar Example</span>${lib ? lib.example : ''}`;
+  } else if (prefix === 'ms' && level === 4) {
+    card.innerHTML = `<span class="bb-label">💡 Remember This</span>${lib ? lib.memoryHook : ''}`;
+  } else if ((prefix === 'ms' && level === 5) || (prefix === 'b' && level === 3)) {
+    card.className += ' bb-mistake';
+    card.innerHTML = `<span class="bb-label">⚠️ Common Mistake</span>A common mistake here is ${lib ? lib.commonMistake : 'rushing without checking each step'}.`;
+  } else if (prefix === 'ms' && level === 6) {
+    const ex = M.q.genIdx != null ? similarQuestion(who, topic, M.q.genIdx, Math.min(3, topicDifficulty(who, topic) + 1)) : null;
+    card.className += ' bb-example';
+    card.innerHTML = ex
+      ? `<span class="bb-label">🎯 Bonus Challenge</span>Feeling confident? Try this harder one for extra practice: <b>${ex.q}</b>`
+      : `<span class="bb-label">🎯 Bonus Challenge</span>Great work exploring every strategy tier for this question!`;
+  }
+  panel.appendChild(card);
+  const btn = $(prefix + '-bb-btn');
+  if (level >= steps.length) {
+    btn.innerHTML = '✅ FULLY BOOSTED';
+    btn.disabled = true;
+  } else {
+    btn.innerHTML = steps[level] + '<span class="bb-progress">' + level + '/' + steps.length + '</span>';
+  }
 }
 
 /* ============ ACTIVE MISSION FLOW ============ */
@@ -2459,6 +2840,9 @@ function startMission(id) {
   $('ms-xp-pill').textContent = '? +' + def.xp + ' XP + accuracy coins';
   $('ms-result').style.display = 'none';
   $('ms-play').style.display = 'block';
+  const padCard = $('pad-card'), padToggle = $('pad-toggle-btn');
+  if (padCard) padCard.classList.remove('mobile-open');
+  if (padToggle) padToggle.textContent = '✏️ SCRATCHPAD';
   initPad();
   nextQ();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2476,6 +2860,8 @@ function nextQ() {
   const choices = $('ms-choices');
   const inp = $('ms-answer');
   inp.value = ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
+  const signBtn = $('ms-sign-btn');
+  if (signBtn) { signBtn.style.display = (!M.q.choices && topicAllowsNegative(M.q.topic)) ? '' : 'none'; signBtn.classList.remove('active'); }
   if (M.q.choices) {
     choices.style.display = 'grid';
     choices.innerHTML = M.q.choices.map(c => '<button class="choice-answer" onclick="chooseMissionAnswer(\'' + c + '\')">' + c + '</button>').join('');
@@ -2487,7 +2873,7 @@ function nextQ() {
   }
   $('ms-fb').textContent = ''; $('ms-fb').className = 'feedback';
   $('ms-submit').disabled = false;
-  $('ms-hint').classList.remove('show'); $('ms-hint').textContent = '';
+  resetBrainBoost('ms');
   segs();
 }
 function chooseMissionAnswer(v) {
@@ -2518,13 +2904,15 @@ function submitQ() {
     }
     burst(M.combo >= 3 ? 26 : 12);
     recordAnswer(M.player, M.q.topic, M.attempts === 0);
+    if (M.bbLevel > 0) markStrategyHelped(M.player, M.q.topic);
     M.i++; lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
     M.attempts++;
-    fb.textContent = 'Good try, fix the step. Hint: ' + (M.q.hint || hintFor());
+    const lib = strategyFor(M.q.topic);
+    fb.textContent = '✖ Not quite — a common mistake here is ' + (lib ? lib.commonMistake : 'rushing without checking each step') + '.';
     fb.className = 'feedback fb-bad';
-    showHint();
+    if (!M.bbLevel) advanceBrainBoost('ms');
     const active = $('ms-answer');
     setTimeout(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
   }
@@ -2573,6 +2961,7 @@ function closeMission() {
   $('grant-screen').classList.remove('on');
   $('guided-screen').classList.remove('on');
   $('escape-screen').classList.remove('on');
+  $('strategy-screen').classList.remove('on');
   $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
 }
 
@@ -2602,6 +2991,21 @@ function clearPad() {
   for (let y = 0; y < r.height; y += 26) { pctx.beginPath(); pctx.moveTo(0, y); pctx.lineTo(r.width, y); pctx.stroke(); }
 }
 function setColor(c, el) { padColor = c; document.querySelectorAll('.dot').forEach(d => d.classList.remove('on')); el.classList.add('on'); }
+// On narrow phones the scratchpad is collapsed by default (see @media max-width:820px)
+// to leave room for the question and Brain Boost panel; this toggles it open on demand.
+// The canvas is 0x0 while hidden, so it must be re-measured via initPad() once shown.
+function toggleScratchpad() {
+  const pc = $('pad-card');
+  const btn = $('pad-toggle-btn');
+  if (!pc || !btn) return;
+  const opening = !pc.classList.contains('mobile-open');
+  pc.classList.toggle('mobile-open', opening);
+  btn.textContent = opening ? '✏️ HIDE SCRATCHPAD' : '✏️ SCRATCHPAD';
+  if (opening) {
+    initPad();
+    setTimeout(() => pc.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
 $('ms-answer').addEventListener('keydown', e => { if (e.key === 'Enter') submitQ(); });
 $('ms-answer').addEventListener('focus', () => setTimeout(() => $('ms-answer').scrollIntoView({ behavior: 'smooth', block: 'center' }), 120));
 
@@ -2644,6 +3048,7 @@ function openStore() {
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
   $('battle-screen').classList.remove('on');
+  $('strategy-screen').classList.remove('on');
   $('store-screen').classList.add('on');
   renderStore();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2784,6 +3189,7 @@ function openParent() {
   $('mission-screen').classList.remove('on');
   $('battle-screen').classList.remove('on');
   $('store-screen').classList.remove('on');
+  $('strategy-screen').classList.remove('on');
   $('parent-screen').classList.add('on');
   $('pin-gate').style.display = parentUnlocked ? 'none' : 'block';
   $('parent-content').style.display = parentUnlocked ? 'block' : 'none';
@@ -2824,6 +3230,102 @@ function syncMuteBtn() {
   const b = $('mute-toggle');
   if (b) b.textContent = state.settings.muted ? 'Off' : 'On';
 }
+
+/* ---- Device & data: version display, forced refresh, local reset ---- */
+function syncVersionDisplay() {
+  const el = $('app-version-display');
+  if (el) el.textContent = `v${APP_VERSION} · build ${APP_BUILD}`;
+}
+// Clears any Cache Storage entries and service worker registrations (there
+// isn't one today, but this stays correct if one is ever added later), then
+// forces a real network fetch of index.html — a plain location.reload() can
+// still be served from a cache layer that Cache-Control alone didn't clear
+// on some mobile browsers, so we also cache-bust the URL itself.
+function checkForUpdates() {
+  toast('🔄 Checking for the latest version…');
+  (async () => {
+    try {
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+    } catch (e) {}
+    location.href = location.pathname + '?refresh=' + Date.now();
+  })();
+}
+function confirmResetProgress() {
+  const w = $('reset-warning');
+  if (w) w.style.display = 'block';
+}
+function cancelResetProgress() {
+  const w = $('reset-warning');
+  if (w) w.style.display = 'none';
+}
+// Parent Zone already requires the PIN to reach this screen, so this button
+// is inherently PIN-protected; the extra click-through warning guards
+// against an accidental tap on a destructive, unrecoverable action.
+function doResetProgress() {
+  try { localStorage.removeItem('smbt-state-v2'); } catch (e) {}
+  toast('🗑️ Local progress reset — reloading…');
+  setTimeout(() => { location.href = location.pathname + '?reset=' + Date.now(); }, 500);
+}
+
+/* ============ STRATEGY LIBRARY SCREEN ============ */
+function renderStrategyLibrary() {
+  const who = state.activePlayer;
+  const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
+  const s = state.strategy[who];
+
+  const badgesHtml = STRATEGY_BADGES.map(b => {
+    const rule = b.rules.find(r => r.who === who);
+    if (!rule) return '';
+    const earned = s.badges.includes(b.id);
+    return earned
+      ? `<div class="badge" onclick="toast('🏆 ${b.name} — earned by mastering ${TOPIC_LABEL[rule.topic]}!')"><div style="font-size:34px">🏆</div><div class="bname">${b.name}</div></div>`
+      : `<div class="badge" style="opacity:.35" onclick="toast('🔒 Keep practicing ${TOPIC_LABEL[rule.topic]} to unlock this trick!')"><div style="font-size:34px">🔒</div><div class="bname">???</div></div>`;
+  }).join('');
+  $('strategy-badges').innerHTML = badgesHtml || '<div class="mgr-note">No trick badges for this player yet.</div>';
+
+  const cardsHtml = topics.map(t => {
+    const lib = strategyFor(t);
+    if (!lib) return '';
+    const viewed = (s.viewed[t] || 0) > 0;
+    if (!viewed) {
+      return `<div class="s-pending" style="opacity:.5;text-align:center;padding:20px">
+        <div style="font-size:28px">🔒</div>
+        <div style="font-weight:700;margin-top:6px">${TOPIC_LABEL[t]}</div>
+        <div class="mgr-note" style="margin-top:6px">Tap 🧠 Brain Boost during a ${TOPIC_LABEL[t]} question to discover this strategy!</div>
+      </div>`;
+    }
+    const helped = s.helped[t] || 0;
+    return `<div class="s-pending" style="border-style:solid;border-color:rgba(155,48,255,.35)">
+      <div style="font-size:28px">${lib.icon}</div>
+      <div style="font-weight:800;font-size:15px;margin:6px 0 8px;color:var(--text)">${lib.name}</div>
+      <div class="mgr-note" style="color:var(--text);opacity:.9;line-height:1.5">${lib.strategy}</div>
+      <div class="mgr-note" style="margin-top:8px;font-style:italic">Example: ${lib.example}</div>
+      ${helped ? `<div class="mgr-note" style="margin-top:8px;color:var(--green)">✅ Used successfully ${helped} time${helped>1?'s':''}</div>` : ''}
+    </div>`;
+  }).join('');
+  $('strategy-cards').innerHTML = cardsHtml || '<div class="mgr-note">Play a Daily Mission and tap Brain Boost to start discovering strategies!</div>';
+}
+function openStrategyLib() {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen'].forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
+  $('strategy-screen').classList.add('on');
+  renderStrategyLibrary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function closeStrategyLib() {
+  $('strategy-screen').classList.remove('on');
+  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+}
+
 function renderParent() {
   const reqs = state.requests.slice().reverse();
   const pending = reqs.filter(r => r.status === 'pending');
@@ -2864,6 +3366,7 @@ function renderParent() {
   renderInsights();
   renderActivity();
   syncMuteBtn();
+  syncVersionDisplay();
 }
 
 /* ---- Learning Insights: weak/strong subjects from mastery tracking ---- */
@@ -2874,12 +3377,21 @@ function renderInsights() {
     const name = who === 'alex' ? '⚡ Alex' : '🔍 Katya';
     const { weak, strong } = weakStrongSubjects(who);
     const line = r => `<div class="wk-line"><span>${r.label}</span><b>${r.acc}%</b></div>`;
+    const strat = state.strategy[who];
+    const viewedTopics = Object.keys(strat.viewed).filter(t => strat.viewed[t] > 0);
+    const mostUsed = viewedTopics.slice().sort((a,b) => (strat.viewed[b]||0) - (strat.viewed[a]||0)).slice(0,2);
+    const recommend = weak.length ? strategyFor(weak[0].topic) : null;
     return `<div class="wk-card">
       <div class="wk-name">${name}</div>
       <div style="color:var(--pink);font-weight:700;font-size:12px;margin:6px 0 2px">NEEDS PRACTICE</div>
       ${weak.length ? weak.map(line).join('') : '<div class="s-empty" style="padding:6px 0">Not enough data yet.</div>'}
       <div style="color:var(--green);font-weight:700;font-size:12px;margin:10px 0 2px">STRONG SUBJECTS</div>
       ${strong.length ? strong.map(line).join('') : '<div class="s-empty" style="padding:6px 0">Keep practicing to build strengths.</div>'}
+      <div style="color:#C77DFF;font-weight:700;font-size:12px;margin:10px 0 2px">🧠 BRAIN BOOST STRATEGIES</div>
+      <div class="wk-line"><span>Strategies discovered</span><b>${viewedTopics.length}</b></div>
+      <div class="wk-line"><span>Trick badges earned</span><b>${strat.badges.length}</b></div>
+      ${mostUsed.length ? `<div class="s-empty" style="padding:4px 0;font-size:12px">Most used: ${mostUsed.map(t => TOPIC_LABEL[t]).join(', ')}</div>` : ''}
+      ${recommend ? `<div class="s-empty" style="padding:4px 0;font-size:12px;color:var(--text)">💡 Recommended next: <b>${recommend.name}</b> (${TOPIC_LABEL[weak[0].topic]} needs practice)</div>` : ''}
     </div>`;
   };
   box.innerHTML = card('alex') + card('katya');
@@ -3067,6 +3579,7 @@ function openMoneyLab() {
   $('battle-screen').classList.remove('on');
   $('store-screen').classList.remove('on');
   $('parent-screen').classList.remove('on');
+  $('strategy-screen').classList.remove('on');
   $('moneylab-screen').classList.add('on');
   renderGoalPicker();
   renderGoalTrack();
@@ -3137,8 +3650,8 @@ function mlGen() {
   const ALEX = [
     () => { const items = R(2, 4), price = pick([4, 5, 6, 7, 8]); return { s: '🛒 Stocking up on bubble tea for the squad.', q: `${items} bubble teas at $${price} each. Total cost?`, a: items * price, unit: '$' }; },
     () => { const bill = 50, spent = R(31, 47); return { s: '💵 You pay with a $50 bill at the game store.', q: `You spend $${spent}. How much change do you get back?`, a: bill - spent, unit: '$' }; },
-    () => { const price = pick([20, 25, 30, 40, 50]), off = pick([10, 20, 25, 50]); return { s: '🏷️ Flash sale on a new controller!', q: `A $${price} item is ${off}% off. What is the discount in dollars?`, a: money2(price * off / 100), unit: '$' }; },
-    () => { const price = pick([20, 30, 40, 60]), off = pick([10, 25, 50]); return { s: '🏷️ Big creator-merch discount!', q: `A $${price} hoodie is ${off}% off. What is the SALE price?`, a: money2(price * (1 - off / 100)), unit: '$' }; },
+    () => { const price = pick([20, 40, 60, 80]), off = pick([10, 20, 25, 50]); return { s: '🏷️ Flash sale on a new controller!', q: `A $${price} item is ${off}% off. What is the discount in dollars?`, a: money2(price * off / 100), unit: '$' }; },
+    () => { const price = pick([20, 40, 60, 80]), off = pick([10, 25, 50]); return { s: '🏷️ Big creator-merch discount!', q: `A $${price} hoodie is ${off}% off. What is the SALE price?`, a: money2(price * (1 - off / 100)), unit: '$' }; },
     () => { const week = pick([5, 8, 10, 12]), wks = R(3, 8); return { s: '🏦 Saving your allowance every week.', q: `You save $${week} a week for ${wks} weeks. How much saved?`, a: week * wks, unit: '$' }; },
     () => { const a = pick([6, 7, 8, 9]), b = pick([3, 4, 5]), pay = 20; return { s: '🧾 Splitting a snack run.', q: `Snacks cost $${a} and $${b}. Change from $${pay}?`, a: pay - a - b, unit: '$' }; }
   ];
@@ -3216,7 +3729,7 @@ let gWho = 'alex', gPick = null;
 function openGrant() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Grant Prize'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
-  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(s => $(s).classList.remove('on'));
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','strategy-screen'].forEach(s => $(s).classList.remove('on'));
   $('grant-screen').classList.add('on');
   $('g-pin-gate').style.display = parentUnlocked ? 'none' : 'block';
   $('g-setup').style.display = parentUnlocked ? 'block' : 'none';
@@ -3405,7 +3918,7 @@ const GUIDED = {
       ],
       hint:`Don't list all ${term} terms! Use: term = first + (n − 1) × step.`
     }; },
-    () => { const price=pick([20,25,40,50,60,80]), off=pick([10,20,25,50]); const disc=price*off/100; return {
+    () => { const price=pick([20,40,60,80,100]), off=pick([10,20,25,50]); const disc=price*off/100; return {
       eyebrow:'💰 MONEY LAB',
       text:`A $${price} headset is ${off}% off in a flash sale. How many dollars do you SAVE (the discount amount)?`,
       strategy:'percent', wrongStrats:['equation','addsub','area'],
@@ -3508,7 +4021,7 @@ function startGuided(who) {
 
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Missions'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
-  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen'].forEach(s => $(s).classList.remove('on'));
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','strategy-screen'].forEach(s => $(s).classList.remove('on'));
   const sc = $('guided-screen');
   sc.classList.add('on');
   sc.classList.toggle('th-katya', gmActiveSet === 'katya');
@@ -3536,7 +4049,7 @@ function renderRail() {
 }
 
 function gmHintBtn() {
-  return `<button class="gm-hint-btn" onclick="gmShowHint()">💡 NEED A HINT?</button>
+  return `<button class="gm-hint-btn" onclick="gmShowHint()">🧠 NEED A BRAIN BOOST?</button>
           <div class="gm-hintbox" id="gm-hintbox"><span>🧠</span><span>${GM.prob.hint}</span></div>`;
 }
 function gmShowHint() { GM.usedHint = true; $('gm-hintbox').classList.add('show'); }
@@ -3953,6 +4466,7 @@ function openBattle() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Battle'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
+  $('strategy-screen').classList.remove('on');
   const sc = $('battle-screen');
   sc.classList.add('on');
   $('b-setup').style.display = 'block';
@@ -4002,24 +4516,20 @@ function bNextQ() {
   let tries = 0;
   do { B.q = pick(BANK[B.turn][topic])(); tries++; } while (B.q.q === B.lastQ[B.turn] && tries < 8);
   B.lastQ[B.turn] = B.q.q;
+  B.q.category = topic;
   $('b-story').textContent = B.q.s;
   $('b-q').textContent = B.q.q;
+  const signBtn = $('b-sign-btn');
+  // Alex's "speed" category is the only Battle category that can require a
+  // negative answer (integer add/sub/multiply); Katya's never does.
+  if (signBtn) { signBtn.style.display = (B.turn === 'alex' && topic === 'speed') ? '' : 'none'; signBtn.classList.remove('active'); }
   const inp = $('b-answer');
   inp.value = ''; inp.disabled = false; inp.focus();
   $('b-fb').textContent = ''; $('b-fb').className = 'feedback';
   $('b-submit').disabled = false;
-  $('b-hint').classList.remove('show'); $('b-hint').textContent = '';
+  resetBrainBoost('b');
   $('b-pass').textContent = (B.turn === 'alex' ? '⚡ Alex' : '🔍 Katya') + ' — solve it to score a point!';
   paintBoard();
-}
-
-function bShowHint() {
-  // reuse mission hint logic by faking M context
-  const saved = (typeof M !== 'undefined') ? M : null;
-  M = { q: B.q, player: B.turn };
-  $('b-hint').textContent = '💡 ' + hintFor();
-  $('b-hint').classList.add('show');
-  M = saved;
 }
 
 function bSubmit() {
@@ -4043,9 +4553,9 @@ function bSubmit() {
       fb.className = 'feedback fb-bad';
       bLock(swapTurn);
     } else {
-      // give the SAME fighter a hint and one more try
-      bShowHint();
-      fb.textContent = '✖ Not quite — check the hint and try once more!';
+      // give the SAME fighter a Brain Boost tier and one more try
+      if (!B.bbLevel) advanceBrainBoost('b');
+      fb.textContent = '✖ Not quite — check the Brain Boost below and try once more!';
       fb.className = 'feedback fb-bad';
     }
   }
