@@ -116,3 +116,10 @@ html{scroll-padding-top:150px}
   .question-arena{min-height:300px}
   .question-text{font-size:clamp(24px,5vw,44px)}
 }
+
+/* QA fixes: sound control and skill-specific strategy copy */
+.sound-toggle{min-height:46px;min-width:52px;display:grid;place-items:center;padding:0 12px;border:1px solid #ffffff20;border-radius:16px;background:#ffffff0a;color:#fff;font:900 16px var(--font-game);box-shadow:0 0 16px #ffffff12;cursor:pointer;transition:.2s}
+.sound-toggle:hover{border-color:#ffd700;box-shadow:0 0 20px #ffd70066;transform:translateY(-2px)}
+.strategy-tip{width:min(100%,720px);margin-top:16px;padding:14px 16px;border-radius:18px;border:1px solid #ffd70088;background:linear-gradient(135deg,rgba(255,215,0,.16),rgba(0,180,255,.09));color:#fff2b8;font:800 19px var(--font-ui);line-height:1.35;text-align:left;box-shadow:0 0 18px #ffd70033}
+.strategy-tip strong{color:#ffd700}
+@media (max-width:900px){.strategy-tip{font-size:16px;margin-top:12px}}
