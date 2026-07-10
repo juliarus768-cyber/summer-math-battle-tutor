@@ -1556,6 +1556,12 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   </div>
 
   <div id="parent-content" style="display:none">
+    <div class="s-pending" id="pin-default-notice" style="display:none;border-style:solid;border-color:rgba(255,201,60,.5);background:rgba(255,201,60,.08);margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between">
+        <div style="font-weight:600;color:var(--text)">&#128272; You&rsquo;re still using the default PIN (1234). Change it in Settings below for better security.</div>
+        <button class="mgr-toggle" onclick="dismissPinNotice()">Got it</button>
+      </div>
+    </div>
     <div class="s-sec-title">&#9203; PENDING APPROVALS <span class="p-count" id="p-pending-count">0</span></div>
     <div class="s-pending" id="p-requests" style="border-color:rgba(25,201,255,.4)"></div>
 
@@ -1879,9 +1885,23 @@ if (!state.activePlayer) state.activePlayer = 'alex';
   if (state[w].keys == null) state[w].keys = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
 });
+if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
 
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
+
+// Single source of truth for awarding XP and leveling up. Every XP-granting
+// flow (Daily Mission, Money Lab, Guided Mission, Escape Room, Battle, Grant
+// Prize, and manual parent adjustments) must call this instead of inlining
+// its own level-up loop, so the formula can never diverge again. Accepts
+// either a child key ('alex'/'katya') or an already-resolved player object.
+function gainXP(who, amount) {
+  const p = typeof who === 'string' ? state[who] : who;
+  p.xp += amount; p.totalXP += amount;
+  let leveled = false;
+  while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
+  return leveled;
+}
 
 /* ============ SOUND — soft Web Audio cues, respects mute + reduced-motion ============ */
 const Sound = (() => {
@@ -2078,7 +2098,7 @@ $('badges').innerHTML = BADGES.map(b => `<div class="badge" onclick="toast('🏅
 const R = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const RNZ = (a,b) => { let v=0; while(v===0) v=R(a,b); return v; };
 const pick = ar => ar[R(0,ar.length-1)];
-const FRIENDS = ['Leila','Arina','Emily'];
+const FRIENDS = ['Aryna'];
 const sgn = n => n < 0 ? `(${n})` : `${n}`;
 
 const BANK = {
@@ -2927,9 +2947,8 @@ function showResult() {
   const wMult = weekendXpMult();
   const xp = Math.round(baseXp * wMult * (teamBonus ? 1.15 : 1));
   const who = state[M.player];
-  who.xp += xp; who.totalXP += xp; who.coins += coins;
-  let leveled = false;
-  while (who.xp >= who.xpMax) { who.xp -= who.xpMax; who.lvl++; who.xpMax += 50; leveled = true; }
+  who.coins += coins;
+  const leveled = gainXP(who, xp);
   bumpStreak(who, M.player === 'alex' ? 'ALEX' : 'KATYA');
   bumpDaily(M.player);
   state.activity[M.player].missions++;
@@ -3219,6 +3238,13 @@ function changePin() {
   state.parentPin = v; Store.set('smbt-state-v2', state);
   $('new-pin').value = '';
   toast('🔐 Parent PIN updated.');
+  renderParent();
+}
+function dismissPinNotice() {
+  state.pinNoticeDismissed = true;
+  Store.set('smbt-state-v2', state);
+  const el = $('pin-default-notice');
+  if (el) el.style.display = 'none';
 }
 function toggleMute() {
   state.settings.muted = !state.settings.muted;
@@ -3327,6 +3353,8 @@ function closeStrategyLib() {
 }
 
 function renderParent() {
+  const pinNotice = $('pin-default-notice');
+  if (pinNotice) pinNotice.style.display = (state.parentPin === '1234' && !state.pinNoticeDismissed) ? 'block' : 'none';
   const reqs = state.requests.slice().reverse();
   const pending = reqs.filter(r => r.status === 'pending');
   $('p-pending-count').textContent = pending.length;
@@ -3486,8 +3514,8 @@ function adjust(who, field, delta) {
 function markMissionDone(who) {
   const p = state[who];
   state.activity[who].missions += 1;
-  p.coins += 20; p.totalXP += 20; p.xp += 20;
-  while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl += 1; p.xpMax = Math.round(p.xpMax * 1.15); }
+  p.coins += 20;
+  gainXP(p, 20);
   bumpDaily(who);
   bumpStreak(p, who === 'alex' ? 'Alex' : 'Katya');
   logEvent(who, '✓', 'Parent logged a completed mission');
@@ -3645,7 +3673,7 @@ function renderGoalTrack() {
 const money2 = n => Math.round(n * 100) / 100;
 function mlGen() {
   const who = state.activePlayer;
-  const F = ['Leila', 'Arina', 'Emily'];
+  const F = ['Aryna'];
   const pickF = () => F[R(0, 2)];
   const ALEX = [
     () => { const items = R(2, 4), price = pick([4, 5, 6, 7, 8]); return { s: '🛒 Stocking up on bubble tea for the squad.', q: `${items} bubble teas at $${price} each. Total cost?`, a: items * price, unit: '$' }; },
@@ -3686,9 +3714,7 @@ function mlCheck() {
     const reward = 15;
     const mlXp = 5 * weekendXpMult();
     state[state.activePlayer].coins += reward;
-    state[state.activePlayer].totalXP += mlXp;
-    state[state.activePlayer].xp += mlXp;
-    while (state[state.activePlayer].xp >= state[state.activePlayer].xpMax) { state[state.activePlayer].xp -= state[state.activePlayer].xpMax; state[state.activePlayer].lvl++; state[state.activePlayer].xpMax += 50; }
+    gainXP(state.activePlayer, mlXp);
     mlStats.solved++; mlStats.earned += reward;
     state.activity[state.activePlayer].money++;
     $('ml-solved').textContent = mlStats.solved;
@@ -3789,8 +3815,7 @@ function grantPrize() {
     p.coins += gPick.amt;
     msg = `${name} received <b>+${gPick.amt} bonus coins!</b> 💰`;
   } else if (gPick.type === 'xp') {
-    p.xp += gPick.amt; p.totalXP += gPick.amt;
-    while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; }
+    gainXP(p, gPick.amt);
     msg = `${name} received <b>+${gPick.amt} bonus XP!</b> ⚡`;
   } else {
     // free prize — log as an already-approved request
@@ -4221,9 +4246,8 @@ function gmFinish() {
   if (GM.explainOk) xp += 20;
   const coins = Math.round(xp / 3);
   xp *= weekendXpMult();
-  p.xp += xp; p.totalXP += xp; p.coins += coins;
-  let leveled = false;
-  while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
+  p.coins += coins;
+  const leveled = gainXP(p, xp);
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
   bumpDaily(who);
   state.activity[who].missions++;
@@ -4415,9 +4439,8 @@ function erSolved() {
   let xp = 50 + ER.cleanMoves * 25;
   const coins = Math.round(xp / 3);
   xp *= weekendXpMult();
-  p.xp += xp; p.totalXP += xp; p.coins += coins;
-  let leveled = false;
-  while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
+  p.coins += coins;
+  const leveled = gainXP(p, xp);
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
   bumpDaily(who);
   state.activity[who].missions++;
@@ -4575,11 +4598,8 @@ function endBattle() {
   // award XP to both — winner gets more, both improve totals
   const bMult = weekendXpMult();
   const winXP = 80 * bMult, loseXP = 40 * bMult;
-  state.alex.totalXP += aWin ? winXP : loseXP;
-  state.alex.xp += aWin ? winXP : loseXP;
-  state.katya.totalXP += aWin ? loseXP : winXP;
-  state.katya.xp += aWin ? loseXP : winXP;
-  [state.alex, state.katya].forEach(p => { while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; } });
+  gainXP(state.alex, aWin ? winXP : loseXP);
+  gainXP(state.katya, aWin ? loseXP : winXP);
   state[winner].coins += 25;
   state.activity[winner].battles++;
   logEvent(null, '⚔️', `Battle Arena: ${aWin ? 'Alex' : 'Katya'} won ${B.score.alex}-${B.score.katya}`);
