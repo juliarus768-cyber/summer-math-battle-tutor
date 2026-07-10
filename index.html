@@ -1180,7 +1180,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 <aside>
 <div class="hero alex selected" id="hero-alex" onclick="setPlayer('alex')">
   <div class="sel-badge"><span class="sel-dot"></span><span id="badge-alex-t">PLAYING NOW</span></div>
-  <div class="grade-chip">GRADE 7→8</div>
+  <div class="grade-chip" id="grade-chip-alex">GRADE 7→8</div>
   <div class="hero-art-wrap"><img class="hero-photo" src="/img/alex-hero.jpg" alt="Alex, anime battle commander" onerror="this.style.display=&#39;none&#39;"></div>
   <div class="hero-body">
     <div class="hero-name-row">
@@ -1339,7 +1339,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 <aside>
 <div class="hero katya" id="hero-katya" onclick="setPlayer('katya')">
   <div class="sel-badge"><span class="sel-dot"></span><span id="badge-katya-t">TAP TO PLAY</span></div>
-  <div class="grade-chip">GRADE 4→5</div>
+  <div class="grade-chip" id="grade-chip-katya">GRADE 4→5</div>
   <div class="hero-art-wrap"><img class="hero-photo" src="/img/katya-hero.jpg" alt="Katya, anime mystery detective" onerror="this.style.display=&#39;none&#39;"></div>
   <div class="hero-body">
     <div class="hero-name-row">
@@ -1611,9 +1611,22 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
         <input class="pin-in" id="new-pin" type="text" inputmode="numeric" maxlength="4" style="font-size:18px;letter-spacing:6px;width:130px;margin:0;padding:8px" placeholder="new PIN">
         <button class="rq-ok" style="border-color:var(--blue);color:var(--blue);background:rgba(25,201,255,.1)" onclick="changePin()">SAVE PIN</button>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
         <span style="font-weight:700">Sound effects:</span>
         <button class="mgr-toggle" id="mute-toggle" onclick="toggleMute()">On</button>
+      </div>
+      <div class="mgr-note" style="margin-bottom:10px">Grade auto-advances every September. Only change this if a child's actual grade doesn't match (e.g. they skipped or repeated a grade).</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-weight:700;min-width:56px">Alex:</span>
+        <span id="grade-current-alex" style="color:var(--muted)"></span>
+        <input type="number" min="1" max="12" id="grade-input-alex" style="width:70px;padding:8px;border-radius:10px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);font-family:var(--orb)" placeholder="grade">
+        <button class="rq-ok" style="border-color:var(--blue);color:var(--blue);background:rgba(25,201,255,.1)" onclick="setGradeOverride('alex')">SET</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-weight:700;min-width:56px">Katya:</span>
+        <span id="grade-current-katya" style="color:var(--muted)"></span>
+        <input type="number" min="1" max="12" id="grade-input-katya" style="width:70px;padding:8px;border-radius:10px;border:1.5px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);font-family:var(--orb)" placeholder="grade">
+        <button class="rq-ok" style="border-color:var(--blue);color:var(--blue);background:rgba(25,201,255,.1)" onclick="setGradeOverride('katya')">SET</button>
       </div>
     </div>
 
@@ -1895,9 +1908,12 @@ const FRESH = {
 const state = Store.get('smbt-state-v2', JSON.parse(JSON.stringify(FRESH)));
 if (!state.activePlayer) state.activePlayer = 'alex';
 // Back-fill new fields for existing saves
+const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
   if (state[w].keys == null) state[w].keys = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
+  if (state[w].birthday == null) state[w].birthday = BIRTHDAYS[w];
+  if (state[w].gradeOverride === undefined) state[w].gradeOverride = null;
 });
 if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
 
@@ -1954,7 +1970,43 @@ const Sound = (() => {
 })();
 window.__playCue = n => Sound.play(n);
 function playCue(name){ if (window.__playCue) window.__playCue(name); }
-const GRADE = { alex: 'GRADE 7→8', katya: 'GRADE 4→5' };
+/* ============ GRADE / AGE SYSTEM (FUTURE_IDEAS.md -> Now) ============
+   Grade auto-advances every school year instead of being a fixed string.
+   GRADE_REFERENCE anchors each child's grade to a specific school year
+   (Sept 2025 - Aug 2026: Alex Grade 7, Katya Grade 4, per CHARACTERS.md/
+   EDUCATION.md -- both "entering" the NEXT grade in Sept 2026). Every
+   later school year is computed relative to that anchor, so this keeps
+   working correctly indefinitely without needing yearly manual edits.
+   A parent-set override (Settings -> grade editor) re-anchors the same
+   way, so auto-advance continues correctly from the corrected value in
+   later years instead of freezing it forever. */
+const GRADE_ADVANCE_MONTH = 9; // September (1-12)
+const GRADE_REFERENCE = { schoolYearStart: 2025, alex: 7, katya: 4 };
+function schoolYearStartFor(date) {
+  const d = date || new Date();
+  const m = d.getMonth() + 1;
+  return m >= GRADE_ADVANCE_MONTH ? d.getFullYear() : d.getFullYear() - 1;
+}
+function getCurrentGrade(who, date) {
+  const syStart = schoolYearStartFor(date);
+  const ov = state[who] && state[who].gradeOverride;
+  if (ov) return ov.grade + (syStart - ov.schoolYearStart);
+  return GRADE_REFERENCE[who] + (syStart - GRADE_REFERENCE.schoolYearStart);
+}
+function gradeLabel(who) { const g = getCurrentGrade(who); return `GRADE ${g}→${g + 1}`; }
+function gradePlain(who) { const g = getCurrentGrade(who); return `Grade ${g}→${g + 1}`; }
+function ageFromBirthday(iso, date) {
+  if (!iso) return null;
+  const b = new Date(iso + 'T00:00:00');
+  const now = date || new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const hadBirthday = (now.getMonth() > b.getMonth()) || (now.getMonth() === b.getMonth() && now.getDate() >= b.getDate());
+  if (!hadBirthday) age--;
+  return age;
+}
+// Kept for any older call sites expecting a plain lookup; now backed by the
+// live computed grade so it can never drift out of sync with the display.
+const GRADE = { get alex() { return gradeLabel('alex'); }, get katya() { return gradeLabel('katya'); } };
 const prefersReducedMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* Animated count-up when a numeric HUD value changes. */
@@ -1987,6 +2039,9 @@ function keyBurstFx() {
 
 function paint() {
   const a = state.alex, k = state.katya, p = state[state.activePlayer];
+  const gcA = $('grade-chip-alex'), gcK = $('grade-chip-katya');
+  if (gcA) gcA.textContent = gradeLabel('alex');
+  if (gcK) gcK.textContent = gradeLabel('katya');
   $('alex-xp').textContent = a.xp; $('alex-xpmax').textContent = a.xpMax;
   $('alex-xppct').textContent = Math.round(a.xp/a.xpMax*100) + '%';
   $('alex-xpbar').style.width = Math.min(100, a.xp/a.xpMax*100) + '%';
@@ -2036,8 +2091,8 @@ function paintLanding(p, isA) {
     pk.classList.toggle('on', !isA);
     $('land-play-a').textContent = isA ? 'PLAYING' : 'TAP';
     $('land-play-k').textContent = !isA ? 'PLAYING' : 'TAP';
-    $('land-meta-a').textContent = 'Lv ' + state.alex.lvl + ' · Grade 7→8';
-    $('land-meta-k').textContent = 'Lv ' + state.katya.lvl + ' · Grade 4→5';
+    $('land-meta-a').textContent = 'Lv ' + state.alex.lvl + ' · ' + gradePlain('alex');
+    $('land-meta-k').textContent = 'Lv ' + state.katya.lvl + ' · ' + gradePlain('katya');
     // compact stat strip reflects the ACTIVE player
     $('land-lvl').textContent = p.lvl;
     $('land-streak').textContent = p.streak + '🔥';
@@ -2055,7 +2110,7 @@ function setPlayer(w) {
   paint();
   const h = $('hero-' + w);
   h.classList.remove('pop'); void h.offsetWidth; h.classList.add('pop');
-  toast(w === 'alex' ? '⚡ ALEX selected — Grade 7→8 battle questions!' : '🔍 KATYA selected — Grade 4→5 mystery questions!');
+  toast(w === 'alex' ? `⚡ ALEX selected — ${gradePlain('alex')} battle questions!` : `🔍 KATYA selected — ${gradePlain('katya')} mystery questions!`);
 }
 
 /* ============ MISSION CARDS ============ */
@@ -2112,7 +2167,44 @@ $('badges').innerHTML = BADGES.map(b => `<div class="badge" onclick="toast('🏅
 const R = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const RNZ = (a,b) => { let v=0; while(v===0) v=R(a,b); return v; };
 const pick = ar => ar[R(0,ar.length-1)];
-const FRIENDS = ['Aryna'];
+
+/* ============ PERSONALIZATION (CHARACTERS.md) ============
+   Real names, interests, and family roles as structured data instead of
+   scattered string literals, per DEVELOPMENT_RULES.md ("never hardcode
+   new personal/family details as string literals -- route them through
+   profile data") and CHARACTERS.md -> Privacy rules (personal details
+   must be data, not hardcoded strings, so they can become parent-
+   editable fields if the app is ever opened to other families). This
+   does not change any visible story output on its own -- generators
+   that already read FRIENDS below get their values from here now
+   instead of a separate literal array. */
+const PERSONALIZATION = {
+  family: {
+    mom: 'Yulia', dad: 'Vadim',
+    grandmaOlga: 'Grandma Olga', grandmaMargarita: 'Grandma Margarita',
+    grandpaSerezha: 'Grandpa Serezha', tolik: 'Tolik the Elf'
+  },
+  alex: {
+    displayName: 'Alex', nickname: 'Sasha',
+    theme: 'battle-champion-strategy',
+    interests: ['gaming (PS5, Fortnite, Valorant, Horizon)', 'chess', 'fencing', 'Duolingo streaks', 'mystery/UFO investigations', 'food (Subway, Popeyes)', 'travel'],
+    friends: [],
+    family: ['Yulia', 'Vadim', 'Grandma Olga', 'Grandma Margarita', 'Grandpa Serezha', 'Tolik the Elf'],
+    rewardVocab: ['gaming time', 'Popeyes', 'Subway', 'a new game', 'a chess upgrade']
+  },
+  katya: {
+    displayName: 'Katya', nickname: 'Katya',
+    theme: 'mystery-detective',
+    interests: ['mysteries', 'Roblox', 'Dress to Impress', 'Toca Boca', 'Sephora', 'bubble tea', 'sushi (avocado rolls)', 'peanut-butter chocolate', 'dancing', 'road trips'],
+    friends: ['Aryna'],
+    family: ['Yulia', 'Vadim', 'Grandma Olga', 'Grandma Margarita', 'Grandpa Serezha', 'Tolik the Elf'],
+    rewardVocab: ['bubble tea', 'a Sephora item', 'sushi night', 'a Roblox item']
+  }
+};
+// Katya's story companions (word problems, Money Lab). Kept as its own
+// binding since it's used dozens of times below -- always the same array
+// PERSONALIZATION.katya.friends points to, so editing one edits both.
+const FRIENDS = PERSONALIZATION.katya.friends;
 const sgn = n => n < 0 ? `(${n})` : `${n}`;
 
 const BANK = {
@@ -3382,6 +3474,20 @@ function dismissPinNotice() {
   const el = $('pin-default-notice');
   if (el) el.style.display = 'none';
 }
+// Re-anchors the child's grade to the given value for the CURRENT school
+// year, so auto-advance keeps working correctly in every later September
+// instead of freezing the grade forever at the manually-set number.
+function setGradeOverride(who) {
+  const inp = $('grade-input-' + who);
+  const v = parseInt(inp.value, 10);
+  if (!Number.isFinite(v) || v < 1 || v > 12) { toast('Enter a grade from 1-12.'); return; }
+  state[who].gradeOverride = { grade: v, schoolYearStart: schoolYearStartFor() };
+  Store.set('smbt-state-v2', state);
+  inp.value = '';
+  toast((who === 'alex' ? 'Alex' : 'Katya') + '’s grade set to ' + v + '.');
+  paint();
+  renderParent();
+}
 function toggleMute() {
   state.settings.muted = !state.settings.muted;
   Store.set('smbt-state-v2', state);
@@ -3491,6 +3597,9 @@ function closeStrategyLib() {
 function renderParent() {
   const pinNotice = $('pin-default-notice');
   if (pinNotice) pinNotice.style.display = (state.parentPin === '1234' && !state.pinNoticeDismissed) ? 'block' : 'none';
+  const gcA = $('grade-current-alex'), gcK = $('grade-current-katya');
+  if (gcA) gcA.textContent = 'currently ' + gradePlain('alex');
+  if (gcK) gcK.textContent = 'currently ' + gradePlain('katya');
   const reqs = state.requests.slice().reverse();
   const pending = reqs.filter(r => r.status === 'pending');
   $('p-pending-count').textContent = pending.length;
@@ -3687,7 +3796,7 @@ function renderDashboard() {
   const kSrc = document.querySelector('#hero-katya .hero-photo');
   const card = (who, faceSrc) => {
     const p = state[who], cls = who === 'alex' ? 'wa' : 'wk';
-    const grade = who === 'alex' ? 'Grade 7→8' : 'Grade 4→5';
+    const grade = gradePlain(who);
     const name = who === 'alex' ? 'Alex' : 'Katya';
     const pct = Math.round(p.xp / p.xpMax * 100);
     return `<div class="dash-card ${cls}">
@@ -3809,7 +3918,7 @@ function renderGoalTrack() {
 const money2 = n => Math.round(n * 100) / 100;
 function mlGen() {
   const who = state.activePlayer;
-  const F = ['Aryna'];
+  const F = PERSONALIZATION.katya.friends;
   const pickF = () => F[R(0, 2)];
   const ALEX = [
     () => { const items = R(2, 4), price = pick([4, 5, 6, 7, 8]); return { s: '🛒 Stocking up on bubble tea for the squad.', q: `${items} bubble teas at $${price} each. Total cost?`, a: items * price, unit: '$' }; },
