@@ -47,6 +47,7 @@ const missionTheme = (child, missionName = '', index = 0) => {
 
 const safeClone = (v) => JSON.parse(JSON.stringify(v));
 const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const DAILY_QUESTION_TOTAL = 30;
 
 const skillStrategies = {
   'Multiplication facts': 'Use groups: count how many groups and how many in each group, then multiply.',
@@ -94,6 +95,16 @@ const legacyRewards = [
 
 const missionQuestionSets = {
   katya: [
+    { q: '8 + 2 = ?', a: 10, hint: 'Count 2 more after 8.', skill: 'Basic addition', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '3 + 7 = ?', a: 10, hint: 'Count 7 more after 3.', skill: 'Basic addition', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '14 - 6 = ?', a: 8, hint: 'Count back 6 from 14.', skill: 'Basic subtraction', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '20 - 9 = ?', a: 11, hint: 'Subtract 10, then add 1.', skill: 'Basic subtraction', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '4 x 3 = ?', a: 12, hint: 'Think 4 groups of 3.', skill: 'Basic multiplication', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '5 x 6 = ?', a: 30, hint: 'Skip-count by 5 six times.', skill: 'Basic multiplication', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '7 x 4 = ?', a: 28, hint: 'Think 7 + 7 + 7 + 7.', skill: 'Basic multiplication', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '18 / 3 = ?', a: 6, hint: '3 times what equals 18?', skill: 'Basic division', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '24 / 6 = ?', a: 4, hint: '6 times what equals 24?', skill: 'Basic division', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '35 / 5 = ?', a: 7, hint: '5 times what equals 35?', skill: 'Basic division', inputMode: 'numeric', category: 'basic-arithmetic' },
     { q: '6 x 7 = ?', a: 42, hint: 'Think 6 groups of 7.', skill: 'Multiplication facts', inputMode: 'numeric' },
     { q: '56 / 8 = ?', a: 7, hint: 'Ask: 8 times what makes 56?', skill: 'Division facts', inputMode: 'numeric' },
     { q: '84 / 4 = ?', a: 21, hint: 'Split 80, then split 4.', skill: 'Long division basics', inputMode: 'numeric' },
@@ -116,6 +127,16 @@ const missionQuestionSets = {
     { q: 'Katya has $20. She saves $6 and earns $4 more. How much money now?', a: 30, hint: 'Start with 20, add 6, add 4.', skill: 'Money math', inputMode: 'numeric' }
   ],
   alex: [
+    { q: '8 + 2 = ?', a: 10, hint: 'Count 2 more after 8.', skill: 'Basic addition', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '3 + 7 = ?', a: 10, hint: 'Count 7 more after 3.', skill: 'Basic addition', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '16 - 7 = ?', a: 9, hint: 'Count back 7 from 16.', skill: 'Basic subtraction', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '25 - 8 = ?', a: 17, hint: 'Subtract 10, then add 2.', skill: 'Basic subtraction', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '6 x 4 = ?', a: 24, hint: 'Think 6 groups of 4.', skill: 'Basic multiplication', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '7 x 5 = ?', a: 35, hint: 'Skip-count by 5 seven times.', skill: 'Basic multiplication', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '8 x 3 = ?', a: 24, hint: 'Think 8 + 8 + 8.', skill: 'Basic multiplication', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '21 / 3 = ?', a: 7, hint: '3 times what equals 21?', skill: 'Basic division', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '32 / 4 = ?', a: 8, hint: '4 times what equals 32?', skill: 'Basic division', inputMode: 'numeric', category: 'basic-arithmetic' },
+    { q: '45 / 5 = ?', a: 9, hint: '5 times what equals 45?', skill: 'Basic division', inputMode: 'numeric', category: 'basic-arithmetic' },
     { q: '3/4 + 1/8 = ?', type: 'choice', options: ['5/8', '7/8', '4/12'], a: '7/8', hint: 'Change 3/4 to 6/8 first.', skill: 'Fractions' },
     { q: '7.2 / 0.6 = ?', a: 12, hint: 'Think 72 divided by 6.', skill: 'Decimals', inputMode: 'decimal' },
     { q: 'What is 15% of 80?', a: 12, hint: '10% is 8 and 5% is 4.', skill: 'Percentages', inputMode: 'numeric' },
@@ -140,7 +161,7 @@ const missionQuestionSets = {
 };
 
 const getDailyQuestions = (childKey) => safeClone(missionQuestionSets[childKey] || []);
-const missionTotal = (childKey) => missionQuestionSets[childKey]?.length || 20;
+const missionTotal = (childKey) => missionQuestionSets[childKey]?.length || DAILY_QUESTION_TOTAL;
 
 const makeChild = (name, grade, level, xp, xpMax, coins, focus, bonus) => ({
   name, gradeLevel: grade, level, xp, xpMax, coins, streak: 10,
@@ -251,8 +272,22 @@ const normalize = (s) => {
     existing.savingChoices = Array.isArray(existing.savingChoices) ? existing.savingChoices : [];
     merged.moneyLab.byChild[k] = existing;
   });
-  if (!Array.isArray(merged.missions.alex) || merged.missions.alex.length !== 1 || merged.missions.alex[0]?.id !== 'alex-daily') merged.missions.alex = buildMissionsFor('alex');
-  if (!Array.isArray(merged.missions.katya) || merged.missions.katya.length !== 1 || merged.missions.katya[0]?.id !== 'katya-daily') merged.missions.katya = buildMissionsFor('katya');
+  ['alex', 'katya'].forEach((childKey) => {
+    if (!Array.isArray(merged.missions[childKey]) || merged.missions[childKey].length !== 1 || merged.missions[childKey][0]?.id !== `${childKey}-daily`) {
+      merged.missions[childKey] = buildMissionsFor(childKey);
+      return;
+    }
+    const freshMission = buildMissionsFor(childKey)[0];
+    merged.missions[childKey][0] = {
+      ...freshMission,
+      ...merged.missions[childKey][0],
+      title: freshMission.title,
+      story: freshMission.story,
+      objective: freshMission.objective,
+      total: freshMission.total,
+      progress: Math.min(merged.missions[childKey][0].progress || 0, freshMission.total)
+    };
+  });
   return merged;
 };
 

@@ -1162,7 +1162,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED · ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub">20 mixed questions for today. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub">30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -2129,7 +2129,7 @@ $('missions').innerHTML = MISSIONS.map(m => `
   <div class="mcard ${m.cls} daily-only" onclick="startMission('daily')">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog">20 questions</div>
+    <div class="mprog">30 questions · 10 basic math</div>
     <div class="mxp">+${m.xp} XP + accuracy coins</div>
   </div>`).join('');
 
@@ -2277,12 +2277,32 @@ katya: {
 }};
 
 /* ============ ADAPTIVE DAILY MISSION ENGINE ============
-   Fixes the "same 20 questions every day" bug: every generator below
+   Fixes the "same questions every day" bug: every generator below
    produces a fresh, randomized question every call. Topics rotate,
    difficulty scales with per-topic mastery, and recently-seen question
    text is remembered so the SAME question rarely repeats back to back. */
 function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a || 1; }
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=R(0,i); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function generateBasicArithmetic() {
+  const addition = Array.from({length:2}, () => {
+    const a=R(2,12), b=R(2,10);
+    return { s:'Basic arithmetic warm-up: addition.', q:`${a} + ${b} = ?`, a:a+b, hint:'Count on from the larger number.', mode:'numeric', topic:'mentalmath', basic:true };
+  });
+  const subtraction = Array.from({length:2}, () => {
+    const b=R(2,10), answer=R(2,15), a=b+answer;
+    return { s:'Basic arithmetic warm-up: subtraction.', q:`${a} − ${b} = ?`, a:answer, hint:'Count back from the first number.', mode:'numeric', topic:'mentalmath', basic:true };
+  });
+  const multiplication = Array.from({length:3}, () => {
+    const a=R(2,10), b=R(2,10);
+    return { s:'Basic arithmetic warm-up: multiplication.', q:`${a} × ${b} = ?`, a:a*b, hint:`Think of ${a} groups of ${b}.`, mode:'numeric', topic:'multiplication', basic:true };
+  });
+  const division = Array.from({length:3}, () => {
+    const divisor=R(2,10), answer=R(2,10);
+    return { s:'Basic arithmetic warm-up: division.', q:`${divisor*answer} ÷ ${divisor} = ?`, a:answer, hint:`${divisor} times what equals ${divisor*answer}?`, mode:'numeric', topic:'division', basic:true };
+  });
+  return [...addition, ...subtraction, ...multiplication, ...division];
+}
 
 const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','ratios','algebra','geometry','probability','money','logic','wordproblems'];
 const KATYA_TOPICS = ['multiplication','division','longdivision','fractions','decimals','money','time','measurement','patterns','wordproblems','reading','grammar','french'];
@@ -2757,7 +2777,7 @@ function weakStrongSubjects(who) {
   return { weak, strong };
 }
 
-/* ---- Build a fresh, shuffled, topic-balanced 20-question mission ---- */
+/* ---- Build a fresh mission: 10 basic warm-ups + 20 adaptive questions ---- */
 function buildTopicSequence(who, count) {
   const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
   const weights = topics.map(t => topicWeight(who, t));
@@ -2786,7 +2806,8 @@ function buildTopicSequence(who, count) {
   return seq;
 }
 function generateDailyMission(who) {
-  const seq = buildTopicSequence(who, QCOUNT);
+  const basics = generateBasicArithmetic();
+  const seq = buildTopicSequence(who, QCOUNT - DAILY_BASIC_COUNT);
   const recent = state.recentQ[who] || (state.recentQ[who] = []);
   const questions = seq.map(topic => {
     const diff = topicDifficulty(who, topic);
@@ -2796,7 +2817,7 @@ function generateDailyMission(who) {
     return item;
   });
   if (recent.length > 60) recent.splice(0, recent.length - 60);
-  return questions;
+  return [...basics, ...questions];
 }
 
 /* ============ HELPERS: dates, confetti, hints ============ */
@@ -3039,7 +3060,7 @@ function queueReinforcement(topic) {
 
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
-const QCOUNT = 20, XP_PER_Q = 8;
+const QCOUNT = 30, DAILY_BASIC_COUNT = 10, XP_PER_Q = 8;
 function startMission(id) {
   const def = MISSIONS[0];
   M = { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
