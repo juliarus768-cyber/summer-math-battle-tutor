@@ -1162,7 +1162,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED · ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub">30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub" id="landing-mission-status">30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -1384,7 +1384,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 <!-- ============ ACTIVE MISSION SCREEN ============ -->
 <section class="mscreen" id="mission-screen">
   <div class="ms-top">
-    <button class="back-btn" onclick="closeMission()">&#8249; &nbsp;HQ</button>
+    <button class="back-btn" onclick="closeMission()">&#10074;&#10074; &nbsp;PAUSE &amp; HQ</button>
     <div style="flex:1">
       <div class="ms-title-row">
         <span class="ms-title" id="ms-title">SPEED ROUND</span>
@@ -1916,6 +1916,9 @@ const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
   if (state[w].gradeOverride === undefined) state[w].gradeOverride = null;
 });
 if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
+if (!state.pausedDaily || typeof state.pausedDaily !== 'object') state.pausedDaily = { alex:null, katya:null };
+if (state.pausedDaily.alex === undefined) state.pausedDaily.alex = null;
+if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
 
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
@@ -2071,6 +2074,7 @@ function paint() {
   const tb = $('team-bonus-sub');
   if (tb) tb.textContent = (dailyCountFor('alex') >= 1 && dailyCountFor('katya') >= 1) ? '✓ Bonus active today!' : 'Both play today for';
   paintLanding(p, isA);
+  paintDailyMissionStatus();
   paintBell();
   Store.set('smbt-state-v2', state);
 }
@@ -2104,6 +2108,21 @@ function paintLanding(p, isA) {
   }
 }
 
+function validPausedMission(who) {
+  const saved = state.pausedDaily && state.pausedDaily[who];
+  return saved && saved.player === who && Array.isArray(saved.questions) && saved.questions.length >= 1 && saved.i >= 0 && saved.i < saved.questions.length ? saved : null;
+}
+
+function paintDailyMissionStatus() {
+  const saved = validPausedMission(state.activePlayer);
+  const progress = $('daily-card-progress');
+  const landingStatus = $('landing-mission-status');
+  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : '30 questions · 10 basic math';
+  if (landingStatus) landingStatus.textContent = saved
+    ? `Mission paused at question ${saved.i + 1} of ${saved.questions.length}. Tap to resume exactly where you stopped.`
+    : '30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.';
+}
+
 function setPlayer(w) {
   if (state.activePlayer === w) { paint(); return; }
   state.activePlayer = w;
@@ -2129,7 +2148,7 @@ $('missions').innerHTML = MISSIONS.map(m => `
   <div class="mcard ${m.cls} daily-only" onclick="startMission('daily')">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog">30 questions · 10 basic math</div>
+    <div class="mprog" id="daily-card-progress">30 questions &middot; 10 basic math</div>
     <div class="mxp">+${m.xp} XP + accuracy coins</div>
   </div>`).join('');
 
@@ -3061,9 +3080,25 @@ function queueReinforcement(topic) {
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
 const QCOUNT = 30, DAILY_BASIC_COUNT = 10, XP_PER_Q = 8;
+function savePausedMission() {
+  if (!M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
+  const snapshot = JSON.parse(JSON.stringify(M));
+  const isCurrentQuestion = M.q === M.questions[M.i];
+  snapshot.answer = isCurrentQuestion && $('ms-answer') ? $('ms-answer').value : '';
+  if (!isCurrentQuestion) snapshot.attempts = 0;
+  snapshot.savedAt = Date.now();
+  state.pausedDaily[M.player] = snapshot;
+  Store.set('smbt-state-v2', state);
+}
+
 function startMission(id) {
   const def = MISSIONS[0];
-  M = { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
+  const saved = validPausedMission(state.activePlayer);
+  M = saved
+    ? { ...JSON.parse(JSON.stringify(saved)), def }
+    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
+  const restoredAttempts = M.attempts || 0;
+  const restoredAnswer = M.answer || '';
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   const sc = $('mission-screen');
   sc.classList.add('on');
@@ -3078,6 +3113,15 @@ function startMission(id) {
   if (padToggle) padToggle.textContent = '✏️ SCRATCHPAD';
   initPad();
   nextQ();
+  if (saved) {
+    M.attempts = restoredAttempts;
+    updateAttemptDots();
+    $('ms-answer').value = restoredAnswer;
+    if (M.q.choices) document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === restoredAnswer));
+    $('ms-fb').textContent = 'Mission resumed — keep going!';
+    $('ms-fb').className = 'feedback fb-good';
+    toast(`▶ Resumed question ${M.i + 1} of ${M.questions.length}`);
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function segs() {
@@ -3194,6 +3238,7 @@ function showResult() {
   const wMult = weekendXpMult();
   const xp = Math.round(baseXp * wMult * (teamBonus ? 1.15 : 1));
   const who = state[M.player];
+  state.pausedDaily[M.player] = null;
   who.coins += coins;
   const leveled = gainXP(who, xp);
   bumpStreak(who, M.player === 'alex' ? 'ALEX' : 'KATYA');
@@ -3221,6 +3266,7 @@ function showResult() {
   segs();
 }
 function closeMission() {
+  savePausedMission();
   $('mission-screen').classList.remove('on');
   $('battle-screen').classList.remove('on');
   $('store-screen').classList.remove('on');
@@ -3231,7 +3277,10 @@ function closeMission() {
   $('escape-screen').classList.remove('on');
   $('strategy-screen').classList.remove('on');
   $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
+  paint();
 }
+
+window.addEventListener('beforeunload', savePausedMission);
 
 /* ============ SCRATCHPAD (canvas whiteboard) ============ */
 let pad, pctx, drawing = false, padColor = '#3FD9FF', padInit = false;
