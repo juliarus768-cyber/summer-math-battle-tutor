@@ -969,7 +969,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED ? ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub">20 mixed questions for today. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub">30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -1708,7 +1708,7 @@ $('missions').innerHTML = MISSIONS.map(m => `
   <div class="mcard ${m.cls} daily-only" onclick="startMission('daily')">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog">20 questions</div>
+    <div class="mprog">30 questions · 10 basic math</div>
     <div class="mxp">+${m.xp} XP + accuracy coins</div>
   </div>`).join('');
 
@@ -1820,6 +1820,16 @@ katya: {
 
 const DAILY_BANK = {
   katya: [
+    { s:'Basic arithmetic warm-up: addition.', q:'8 + 2 = ?', a:10, hint:'Count 2 more after 8.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: addition.', q:'3 + 7 = ?', a:10, hint:'Count 7 more after 3.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: subtraction.', q:'14 - 6 = ?', a:8, hint:'Count back 6 from 14.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: subtraction.', q:'20 - 9 = ?', a:11, hint:'Subtract 10, then add 1.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: multiplication.', q:'4 x 3 = ?', a:12, hint:'Think 4 groups of 3.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: multiplication.', q:'5 x 6 = ?', a:30, hint:'Skip-count by 5 six times.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: multiplication.', q:'7 x 4 = ?', a:28, hint:'Think 7 + 7 + 7 + 7.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: division.', q:'18 / 3 = ?', a:6, hint:'3 times what equals 18?', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: division.', q:'24 / 6 = ?', a:4, hint:'6 times what equals 24?', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: division.', q:'35 / 5 = ?', a:7, hint:'5 times what equals 35?', mode:'numeric', basic:true },
     { s:'Daily Grade 5 prep: multiplication facts.', q:'6 x 7 = ?', a:42, hint:'Think 6 groups of 7.', mode:'numeric' },
     { s:'Daily Grade 5 prep: division facts.', q:'56 / 8 = ?', a:7, hint:'Ask: 8 times what makes 56?', mode:'numeric' },
     { s:'Long division basics.', q:'84 / 4 = ?', a:21, hint:'Split 80, then split 4.', mode:'numeric' },
@@ -1842,6 +1852,16 @@ const DAILY_BANK = {
     { s:'Money math.', q:'Katya has $20. She saves $6 and earns $4 more. How much money now?', a:30, hint:'Start with 20, add 6, add 4.', mode:'numeric' }
   ],
   alex: [
+    { s:'Basic arithmetic warm-up: addition.', q:'8 + 2 = ?', a:10, hint:'Count 2 more after 8.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: addition.', q:'3 + 7 = ?', a:10, hint:'Count 7 more after 3.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: subtraction.', q:'16 - 7 = ?', a:9, hint:'Count back 7 from 16.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: subtraction.', q:'25 - 8 = ?', a:17, hint:'Subtract 10, then add 2.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: multiplication.', q:'6 x 4 = ?', a:24, hint:'Think 6 groups of 4.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: multiplication.', q:'7 x 5 = ?', a:35, hint:'Skip-count by 5 seven times.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: multiplication.', q:'8 x 3 = ?', a:24, hint:'Think 8 + 8 + 8.', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: division.', q:'21 / 3 = ?', a:7, hint:'3 times what equals 21?', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: division.', q:'32 / 4 = ?', a:8, hint:'4 times what equals 32?', mode:'numeric', basic:true },
+    { s:'Basic arithmetic warm-up: division.', q:'45 / 5 = ?', a:9, hint:'5 times what equals 45?', mode:'numeric', basic:true },
     { s:'Fractions.', q:'3/4 + 1/8 = ?', a:'7/8', choices:['5/8','7/8','4/12'], hint:'Change 3/4 to 6/8 first.' },
     { s:'Decimals.', q:'7.2 / 0.6 = ?', a:12, hint:'Think 72 divided by 6.', mode:'decimal' },
     { s:'Percentages.', q:'What is 15% of 80?', a:12, hint:'10% is 8 and 5% is 4.', mode:'numeric' },
@@ -1927,7 +1947,7 @@ function showHint() {
 
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
-const QCOUNT = 20, XP_PER_Q = 8;
+const QCOUNT = 30, XP_PER_Q = 8;
 function startMission(id) {
   const def = MISSIONS[0];
   M = { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: DAILY_BANK[state.activePlayer].slice() };
@@ -3392,4 +3412,3 @@ paint();
 </script>
 </body>
 </html>
-
