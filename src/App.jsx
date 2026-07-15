@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Particles from './components/Particles';
 
 const STORAGE_KEY = 'summerMathBattleTutorStateV2';
 const todayKey = () => new Date().toISOString().slice(0, 10);
-const tabs = ['Home', 'Daily Mission', 'Battle', 'Store', 'Grant Prize', 'Parent'];
+const tabs = ['Home', 'Daily Mission', 'Battle', 'Money Lab', 'Store', 'Grant Prize', 'Parent'];
 const missionNames = ['Speed Round', 'Logic Battle', 'Money Lab', 'Mystery Case', 'Boss Battle', 'Streak Saver'];
 const alexQuestNames = ['🚀 Speed Run', '🥷 Ninja Precision', '💰 Money Boss', '🎯 Accuracy Trial', '🏆 Champion Quest', '🔥 Streak Protector'];
 const katyaQuestNames = ['🗝 Secret Code Breaker', '🔍 Mystery File', '💄 Sephora Shopping Mystery', '📺 Portal Investigation', '🎮 Roblox Signal', '🌙 Midnight Puzzle'];
@@ -48,6 +48,36 @@ const missionTheme = (child, missionName = '', index = 0) => {
 const safeClone = (v) => JSON.parse(JSON.stringify(v));
 const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const DAILY_QUESTION_TOTAL = 30;
+
+const skillStrategies = {
+  'Multiplication facts': 'Use groups: count how many groups and how many in each group, then multiply.',
+  'Division facts': 'Division asks “what times the divisor makes this total?” Check with multiplication.',
+  'Long division basics': 'Split the big number into friendly chunks first, then divide each chunk.',
+  'Multi-digit multiplication': 'Break one factor into tens and ones, multiply each part, then add.',
+  'Fractions basics': 'Name the equal parts first. The bottom number is total equal parts; the top is parts used.',
+  'Decimals introduction': 'Line up decimal places and read tenths/hundredths carefully.',
+  'Money math': 'Track dollars and cents like a receipt: add costs or subtract spending from the total.',
+  'Word problems': 'Underline what is being repeated, shared, added, or removed before calculating.',
+  'Patterns': 'Find the change from one number to the next, then repeat that change.',
+  'Geometry basics': 'Draw the shape and label equal sides before adding or multiplying.',
+  Measurement: 'Use the conversion fact first, then multiply or divide by the conversion amount.',
+  Fractions: 'Use a common denominator so the fraction pieces are the same size before adding.',
+  Decimals: 'Move or line up decimals consistently, then calculate as whole-number facts.',
+  Percentages: 'Find 10%, 5%, or 1% chunks and combine them.',
+  'Ratios and rates': 'Compare matching units. Scale both parts by the same factor.',
+  Integers: 'Track direction on a number line; negatives move left and positives move right.',
+  Equations: 'Undo the operation on both sides to keep the equation balanced.',
+  BEDMAS: 'Do brackets/exponents first, then multiplication/division, then addition/subtraction.',
+  Geometry: 'Use the key fact for the shape before guessing; triangle angles total 180°.',
+  Area: 'Area covers the inside: length × width.',
+  Volume: 'Volume fills a box: length × width × height.',
+  Probability: 'Probability is wanted outcomes over total possible outcomes.',
+  Rates: 'Rate means per 1 unit, so divide distance or total by the number of units.',
+  'Financial math': 'Calculate tax/discount separately, then add or subtract it from the price.',
+  'Speed and accuracy': 'Use a quick split, then pause for a one-second check before submitting.'
+};
+
+const strategyFor = (question) => skillStrategies[question?.skill] || question?.hint || 'Choose the operation that matches the story, solve, then check with the inverse operation.';
 
 const rewards = [
   ['🎮', 'Small digital reward', 90, 'Common'], ['🎵', 'Pick music in the car', 140, 'Common'], ['🍫', 'Chocolate or small treat', 220, 'Rare'],
@@ -142,6 +172,7 @@ const makeChild = (name, grade, level, xp, xpMax, coins, focus, bonus) => ({
 
 const defaultState = {
   activeTab: 'Home', selectedChild: 'alex', weekendMode: false, notifications: 2, banner: 'Summer Math Battle Tutor Loaded',
+  soundOn: true,
   battleScore: { alex: 0, katya: 0 }, grant: { lastClaimDate: '', message: '' },
   ui: { message: '', levelUp: '', rewardMessage: '' },
   activeMission: null, // {child, missionId, questions, index, input, feedback, localCorrect, localAttempts, localCorrections, secondTry}
@@ -264,7 +295,39 @@ const load = () => { try { const raw = localStorage.getItem(STORAGE_KEY); return
 
 export default function App() {
   const [state, setState] = useState(load);
+  const audioRef = useRef(null);
   const persist = (next) => { setState(next); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {} };
+
+  const playSound = (type) => {
+    if (!state.soundOn) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = audioRef.current || new Ctx();
+      audioRef.current = ctx;
+      const now = ctx.currentTime;
+      const notes = type === 'correct' ? [523.25, 659.25, 783.99] : type === 'complete' ? [392, 523.25, 659.25, 1046.5] : [220, 196];
+      notes.forEach((freq, index) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type === 'wrong' ? 'sawtooth' : 'triangle';
+        osc.frequency.setValueAtTime(freq, now + index * 0.08);
+        gain.gain.setValueAtTime(0, now + index * 0.08);
+        gain.gain.linearRampToValueAtTime(type === 'wrong' ? 0.05 : 0.08, now + index * 0.08 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.16);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + index * 0.08);
+        osc.stop(now + index * 0.08 + 0.18);
+      });
+    } catch {}
+  };
+
+  const toggleSound = () => {
+    const next = safeClone(state);
+    next.soundOn = !next.soundOn;
+    next.ui.message = next.soundOn ? 'Sound effects on.' : 'Sound effects muted.';
+    persist(next);
+  };
 
   const setSelectedChild = (childKey) => {
     const next = safeClone(state);
@@ -314,14 +377,22 @@ export default function App() {
   const submitMissionAnswer = () => {
     const next = safeClone(state); const m = next.activeMission; if (!m) return;
     const child = next.children[m.childKey]; const mission = next.missions[m.childKey].find((x) => x.id === m.missionId); const q = m.questions[m.index];
+    if (!child || !mission || !q) {
+      next.ui.message = 'That mission step was out of sync, so it was safely reset. Start the mission again.';
+      next.activeMission = null;
+      persist(next);
+      return;
+    }
     m.localAttempts += 1; mission.attempts += 1; child.statsToday.attempts += 1;
     if (isAnswerCorrect(q, m.input)) {
       const corrected = m.secondTry; m.localCorrect += 1; mission.correctAnswers += 1; mission.progress = Math.max(mission.progress, m.index + 1); child.statsToday.correct += 1; m.feedback = corrected ? 'Nice fix. That step is stronger now.' : 'Correct! Great work.';
       addXpCoins(next, m.childKey, corrected ? 5 : 8, corrected ? 3 : 5, q.skill);
       if (corrected) { mission.mistakesCorrected += 1; child.mistakesCorrected += 1; child.statsToday.coinsEarned += 0; next.battleScore[m.childKey] += 1; }
       m.secondTry = false; m.input = '';
+      let completedMission = false;
       if (m.index < m.questions.length - 1) m.index += 1;
       else {
+        completedMission = true;
         const score = m.localCorrect;
         const accuracy = Math.round((score / Math.max(1, m.questions.length)) * 100);
         const accuracyBonusXp = Math.round(accuracy / 4);
@@ -336,8 +407,10 @@ export default function App() {
         next.ui.message = `${child.name} completed ${mission.title}! Score: ${score}/${m.questions.length} (${accuracy}%). XP and coins added.`;
         next.activeMission = null;
       }
+      playSound(completedMission ? 'complete' : 'correct');
     } else {
-      m.feedback = 'Good try, fix the step. Hint: ' + q.hint; m.secondTry = true;
+      m.feedback = 'Good try, fix the step. Strategy: ' + strategyFor(q); m.secondTry = true;
+      playSound('wrong');
     }
     child.accuracy = Math.round((child.statsToday.correct / Math.max(1, child.statsToday.attempts)) * 100);
     persist(next);
@@ -390,12 +463,13 @@ export default function App() {
     next.moneyLab.secondTry = false;
     persist(next);
   };
-  const submitMoneyLab = () => {
+  const submitMoneyLab = (overrideChildKey, overrideMissionId) => {
     const next = safeClone(state);
-    const childKey = next.moneyLab.activeChild || next.selectedChild;
+    const childKey = overrideChildKey || next.moneyLab.activeChild || next.selectedChild;
     const bucket = next.moneyLab.byChild[childKey];
-    const mission = bucket.missions.find((m) => m.id === bucket.activeId);
-    if (!mission || mission.completed) return;
+    if (overrideMissionId && bucket) bucket.activeId = overrideMissionId;
+    const mission = bucket?.missions.find((m) => m.id === (overrideMissionId || bucket.activeId));
+    if (!bucket || !mission || mission.completed) return;
     mission.attempts += 1;
     const raw = String(next.moneyLab.answer || '').trim();
     const ok = mission.type === 'choice' ? raw === mission.answer : Number(raw) === mission.answer;
@@ -415,9 +489,11 @@ export default function App() {
       if (corrected) { bucket.mistakesCorrected += 1; next.children[childKey].mistakesCorrected += 1; }
       next.moneyLab.answer = '';
       next.moneyLab.secondTry = false;
+      playSound('correct');
     } else {
       next.moneyLab.feedback = `Good try. Let’s fix the step. Hint: ${mission.hint}`;
       next.moneyLab.secondTry = true;
+      playSound('wrong');
     }
     persist(next);
   };
@@ -446,7 +522,7 @@ export default function App() {
     <nav className="game-hud">
       <div className="hud-logo">⚔ SUMMER BATTLE QUEST 2026</div>
       <div className="hud-tabs">{tabs.map((t)=> <button className={state.activeTab===t ? 'active' : ''} key={t} onClick={()=>switchTab(t)}>{t}</button>)}</div>
-      <div className="hud-counters"><span>🪙 {state.children.alex.coins + state.children.katya.coins}</span><span>⭐ {state.children.alex.xp + state.children.katya.xp} XP</span><span className="notification">🔔<b>{state.notifications}</b></span><span>⚙</span></div>
+      <div className="hud-counters"><span>🪙 {state.children.alex.coins + state.children.katya.coins}</span><span>⭐ {state.children.alex.xp + state.children.katya.xp} XP</span><span className="notification">🔔<b>{state.notifications}</b></span><button className="sound-toggle" onClick={toggleSound} aria-label={state.soundOn ? 'Mute sounds' : 'Turn on sounds'}>{state.soundOn ? '🔊' : '🔇'}</button></div>
     </nav>
     <div className="actions child-switcher"><button className={selected === 'alex' ? 'active' : ''} onClick={() => setSelectedChild('alex')}>Alex</button><button className={selected === 'katya' ? 'active' : ''} onClick={() => setSelectedChild('katya')}>Katya</button><strong>Currently selected: {selectedName}</strong></div>
     <section className={`quest-command ${selected}`}>
@@ -476,6 +552,7 @@ export default function App() {
           <p className="question-label">{activeMissionRecord?.objective || activeTheme?.objective}</p>
           <p className="mission-story">{activeMissionRecord?.story || activeTheme?.story}</p>
           <div className="question-text">{activeQuestion?.q || 'Loading question...'}</div>
+          {activeQuestion && <div className="strategy-tip"><strong>Strategy for this skill:</strong> {strategyFor(activeQuestion)}</div>}
           {activeQuestion?.type === 'choice' ? <div className="choice-grid">{activeQuestion.options.map((option) => <button className={`choice-answer ${state.activeMission.input === option ? 'selected' : ''}`} key={option} onClick={() => persist({ ...state, activeMission: { ...state.activeMission, input: option } })}>{option}</button>)}</div> : <input className="answer-input" aria-label="Answer" placeholder="Type your answer" inputMode={activeQuestion?.inputMode || 'numeric'} autoComplete="off" value={state.activeMission.input} onFocus={scrollMissionInputIntoView} onChange={(e) => persist({ ...state, activeMission: { ...state.activeMission, input: e.target.value } })} />}
           <button className="submit-answer" onClick={submitMissionAnswer}>Submit Answer</button>
           {state.activeMission.feedback && <div className={`feedback-box ${activeFeedbackType}`}>{state.activeMission.feedback}</div>}
@@ -497,7 +574,7 @@ export default function App() {
       {state.activeTab === 'Store' && <section className='dashboard-panel'><div className='section-title'><h2>Reward Store</h2><span>{selectedName} selected • parent approval required</span></div><div className='store-grid'>{rewards.map((r,idx) => {const progress=Math.min(100,Math.round((state.children[selected].coins/r[2])*100)); const need=Math.max(0,r[2]-state.children[selected].coins); return <article className={`store-card ${need === 0 ? 'unlocked' : 'locked'}`} key={r[1]} style={{borderColor:'#'+((idx*123456)%0xffffff).toString(16).padStart(6,'0')+'88'}}><div className='reward-icon'>{r[0]}</div><h4>{r[1]}</h4><p className='cost'>{r[2]} coins</p><div className='xp'><span style={{width:`${progress}%`}}/></div><p>{need === 0 ? 'Ready to request' : `${need} coins to go`}</p><small>Requires parent approval</small><button onClick={() => requestReward(selected, r)}>Request Reward</button></article>;})}</div></section>}
       {state.activeTab === 'Grant Prize' && <section><h2>Grant Prize</h2><button onClick={claimGrant}>Claim Daily Grant Prize</button><p>{state.grant.message}</p></section>}
       {state.activeTab === 'Practice' && <section><h2>Practice Trainer</h2><p>Selected child: {selectedName}</p><div className="actions"><button onClick={() => setSelectedChild('alex')}>Alex</button><button onClick={() => setSelectedChild('katya')}>Katya</button></div><select value={state.practice.mode} onChange={(e)=>persist({...state,practice:{...state.practice,mode:e.target.value,child:selected}})}><option>Multiplication</option><option>Division</option><option>Mixed</option><option>Missing Number</option></select><button onClick={()=>{const qs=Array.from({length:10},()=>genQuestion(selected,'Speed Round'));persist({...state,practice:{...state.practice,child:selected,questions:qs,index:0,score:0}})}}>Generate 10 Questions</button>{state.practice.questions.length>0&&<article className="big-card"><p>{state.practice.index+1}/10: {state.practice.questions[state.practice.index]?.q}</p><input value={state.practice.answer||''} onChange={(e)=>persist({...state,practice:{...state.practice,answer:e.target.value}})} /><button onClick={()=>{const n=safeClone(state);const q=n.practice.questions[n.practice.index];if(Number((n.practice.answer||'').trim())===q.a)n.practice.score+=1;n.practice.index=Math.min(9,n.practice.index+1);n.practice.answer='';persist(n);}}>Submit</button><p>Score: {state.practice.score}</p></article>}</section>}
-      {state.activeTab === 'Money Lab' && <section><h2>💰 Money Lab for {state.children[moneyLabChild].name}</h2><div className="actions"><button onClick={() => setMoneyLabChild('alex')}>Alex</button><button onClick={() => setMoneyLabChild('katya')}>Katya</button></div><article className="big-card"><h3>Selected Child Card</h3><p>{state.children[moneyLabChild].name} • Coins: {state.children[moneyLabChild].coins}</p><p>Piggy Bank: {moneyLabBucket.coinsEarned} coins earned in Money Lab</p><p>Completed badges: {moneyLabBucket.completedCount}/7</p></article><div className="mission-grid">{moneyLabBucket.missions.map((m) => <article className="mission" key={m.id}><h4>🐷 {m.title}</h4><p>{m.story}</p><p><strong>Question:</strong> {m.question}</p>{m.type === 'choice' ? <div>{(m.options || []).map((opt) => <button key={opt} onClick={() => persist({ ...state, moneyLab: { ...state.moneyLab, answer: opt, activeChild: moneyLabChild, byChild: { ...state.moneyLab.byChild, [moneyLabChild]: { ...moneyLabBucket, activeId: m.id } } } })}>{opt}</button>)}</div> : <input placeholder="Enter number" value={(moneyLabBucket.activeId === m.id) ? state.moneyLab.answer : ''} onChange={(e) => { persist({ ...state, moneyLab: { ...state.moneyLab, activeChild: moneyLabChild, answer: e.target.value, byChild: { ...state.moneyLab.byChild, [moneyLabChild]: { ...moneyLabBucket, activeId: m.id } } } }); }} />}<p>Rewards: +{m.xpReward} XP • +{m.coinReward} coins</p><p>Status: {m.completed ? '✅ Completed' : '⬜ Not completed'}</p><button disabled={m.completed} onClick={() => { setMoneyLabMission(moneyLabChild, m.id); submitMoneyLab(); }}>Submit</button></article>)}</div><article className="big-card"><h3>Savings Goal Card</h3><p>Goal rewards: Bubble tea, DoorDash, Movie, Restaurant with mom/dad, Starbucks card, Apple gift card, PlayStation card.</p><p>Feedback: {state.moneyLab.feedback}</p><p>Coin progress bar: {Math.min(100, Math.round((state.children[moneyLabChild].coins / 500) * 100))}% toward PlayStation card</p></article></section>}
+      {state.activeTab === 'Money Lab' && <section><h2>💰 Money Lab for {state.children[moneyLabChild].name}</h2><div className="actions"><button onClick={() => setMoneyLabChild('alex')}>Alex</button><button onClick={() => setMoneyLabChild('katya')}>Katya</button></div><article className="big-card"><h3>Selected Child Card</h3><p>{state.children[moneyLabChild].name} • Coins: {state.children[moneyLabChild].coins}</p><p>Piggy Bank: {moneyLabBucket.coinsEarned} coins earned in Money Lab</p><p>Completed badges: {moneyLabBucket.completedCount}/7</p></article><div className="mission-grid">{moneyLabBucket.missions.map((m) => <article className="mission" key={m.id}><h4>🐷 {m.title}</h4><p>{m.story}</p><p><strong>Question:</strong> {m.question}</p>{m.type === 'choice' ? <div>{(m.options || []).map((opt) => <button key={opt} onClick={() => persist({ ...state, moneyLab: { ...state.moneyLab, answer: opt, activeChild: moneyLabChild, byChild: { ...state.moneyLab.byChild, [moneyLabChild]: { ...moneyLabBucket, activeId: m.id } } } })}>{opt}</button>)}</div> : <input placeholder="Enter number" value={(moneyLabBucket.activeId === m.id) ? state.moneyLab.answer : ''} onChange={(e) => { persist({ ...state, moneyLab: { ...state.moneyLab, activeChild: moneyLabChild, answer: e.target.value, byChild: { ...state.moneyLab.byChild, [moneyLabChild]: { ...moneyLabBucket, activeId: m.id } } } }); }} />}<p>Rewards: +{m.xpReward} XP • +{m.coinReward} coins</p><p>Status: {m.completed ? '✅ Completed' : '⬜ Not completed'}</p><button disabled={m.completed} onClick={() => submitMoneyLab(moneyLabChild, m.id)}>Submit</button></article>)}</div><article className="big-card"><h3>Savings Goal Card</h3><p>Goal rewards: Bubble tea, DoorDash, Movie, Restaurant with mom/dad, Starbucks card, Apple gift card, PlayStation card.</p><p>Feedback: {state.moneyLab.feedback}</p><p>Coin progress bar: {Math.min(100, Math.round((state.children[moneyLabChild].coins / 500) * 100))}% toward PlayStation card</p></article></section>}
       {state.activeTab === 'Parent' && <section><h2>Parent Dashboard</h2>{['alex', 'katya'].map((k) => <article key={k} className="big-card"><h3>{state.children[k].name}</h3><p>Minutes: {state.children[k].minutesToday} | Missions: {state.children[k].missionsCompletedToday}</p><p>XP today: {state.children[k].statsToday.xpEarned} | Coins today: {state.children[k].statsToday.coinsEarned}</p><p>Accuracy: {state.children[k].accuracy}% | Corrections: {state.children[k].mistakesCorrected}</p><button onClick={() => momBonus(k)}>Mom Bonus +25 coins</button></article>)}
         <h3>Money Lab Progress</h3><ul>{['alex', 'katya'].map((k) => <li key={k}>{state.children[k].name}: completed {state.moneyLab.byChild[k].completedCount}/7, skills: {state.moneyLab.byChild[k].skills.join(', ') || 'none'}, money choices: {state.moneyLab.byChild[k].savingChoices.join(', ') || 'none'}, next lesson: {state.moneyLab.byChild[k].completedCount < 3 ? 'Needs vs Wants + Saving basics' : 'Budgeting and delivery fees'}.</li>)}</ul>
         <h3>Reward Requests</h3><ul>{state.rewardRequests.map((r) => <li key={r.id}>{r.child} - {r.reward} ({r.cost}) [{r.status}] {r.status === 'Pending Parent Approval' && <><button onClick={() => parentDecision(r.id, true)}>Approve</button><button onClick={() => parentDecision(r.id, false)}>Decline</button></>}</li>)}</ul>
@@ -507,4 +584,3 @@ export default function App() {
       </section>}
     </main><div className="card">Selected child: {selected} | Active tab: {state.activeTab} | Active mission: {state.activeMission ? 'yes' : 'no'}</div></div>;
 }
-
