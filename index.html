@@ -1926,8 +1926,8 @@ if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
    anything higher that still exists on the device. */
 function restoreRememberedJuly15Progress() {
   const floor = {
-    alex: { lvl: 7, coins: 430, keys: 1, xpMax: 400, totalXP: 1350 },
-    katya: { lvl: 13, coins: 500, keys: 1, xpMax: 700, totalXP: 4500 }
+    alex: { lvl: 7, coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
+    katya: { lvl: 13, coins: 500, keys: 1, streak: 4, xpMax: 700, totalXP: 4500 }
   };
   let changed = false;
   ['alex', 'katya'].forEach(w => {
@@ -1942,7 +1942,7 @@ function restoreRememberedJuly15Progress() {
   if (changed) {
     state.progressRestore = {
       appliedAt: new Date().toISOString(),
-      source: 'July 15 remembered baseline: Alex lvl 7, 430 coins, 1 key; Katya lvl 13, 500 coins, 1 key'
+      source: 'July 17 remembered baseline: Alex lvl 7, 510 coins, 2 keys, day streak 5; Katya lvl 13, 500 coins, 1 key, day streak 4'
     };
     Store.set('smbt-state-v2', state);
   }
