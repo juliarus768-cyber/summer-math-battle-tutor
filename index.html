@@ -1920,6 +1920,35 @@ if (!state.pausedDaily || typeof state.pausedDaily !== 'object') state.pausedDai
 if (state.pausedDaily.alex === undefined) state.pausedDaily.alex = null;
 if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
 
+/* ============ JULY 15 PROGRESS SAFETY RESTORE ============
+   This protects against the phone/browser save being zeroed during the recent
+   UI changes. It only raises values to the remembered floor and never lowers
+   anything higher that still exists on the device. */
+function restoreRememberedJuly15Progress() {
+  const floor = {
+    alex: { lvl: 7, coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
+    katya: { lvl: 13, coins: 500, keys: 1, streak: 4, xpMax: 700, totalXP: 4500 }
+  };
+  let changed = false;
+  ['alex', 'katya'].forEach(w => {
+    const p = state[w] || (state[w] = JSON.parse(JSON.stringify(FRESH[w])));
+    Object.entries(floor[w]).forEach(([key, value]) => {
+      if (Number(p[key] || 0) < value) {
+        p[key] = value;
+        changed = true;
+      }
+    });
+  });
+  if (changed) {
+    state.progressRestore = {
+      appliedAt: new Date().toISOString(),
+      source: 'July 17 remembered baseline: Alex lvl 7, 510 coins, 2 keys, day streak 5; Katya lvl 13, 500 coins, 1 key, day streak 4'
+    };
+    Store.set('smbt-state-v2', state);
+  }
+}
+restoreRememberedJuly15Progress();
+
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
 
