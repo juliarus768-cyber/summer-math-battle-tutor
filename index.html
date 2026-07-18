@@ -12,6 +12,13 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<!-- Cloud sync (optional). Plain, non-deferred script tags so window.firebase is
+     guaranteed to exist (or fail cleanly) before the main inline game script below
+     runs -- that script is not a module, so load order matters. If this fails to
+     load (offline, ad-blocker, or sync not yet configured), the app runs exactly
+     as before: fully local, no cloud features, nothing breaks. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <title>Summer Math Battle Tutor</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -1637,7 +1644,20 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="s-sec-title">&#128241; DEVICE &amp; DATA</div>
     <div class="s-pending" style="border-style:solid;border-color:rgba(255,140,40,.4)">
       <div class="mgr-note" style="margin-bottom:14px;color:var(--text);line-height:1.5">
-        &#128241; <b>Progress is saved on THIS DEVICE only</b> (in the browser's local storage). If Alex or Katya play on a different phone, tablet, or browser, they'll see different coins, XP, and streaks there &mdash; nothing is synced between devices yet. Cross-device sync is a planned future update.
+        &#128241; Progress is always saved on this device first, so the game keeps working with no internet connection. Set up a <b>Family Sync Code</b> below to also back it up to the cloud and keep every device in sync.
+      </div>
+      <div style="margin-bottom:16px;padding:14px;border:1.5px solid var(--blue);border-radius:14px;background:rgba(25,201,255,.06)">
+        <div style="font-weight:700;margin-bottom:8px">&#9729;&#65039; Family Sync Code</div>
+        <div class="mgr-note" id="cloud-sync-status" style="margin-bottom:12px">Cloud sync not set up yet (offline-only, works fine).</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <input class="pin-in" id="family-code-input" type="text" maxlength="8" style="font-size:16px;letter-spacing:3px;width:150px;margin:0;padding:8px;text-transform:uppercase" placeholder="e.g. K7P2M9QX">
+          <button class="rq-ok" style="border-color:var(--blue);color:var(--blue);background:rgba(25,201,255,.1)" onclick="linkFamilyCodeUI(false)">LINK THIS DEVICE</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="mgr-toggle" onclick="generateFamilyCodeUI()">GENERATE A NEW CODE</button>
+          <button class="mgr-toggle" onclick="Cloud.syncNow().then(()=>{toast('&#9729;&#65039; Synced'); Cloud.renderSyncStatus();})">SYNC NOW</button>
+        </div>
+        <div class="mgr-note" style="margin-bottom:0">Write this code down. Enter the exact same code on any other phone, tablet, or laptop to link it to the same family &mdash; no login needed. Keep it private, like a house key.</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
         <span style="font-weight:700">App version:</span>
@@ -1899,7 +1919,15 @@ const Store = (() => {
   try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ok = true; } catch(e) {}
   return {
     get(k,d){ try { const v = ok ? localStorage.getItem(k) : mem[k]; return v != null ? JSON.parse(v) : d; } catch(e){ return d; } },
-    set(k,v){ try { if (ok) localStorage.setItem(k, JSON.stringify(v)); else mem[k] = JSON.stringify(v); } catch(e){} }
+    set(k,v){
+      try { if (ok) localStorage.setItem(k, JSON.stringify(v)); else mem[k] = JSON.stringify(v); } catch(e){}
+      // Every save of the main game state also queues a debounced cloud push, so
+      // no individual call site needs to know about sync. No-ops if cloud sync
+      // isn't configured/linked yet.
+      if (k === 'smbt-state-v2' && typeof Cloud !== 'undefined' && Cloud.scheduleDebouncedPush) {
+        Cloud.scheduleDebouncedPush();
+      }
+    }
   };
 })();
 
@@ -1925,9 +1953,10 @@ if (state.pausedDaily.alex === undefined) state.pausedDaily.alex = null;
 if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
 
 /* ============ JULY 15 PROGRESS SAFETY RESTORE ============
-   This protects against the phone/browser save being zeroed during the recent
-   UI changes. It only raises values to the remembered floor and never lowers
-   anything higher that still exists on the device. */
+   Keep this even with cloud sync enabled. It protects any phone/browser that was
+   zeroed during the recent icon/progress incident before that zeroed state can
+   be pushed to the cloud. It only raises values to the remembered floor and
+   never lowers anything higher that still exists on the device. */
 function restoreRememberedJuly15Progress() {
   const floor = {
     alex: { lvl: 7, coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
@@ -1946,12 +1975,238 @@ function restoreRememberedJuly15Progress() {
   if (changed) {
     state.progressRestore = {
       appliedAt: new Date().toISOString(),
-      source: 'July 17 remembered baseline: Alex lvl 7, 510 coins, 2 keys, day streak 5; Katya lvl 13, 500 coins, 1 key, day streak 4'
+      source: 'July remembered baseline before cloud sync'
     };
     Store.set('smbt-state-v2', state);
   }
 }
 restoreRememberedJuly15Progress();
+
+/* ============ CLOUD SYNC (optional) ============
+   Cross-device progress sync via Firestore, linked by a short "Family Sync Code"
+   instead of any login or account. Fully optional and safe-by-default: if
+   Firebase isn't configured yet, or the SDK script failed to load (offline,
+   blocked, etc.), everything below no-ops and the app behaves exactly as it
+   always has -- purely local, localStorage-only, nothing breaks.
+
+   TO ENABLE (one-time setup, takes about 5 minutes):
+   1. Go to https://console.firebase.google.com and create a free project.
+   2. In that project, open "Firestore Database" and click "Create database"
+      (start in production mode; any region is fine).
+   3. In Project settings (gear icon) -> General -> "Your apps", click the web
+      icon (</>) to register a web app, then copy the firebaseConfig object it
+      shows you.
+   4. Paste those 6 values into FIREBASE_CONFIG below, replacing the YOUR_...
+      placeholders. That's the only code change needed -- everything else in
+      this file is already wired up.
+   5. In Firestore's Rules tab, a reasonable starting rule (adjust later if you
+      want tighter security) is:
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /families/{code} { allow read, write: if true; }
+          }
+        }
+      (This is intentionally permissive since there's no login -- the family
+      code itself is the "password". Keep codes private, like a house key.) */
+const FIREBASE_CONFIG = {
+  apiKey: 'YOUR_API_KEY',
+  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
+  projectId: 'YOUR_PROJECT_ID',
+  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+  messagingSenderId: 'YOUR_SENDER_ID',
+  appId: 'YOUR_APP_ID'
+};
+
+const Cloud = (() => {
+  const FAMILY_CODE_KEY = 'smbt-family-code';
+  const LAST_SYNC_KEY = 'smbt-last-synced';
+  let db = null;
+  let familyCode = null;
+  let autoSyncTimer = null;
+  let debounceTimer = null;
+  let syncing = false;
+
+  function configured() {
+    return !!(FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_') && window.firebase);
+  }
+
+  function ensureApp() {
+    if (!configured()) return false;
+    if (db) return true;
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      try { db.enablePersistence({ synchronizeTabs: true }).catch(()=>{}); } catch(e){}
+      return true;
+    } catch (e) { console.warn('Cloud init failed', e); return false; }
+  }
+
+  function genCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous 0/O/1/I
+    let c = '';
+    for (let i = 0; i < 8; i++) c += chars[Math.floor(Math.random() * chars.length)];
+    return c;
+  }
+
+  function snapshotForCloud() {
+    const { activeProfile, ...rest } = state; // activeProfile is device-local UI state
+    return JSON.parse(JSON.stringify(rest));
+  }
+
+  // Recovery seed: applied ONLY when a device explicitly asks to recover into a
+  // brand-new family record (no cloud doc exists yet). This carries forward the
+  // exact numbers the old permanent "July restore" hack used to force on every
+  // load -- but here it's a one-time floor applied once at migration time.
+  const RECOVERY_SEED_FLOOR = {
+    alex:  { lvl: 7,  coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
+    katya: { lvl: 13, coins: 500, keys: 1, streak: 4, xpMax: 700, totalXP: 4500 }
+  };
+  function applyRecoverySeed(snap) {
+    ['alex','katya'].forEach(w => {
+      const p = snap[w], floor = RECOVERY_SEED_FLOOR[w];
+      if (!p || !floor) return;
+      Object.entries(floor).forEach(([k,v]) => { if (Number(p[k]||0) < v) p[k] = v; });
+    });
+    return snap;
+  }
+
+  // Merge rule: for each child, whichever snapshot has the higher totalXP is
+  // considered "more advanced" and wins WHOLESALE for that child's stats -- we
+  // never cherry-pick individual fields (e.g. take xp from one side and xpMax
+  // from the other), since that could produce an inconsistent state. totalXP is
+  // lifetime-earned and effectively monotonic during normal play, so it's a
+  // reliable "which session is further along" signal. Request history and
+  // per-topic mastery are additive records, so those are combined instead of
+  // picked from one side.
+  function mergeState(local, cloud) {
+    if (!cloud) return local;
+    if (!local) return cloud;
+    const merged = JSON.parse(JSON.stringify(cloud));
+    ['alex','katya'].forEach(w => {
+      const l = local[w], c = cloud[w];
+      if (!l) return;
+      if (!c || Number(l.totalXP||0) > Number(c.totalXP||0)) merged[w] = l;
+    });
+    const reqById = new Map();
+    (cloud.requests||[]).forEach(r => reqById.set(r.id, r));
+    (local.requests||[]).forEach(r => reqById.set(r.id, r));
+    merged.requests = Array.from(reqById.values());
+    merged.mastery = merged.mastery || {};
+    ['alex','katya'].forEach(w => {
+      const lXP = local[w] ? Number(local[w].totalXP||0) : -1;
+      const cXP = cloud[w] ? Number(cloud[w].totalXP||0) : -1;
+      const lm = local.mastery && local.mastery[w], cm = cloud.mastery && cloud.mastery[w];
+      merged.mastery[w] = lXP > cXP ? (lm||cm||{}) : (cm||lm||{});
+    });
+    merged.parentPin = local.parentPin || cloud.parentPin;
+    merged.settings = cloud.settings || local.settings;
+    merged.rewards = cloud.rewards || local.rewards;
+    return merged;
+  }
+
+  function applyMergedState(newState) {
+    Object.keys(state).forEach(k => delete state[k]); // many closures hold a ref to `state`
+    Object.assign(state, newState);
+    Store.set('smbt-state-v2', state);
+    if (typeof paint === 'function') paint();
+  }
+
+  async function linkFamily(code, opts = {}) {
+    if (!ensureApp()) return { ok:false, reason:'not-configured' };
+    code = (code||'').trim().toUpperCase();
+    if (!code) return { ok:false, reason:'no-code' };
+    try {
+      const ref = db.collection('families').doc(code);
+      const snap = await ref.get();
+      const cloudState = snap.exists ? snap.data().state : null;
+      const localState = snapshotForCloud();
+      const finalState = !cloudState
+        ? (opts.applyRecoverySeed ? applyRecoverySeed(localState) : localState)
+        : mergeState(localState, cloudState);
+      await ref.set({ state: finalState, updatedAt: Date.now() }, { merge:false });
+      applyMergedState(finalState);
+      familyCode = code;
+      try { localStorage.setItem(FAMILY_CODE_KEY, code); } catch(e){}
+      setLastSynced(Date.now());
+      scheduleAutoSync();
+      return { ok:true, code, wasNew: !cloudState };
+    } catch (e) {
+      console.warn('linkFamily failed', e);
+      return { ok:false, reason:'network', error:e };
+    }
+  }
+
+  async function pushNow() {
+    if (!ensureApp() || !familyCode) return false;
+    try {
+      await db.collection('families').doc(familyCode)
+        .set({ state: snapshotForCloud(), updatedAt: Date.now() }, { merge:false });
+      setLastSynced(Date.now());
+      return true;
+    } catch (e) { console.warn('cloud push failed', e); return false; }
+  }
+
+  async function pullAndMergeNow() {
+    if (!ensureApp() || !familyCode) return false;
+    try {
+      const snap = await db.collection('families').doc(familyCode).get();
+      if (!snap.exists) return false;
+      applyMergedState(mergeState(snapshotForCloud(), snap.data().state));
+      setLastSynced(Date.now());
+      return true;
+    } catch (e) { console.warn('cloud pull failed', e); return false; }
+  }
+
+  async function syncNow() {
+    if (syncing || !familyCode) return false;
+    syncing = true;
+    try { await pullAndMergeNow(); await pushNow(); return true; }
+    finally { syncing = false; }
+  }
+
+  function scheduleDebouncedPush() {
+    if (!familyCode) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => { pushNow(); }, 4000);
+  }
+  function scheduleAutoSync() {
+    clearInterval(autoSyncTimer);
+    autoSyncTimer = setInterval(() => { if (navigator.onLine) syncNow(); }, 60000);
+  }
+
+  function setLastSynced(ts) {
+    try { localStorage.setItem(LAST_SYNC_KEY, String(ts)); } catch(e){}
+    renderSyncStatus();
+  }
+  function getLastSynced() {
+    try { const v = localStorage.getItem(LAST_SYNC_KEY); return v ? Number(v) : null; } catch(e){ return null; }
+  }
+  function renderSyncStatus() {
+    const el = document.getElementById('cloud-sync-status');
+    if (!el) return;
+    if (!configured()) { el.textContent = 'Cloud sync not set up yet (offline-only, works fine).'; return; }
+    if (!familyCode) { el.textContent = 'Not linked to a Family Sync Code yet.'; return; }
+    const ts = getLastSynced();
+    el.textContent = 'Code ' + familyCode + ' · Last synced: ' + (ts ? new Date(ts).toLocaleString() : 'never');
+  }
+
+  function boot() {
+    if (!configured()) { renderSyncStatus(); return; }
+    let saved = null;
+    try { saved = localStorage.getItem(FAMILY_CODE_KEY); } catch(e){}
+    if (!saved) { renderSyncStatus(); return; }
+    familyCode = saved;
+    pullAndMergeNow().finally(() => { scheduleAutoSync(); renderSyncStatus(); });
+    window.addEventListener('online', () => syncNow());
+  }
+
+  return {
+    configured, linkFamily, syncNow, pushNow, pullAndMergeNow, genCode, boot,
+    scheduleDebouncedPush, renderSyncStatus, mergeState,
+    getFamilyCode: () => familyCode,
+  };
+})();
 
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
@@ -3571,6 +3826,29 @@ function changePin() {
   toast('🔐 Parent PIN updated.');
   renderParent();
 }
+async function generateFamilyCodeUI() {
+  if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
+  const code = Cloud.genCode();
+  toast('⏳ Creating family record...');
+  const res = await Cloud.linkFamily(code, { applyRecoverySeed: false });
+  if (res.ok) {
+    $('family-code-input').value = code;
+    toast('✅ New Family Sync Code created: ' + code + ' \u2014 write it down!');
+  } else {
+    toast('⚠️ Couldn\u2019t create a code right now. Check your connection and try again.');
+  }
+  renderParent();
+}
+async function linkFamilyCodeUI() {
+  const code = ($('family-code-input').value || '').trim();
+  if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
+  if (!code) { toast('Enter the Family Sync Code first.'); return; }
+  toast('⏳ Linking and syncing...');
+  const res = await Cloud.linkFamily(code, { applyRecoverySeed: false });
+  if (res.ok) toast(res.wasNew ? '✅ New family record created and linked.' : '✅ Linked \u2014 progress merged with the cloud.');
+  else toast('⚠️ Couldn\u2019t link right now. Check the code and your connection.');
+  renderParent();
+}
 function dismissPinNotice() {
   state.pinNoticeDismissed = true;
   Store.set('smbt-state-v2', state);
@@ -3698,6 +3976,7 @@ function closeStrategyLib() {
 }
 
 function renderParent() {
+  if (typeof Cloud !== 'undefined') Cloud.renderSyncStatus();
   const pinNotice = $('pin-default-notice');
   if (pinNotice) pinNotice.style.display = (state.parentPin === '1234' && !state.pinNoticeDismissed) ? 'block' : 'none';
   const gcA = $('grade-current-alex'), gcK = $('grade-current-katya');
@@ -5052,15 +5331,51 @@ function toast(msg) {
 })();
 
 /* ============ PROFILE PICKER ============ */
+// Robust scroll lock. overflow:hidden on <body> alone does NOT stop scroll on
+// iOS Safari or reliably block touch-drag/programmatic scroll of the root
+// scroller -- which let the dashboard slide under the fixed picker overlay and
+// produced scrambled compositing "glitch" bands on iPad/iPhone. We freeze the
+// page with position:fixed at the current offset, lock <html> too, and add a
+// touchmove backstop (still allowing the picker's own scroll on short screens).
+let _scrollLockY = 0;
+function _blockTouch(e) {
+  const pk = $('picker');
+  if (pk && pk.contains(e.target) && pk.scrollHeight > pk.clientHeight) return;
+  e.preventDefault();
+}
+function lockScroll() {
+  _scrollLockY = window.scrollY || window.pageYOffset || 0;
+  const b = document.body;
+  b.style.position = 'fixed';
+  b.style.top = `-${_scrollLockY}px`;
+  b.style.left = '0';
+  b.style.right = '0';
+  b.style.width = '100%';
+  b.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+  document.addEventListener('touchmove', _blockTouch, { passive: false });
+}
+function unlockScroll() {
+  const b = document.body;
+  b.style.position = '';
+  b.style.top = '';
+  b.style.left = '';
+  b.style.right = '';
+  b.style.width = '';
+  b.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  document.removeEventListener('touchmove', _blockTouch, { passive: false });
+  window.scrollTo(0, _scrollLockY);
+}
 function showPicker() {
   const pk = $('picker');
   if (pk) pk.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  lockScroll();
 }
 function hidePicker() {
   const pk = $('picker');
   if (pk) pk.classList.add('hidden');
-  document.body.style.overflow = '';
+  unlockScroll();
 }
 function pickProfile(who) {
   if (who === 'parent') {
@@ -5101,7 +5416,10 @@ paint();
 
 // Boot on the profile picker every load (no accounts, just a scoped session).
 showPicker();
+
+// Auto-relink cloud sync if this device was already linked to a Family Sync
+// Code (no-ops entirely if cloud sync isn't configured yet).
+Cloud.boot();
 </script>
 </body>
 </html>
-
