@@ -12,13 +12,6 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
-<!-- Cloud sync (optional). Plain, non-deferred script tags so window.firebase is
-     guaranteed to exist (or fail cleanly) before the main inline game script below
-     runs -- that script is not a module, so load order matters. If this fails to
-     load (offline, ad-blocker, or sync not yet configured), the app runs exactly
-     as before: fully local, no cloud features, nothing breaks. -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <title>Summer Math Battle Tutor</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -1984,10 +1977,9 @@ restoreRememberedJuly15Progress();
 
 /* ============ CLOUD SYNC (optional) ============
    Cross-device progress sync via Firestore, linked by a short "Family Sync Code"
-   instead of any login or account. Fully optional and safe-by-default: if
-   Firebase isn't configured yet, or the SDK script failed to load (offline,
-   blocked, etc.), everything below no-ops and the app behaves exactly as it
-   always has -- purely local, localStorage-only, nothing breaks.
+   instead of any login or account. Fully optional and safe-by-default: Firebase
+   loads lazily only when sync is used, so the game always opens and saves locally
+   even if the Firebase CDN is slow, offline, or blocked.
 
    TO ENABLE (one-time setup, takes about 5 minutes):
    1. Go to https://console.firebase.google.com and create a free project.
@@ -2022,19 +2014,51 @@ const FIREBASE_CONFIG = {
 const Cloud = (() => {
   const FAMILY_CODE_KEY = 'smbt-family-code';
   const LAST_SYNC_KEY = 'smbt-last-synced';
+  const FIREBASE_APP_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js';
+  const FIREBASE_FIRESTORE_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js';
   let db = null;
   let familyCode = null;
   let autoSyncTimer = null;
   let debounceTimer = null;
   let syncing = false;
+  let sdkLoadPromise = null;
 
   function configured() {
-    return !!(FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_') && window.firebase);
+    return !!(FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_'));
   }
 
-  function ensureApp() {
+  function firebaseReady() {
+    return !!(window.firebase && firebase.firestore);
+  }
+
+  function loadScript(src) {
+    return new Promise(resolve => {
+      if (document.querySelector('script[src="' + src + '"]')) { resolve(true); return; }
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+      setTimeout(() => resolve(false), 8000);
+    });
+  }
+
+  function loadFirebaseSdk() {
+    if (firebaseReady()) return Promise.resolve(true);
+    if (!sdkLoadPromise) {
+      sdkLoadPromise = loadScript(FIREBASE_APP_SDK)
+        .then(ok => ok ? loadScript(FIREBASE_FIRESTORE_SDK) : false)
+        .then(() => firebaseReady())
+        .catch(() => false);
+    }
+    return sdkLoadPromise;
+  }
+
+  async function ensureApp() {
     if (!configured()) return false;
     if (db) return true;
+    if (!await loadFirebaseSdk()) return false;
     try {
       if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
       db = firebase.firestore();
@@ -2114,7 +2138,7 @@ const Cloud = (() => {
   }
 
   async function linkFamily(code, opts = {}) {
-    if (!ensureApp()) return { ok:false, reason:'not-configured' };
+    if (!await ensureApp()) return { ok:false, reason:'not-configured' };
     code = (code||'').trim().toUpperCase();
     if (!code) return { ok:false, reason:'no-code' };
     try {
@@ -2139,7 +2163,7 @@ const Cloud = (() => {
   }
 
   async function pushNow() {
-    if (!ensureApp() || !familyCode) return false;
+    if (!familyCode || !await ensureApp()) return false;
     try {
       await db.collection('families').doc(familyCode)
         .set({ state: snapshotForCloud(), updatedAt: Date.now() }, { merge:false });
@@ -2149,7 +2173,7 @@ const Cloud = (() => {
   }
 
   async function pullAndMergeNow() {
-    if (!ensureApp() || !familyCode) return false;
+    if (!familyCode || !await ensureApp()) return false;
     try {
       const snap = await db.collection('families').doc(familyCode).get();
       if (!snap.exists) return false;
