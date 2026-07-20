@@ -1927,8 +1927,8 @@ const Store = (() => {
 /* ============ GAME STATE — fresh start, both players at 0 ============ */
 const FRESH = {
   activePlayer: 'alex',
-  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0 },
-  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0 }
+  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
+  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
 };
 const state = Store.get('smbt-state-v2', JSON.parse(JSON.stringify(FRESH)));
 if (!state.activePlayer) state.activePlayer = 'alex';
@@ -1936,6 +1936,7 @@ if (!state.activePlayer) state.activePlayer = 'alex';
 const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
   if (state[w].keys == null) state[w].keys = 0;
+  if (state[w].updatedAt == null) state[w].updatedAt = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
   if (state[w].birthday == null) state[w].birthday = BIRTHDAYS[w];
   if (state[w].gradeOverride === undefined) state[w].gradeOverride = null;
@@ -2096,12 +2097,13 @@ const Cloud = (() => {
     return snap;
   }
 
-  // Merge rule: for each child, whichever snapshot has the higher totalXP is
+  // Merge rule: for each child, whichever snapshot has the newer updatedAt is
   // considered "more advanced" and wins WHOLESALE for that child's stats -- we
   // never cherry-pick individual fields (e.g. take xp from one side and xpMax
-  // from the other), since that could produce an inconsistent state. totalXP is
-  // lifetime-earned and effectively monotonic during normal play, so it's a
-  // reliable "which session is further along" signal. Request history and
+  // from the other), since that could produce an inconsistent state. updatedAt
+  // is stamped whenever coins, keys, or XP change, so manual deductions and
+  // reward spending win over older cloud snapshots even when totalXP is tied.
+  // Request history and
   // per-topic mastery are additive records, so those are combined instead of
   // picked from one side.
   function mergeState(local, cloud) {
@@ -2111,7 +2113,7 @@ const Cloud = (() => {
     ['alex','katya'].forEach(w => {
       const l = local[w], c = cloud[w];
       if (!l) return;
-      if (!c || Number(l.totalXP||0) > Number(c.totalXP||0)) merged[w] = l;
+      if (!c || Number(l.updatedAt||0) > Number(c.updatedAt||0)) merged[w] = l;
     });
     const reqById = new Map();
     (cloud.requests||[]).forEach(r => reqById.set(r.id, r));
@@ -2236,6 +2238,11 @@ const Cloud = (() => {
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
 
+function touchPlayer(who) {
+  const p = typeof who === 'string' ? state[who] : who;
+  if (p) p.updatedAt = Date.now();
+}
+
 // Single source of truth for awarding XP and leveling up. Every XP-granting
 // flow (Daily Mission, Money Lab, Guided Mission, Escape Room, Battle, Grant
 // Prize, and manual parent adjustments) must call this instead of inlining
@@ -2246,6 +2253,7 @@ function gainXP(who, amount) {
   p.xp += amount; p.totalXP += amount;
   let leveled = false;
   while (p.xp >= p.xpMax) { p.xp -= p.xpMax; p.lvl++; p.xpMax += 50; leveled = true; }
+  touchPlayer(p);
   return leveled;
 }
 
@@ -3205,6 +3213,7 @@ function bumpStreak(p, name) {
   if (KEY_MILESTONES.includes(p.streak) && p.streak > (p.lastKeyMilestone || 0)) {
     p.keys = (p.keys || 0) + 1;
     p.lastKeyMilestone = p.streak;
+    touchPlayer(p);
     awardKeyMoment(name, p.streak);
   }
 }
@@ -3557,6 +3566,7 @@ function showResult() {
   bumpStreak(who, M.player === 'alex' ? 'ALEX' : 'KATYA');
   bumpDaily(M.player);
   state.activity[M.player].missions++;
+  touchPlayer(who);
   logEvent(M.player, '🎯', `Completed Daily Mission — ${M.correct}/${total} (${accuracy}%), +${xp} XP, +${coins} coins`);
   burst(leveled ? 90 : (accuracy >= 90 ? 60 : 25));
   playCue('task');
@@ -3786,6 +3796,7 @@ function decideRequest(rid, ok) {
     }
     p.coins -= r.cost;
     if (r.keys) p.keys -= r.keys;
+    touchPlayer(p);
     r.status = 'approved';
     r.decidedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     playCue('approve');
@@ -4160,6 +4171,7 @@ function adjust(who, field, delta) {
   const step = (field === 'coins' || field === 'totalXP') ? 10 : 1;
   const p = state[who];
   p[field] = Math.max(0, (p[field] || 0) + delta * step);
+  touchPlayer(p);
   paint();
   renderParent();
 }
@@ -4170,6 +4182,7 @@ function markMissionDone(who) {
   gainXP(p, 20);
   bumpDaily(who);
   bumpStreak(p, who === 'alex' ? 'Alex' : 'Katya');
+  touchPlayer(p);
   logEvent(who, '✓', 'Parent logged a completed mission');
   paint();
   renderParent();
@@ -4369,6 +4382,7 @@ function mlCheck() {
     gainXP(state.activePlayer, mlXp);
     mlStats.solved++; mlStats.earned += reward;
     state.activity[state.activePlayer].money++;
+    touchPlayer(state.activePlayer);
     $('ml-solved').textContent = mlStats.solved;
     $('ml-earned').textContent = mlStats.earned;
     fb.textContent = pick(['✔ Correct! +15 coins 💰', '✔ Smart money move! +15 coins', '✔ Cha-ching! +15 coins']);
@@ -4465,6 +4479,7 @@ function grantPrize() {
   let msg = '';
   if (gPick.type === 'coins') {
     p.coins += gPick.amt;
+    touchPlayer(p);
     msg = `${name} received <b>+${gPick.amt} bonus coins!</b> 💰`;
   } else if (gPick.type === 'xp') {
     gainXP(p, gPick.amt);
@@ -4903,6 +4918,7 @@ function gmFinish() {
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
   bumpDaily(who);
   state.activity[who].missions++;
+  touchPlayer(p);
   paint();
 
   // rank based on reasoning quality
@@ -5096,6 +5112,7 @@ function erSolved() {
   bumpStreak(p, who === 'alex' ? 'ALEX' : 'KATYA');
   bumpDaily(who);
   state.activity[who].missions++;
+  touchPlayer(p);
   paint();
 
   const allClean = ER.cleanMoves === ER.totalMoves;
@@ -5254,6 +5271,7 @@ function endBattle() {
   gainXP(state.katya, aWin ? loseXP : winXP);
   state[winner].coins += 25;
   state.activity[winner].battles++;
+  touchPlayer(state[winner]);
   logEvent(null, '⚔️', `Battle Arena: ${aWin ? 'Alex' : 'Katya'} won ${B.score.alex}-${B.score.katya}`);
   paint();
   const wf = $('b-win-face');
