@@ -1,0 +1,44 @@
+name: Math Thinking Check
+
+on:
+  pull_request:
+    paths:
+      - 'math-secrets.js'
+      - 'vite.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/math-thinking-check.yml'
+  push:
+    branches:
+      - agent/add-math-secrets
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: JavaScript syntax check
+        run: node --check math-secrets.js
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify release features are bundled
+        run: |
+          test -f dist/index.html
+          grep -R -q 'Math Thinking System v' dist
+          grep -R -q 'Math Thinking Report' dist
+          grep -R -q 'PATTERN HUNTER' dist
+          grep -R -q "APP_VERSION = '1.2.0'" dist

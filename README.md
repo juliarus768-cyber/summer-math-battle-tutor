@@ -24,6 +24,24 @@ npm run build    # production build into dist/
 npm run preview  # preview the production build
 ```
 
+## Math Thinking System
+
+The production Math Thinking system provides 150 curriculum strategies, progressive
+wrong-answer teaching, Pattern Hunter, mastery-gated Math Secrets, spaced reviews,
+error-pattern evidence, and PIN-gated parent analytics. Architecture and extension
+guidance are documented in [`docs/MATH_THINKING_SYSTEM.md`](docs/MATH_THINKING_SYSTEM.md).
+
+## Running tests
+
+```bash
+npm ci
+npm run check
+npm run build
+```
+
+`npm run check` runs JavaScript syntax checks and validates catalogue IDs, required
+fields, grade ranges, prerequisites, and topic references.
+
 ## Deploy to Vercel
 
 1. Push this branch to GitHub.

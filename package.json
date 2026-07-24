@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/validate-math-thinking.mjs && node tests/validate-parent-report.mjs && node tests/validate-profile-defaults.mjs",
+    "check": "node --check math-secrets.js && node --check math-parent-report.js && npm test"
   },
   "devDependencies": {
-    "vite": "^5.4.10"
+    "vite": "^8.1.5"
   }
 }

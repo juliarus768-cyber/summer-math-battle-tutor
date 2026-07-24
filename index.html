@@ -1161,12 +1161,12 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   </div>
 
   <!-- FEATURED ACTION: DAILY MISSION -->
-  <div class="land-featured" id="land-featured" onclick="startMission('daily')">
+  <div class="land-featured" id="land-featured" role="button" tabindex="0" aria-label="Start or resume Daily Math Mission" onclick="startMission('daily')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startMission('daily')}">
     <div class="lf-emoji">🧠</div>
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED · ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub" id="landing-mission-status">30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub" id="landing-mission-status">18–20 adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -1200,7 +1200,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="xp-row"><span>XP <b id="alex-xp">645</b> / <span id="alex-xpmax">800</span></span><span id="alex-xppct">81%</span></div>
     <div class="bar bar-blue"><i id="alex-xpbar" style="width:81%"></i></div>
     <div class="hero-stats">
-      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="alex-coins">305</span></div><div class="k">COINS</div></div>
+      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="alex-coins">80</span></div><div class="k">COINS</div></div>
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="alex-streak">11</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#7FB6FF"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8Z" fill="#FFC93C" opacity=".9"/></svg>BATTLE<br>RANK</div><div class="k">DIVISION II</div></div>
     </div>
@@ -1359,7 +1359,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="xp-row"><span>XP <b id="katya-xp">435</b> / <span id="katya-xpmax">600</span></span><span id="katya-xppct">73%</span></div>
     <div class="bar bar-pink"><i id="katya-xpbar" style="width:73%"></i></div>
     <div class="hero-stats">
-      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="katya-coins">205</span></div><div class="k">COINS</div></div>
+      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="katya-coins">110</span></div><div class="k">COINS</div></div>
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="katya-streak">9</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#FF8FB8"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M12 2 20 6v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6Z" fill="rgba(255,46,126,.2)" stroke="#FF2E7E" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="none" stroke="#FF6FA5" stroke-width="1.8"/><path d="M13.2 13.2 16 16" stroke="#FF6FA5" stroke-width="1.8"/></svg>DETECTIVE<br>RANK</div><div class="k">CASE SOLVER</div></div>
     </div>
@@ -1567,7 +1567,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="pin-wrap">
       <div style="font-family:var(--orb);font-weight:900;letter-spacing:2px;font-size:18px">ENTER PARENT PIN</div>
       <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Default PIN is <b>1234</b> &mdash; you can change it below.</div>
-      <input class="pin-in" id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+      <input class="pin-in" id="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Parent PIN" placeholder="••••">
       <button class="b-start" style="background:linear-gradient(90deg,#19C9FF,#2D6BFF);box-shadow:0 6px 22px rgba(25,201,255,.4);width:100%" onclick="checkPin()">UNLOCK</button>
       <div id="pin-err" style="color:var(--pink);font-weight:700;font-size:13px;margin-top:10px;min-height:18px"></div>
     </div>
@@ -1765,7 +1765,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="pin-wrap">
       <div style="font-family:var(--orb);font-weight:900;letter-spacing:2px;font-size:18px">PARENTS ONLY</div>
       <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Enter the parent PIN to grant a surprise prize.</div>
-      <input class="pin-in" id="g-pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+      <input class="pin-in" id="g-pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Parent PIN for prize chest" placeholder="••••">
       <button class="b-start" style="background:linear-gradient(90deg,#FFC93C,#FF8C28);box-shadow:0 6px 22px rgba(255,140,40,.4);width:100%;color:#04060E" onclick="gCheckPin()">UNLOCK CHEST</button>
       <div id="g-pin-err" style="color:var(--pink);font-weight:700;font-size:13px;margin-top:10px;min-height:18px"></div>
     </div>
@@ -1892,7 +1892,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
 <div class="footer">
   <span>Summer Math Battle Tutor © 2026</span>
-  <span>v1.1.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
+  <span>v1.2.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
 </div>
 </div><!-- /wrap -->
 
@@ -1903,7 +1903,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
    __BUILD_ID__ is stamped in by vite.config.js at build time (see
    injectBuildInfo). If you ever see "__BUILD_ID__" literally on screen, the
    page was opened from raw source rather than a built/deployed copy. */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const APP_BUILD = '__BUILD_ID__';
 
 /* ============ SAFE STORAGE (localStorage with in-memory fallback) ============ */
@@ -1917,25 +1917,34 @@ const Store = (() => {
       // Every save of the main game state also queues a debounced cloud push, so
       // no individual call site needs to know about sync. No-ops if cloud sync
       // isn't configured/linked yet.
-      if (k === 'smbt-state-v2' && typeof Cloud !== 'undefined' && Cloud.scheduleDebouncedPush) {
-        Cloud.scheduleDebouncedPush();
+      if (k === 'smbt-state-v2' && window.Cloud && window.Cloud.scheduleDebouncedPush) {
+        window.Cloud.scheduleDebouncedPush();
       }
     }
   };
 })();
 
-/* ============ GAME STATE — fresh start, both players at 0 ============ */
+/* ============ GAME STATE — family defaults for brand-new profiles ============ */
 const FRESH = {
   activePlayer: 'alex',
-  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
-  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
+  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 80, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
+  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 110, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
 };
-const state = Store.get('smbt-state-v2', JSON.parse(JSON.stringify(FRESH)));
+const storedState = Store.get('smbt-state-v2', null);
+const state = storedState && typeof storedState === 'object' && !Array.isArray(storedState)
+  ? storedState
+  : JSON.parse(JSON.stringify(FRESH));
 if (!state.activePlayer) state.activePlayer = 'alex';
 // Back-fill new fields for existing saves
 const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
-  if (state[w].keys == null) state[w].keys = 0;
+  if (!state[w] || typeof state[w] !== 'object' || Array.isArray(state[w])) {
+    state[w] = JSON.parse(JSON.stringify(FRESH[w]));
+  }
+  // Nullish checks are intentional: an existing zero balance is real progress
+  // and must never be replaced by a default.
+  if (state[w].coins == null) state[w].coins = FRESH[w].coins;
+  if (state[w].keys == null) state[w].keys = FRESH[w].keys;
   if (state[w].updatedAt == null) state[w].updatedAt = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
   if (state[w].birthday == null) state[w].birthday = BIRTHDAYS[w];
@@ -1945,36 +1954,6 @@ if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
 if (!state.pausedDaily || typeof state.pausedDaily !== 'object') state.pausedDaily = { alex:null, katya:null };
 if (state.pausedDaily.alex === undefined) state.pausedDaily.alex = null;
 if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
-
-/* ============ JULY 15 PROGRESS SAFETY RESTORE ============
-   Keep this even with cloud sync enabled. It protects any phone/browser that was
-   zeroed during the recent icon/progress incident before that zeroed state can
-   be pushed to the cloud. It only raises values to the remembered floor and
-   never lowers anything higher that still exists on the device. */
-function restoreRememberedJuly15Progress() {
-  const floor = {
-    alex: { lvl: 7, coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
-    katya: { lvl: 13, coins: 500, keys: 1, streak: 4, xpMax: 700, totalXP: 4500 }
-  };
-  let changed = false;
-  ['alex', 'katya'].forEach(w => {
-    const p = state[w] || (state[w] = JSON.parse(JSON.stringify(FRESH[w])));
-    Object.entries(floor[w]).forEach(([key, value]) => {
-      if (Number(p[key] || 0) < value) {
-        p[key] = value;
-        changed = true;
-      }
-    });
-  });
-  if (changed) {
-    state.progressRestore = {
-      appliedAt: new Date().toISOString(),
-      source: 'July remembered baseline before cloud sync'
-    };
-    Store.set('smbt-state-v2', state);
-  }
-}
-restoreRememberedJuly15Progress();
 
 /* ============ CLOUD SYNC (optional) ============
    Cross-device progress sync via Firestore, linked by a short "Family Sync Code"
@@ -2085,8 +2064,8 @@ const Cloud = (() => {
   // exact numbers the old permanent "July restore" hack used to force on every
   // load -- but here it's a one-time floor applied once at migration time.
   const RECOVERY_SEED_FLOOR = {
-    alex:  { lvl: 7,  coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
-    katya: { lvl: 13, coins: 500, keys: 1, streak: 4, xpMax: 700, totalXP: 4500 }
+    alex:  { lvl: 7,  coins: 80, keys: 0, streak: 5, xpMax: 400, totalXP: 1350 },
+    katya: { lvl: 13, coins: 110, keys: 0, streak: 4, xpMax: 700, totalXP: 4500 }
   };
   function applyRecoverySeed(snap) {
     ['alex','katya'].forEach(w => {
@@ -2129,6 +2108,60 @@ const Cloud = (() => {
     merged.parentPin = local.parentPin || cloud.parentPin;
     merged.settings = cloud.settings || local.settings;
     merged.rewards = cloud.rewards || local.rewards;
+    const mergeNumberMap = (a, b) => {
+      const safeA = a && typeof a === 'object' && !Array.isArray(a) ? a : {};
+      const safeB = b && typeof b === 'object' && !Array.isArray(b) ? b : {};
+      const out = { ...safeA };
+      Object.entries(safeB).forEach(([key,value]) => { out[key] = Math.max(Number(out[key]||0), Number(value||0)); });
+      return out;
+    };
+    const mergeMathChild = (a, b) => {
+      const arrayValue = value => Array.isArray(value) ? value : [];
+      const objectValue = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      a = objectValue(a);
+      b = objectValue(b);
+      const out = { ...b, ...a, updatedAt: Math.max(Number(a.updatedAt||0), Number(b.updatedAt||0)) };
+      out.unlocked = [...new Set([...arrayValue(a.unlocked), ...arrayValue(b.unlocked)])];
+      out.seen = mergeNumberMap(a.seen, b.seen);
+      out.errors = mergeNumberMap(a.errors, b.errors);
+      out.review = { ...objectValue(b.review) };
+      Object.entries(objectValue(a.review)).forEach(([id,review]) => {
+        if (!out.review[id] || Number(review.last||0) >= Number(out.review[id].last||0)) out.review[id] = review;
+      });
+      const eventMap = new Map();
+      [...arrayValue(b.events), ...arrayValue(a.events)].forEach(event => {
+        if (!event || typeof event !== 'object') return;
+        const key = [event.questionKey||'',event.t||0,event.topic||'',event.attempts||0,event.correct?1:0].join('|');
+        eventMap.set(key,event);
+      });
+      out.events = [...eventMap.values()].sort((x,y)=>Number(x.t||0)-Number(y.t||0)).slice(-500);
+      out.topic = { ...objectValue(b.topic) };
+      Object.entries(objectValue(a.topic)).forEach(([topic,row]) => {
+        row = objectValue(row);
+        const prior = objectValue(out.topic[topic]), recent = [...arrayValue(prior.recent), ...arrayValue(row.recent)];
+        out.topic[topic] = {
+          seen: Math.max(Number(prior.seen||0),Number(row.seen||0)),
+          correct: Math.max(Number(prior.correct||0),Number(row.correct||0)),
+          hints: Math.max(Number(prior.hints||0),Number(row.hints||0)),
+          strategyViews: Math.max(Number(prior.strategyViews||0),Number(row.strategyViews||0)),
+          recent: recent.sort((x,y)=>Number(x.t||0)-Number(y.t||0)).slice(-30)
+        };
+      });
+      ['strategyViews','usefulSelections','patternAttempts','patternUseful','hintsUsed'].forEach(key => {
+        out[key] = Math.max(Number(a[key]||0), Number(b[key]||0));
+      });
+      return out;
+    };
+    merged.mathThinking = merged.mathThinking || {};
+    ['alex','katya'].forEach(w => {
+      const lm = local.mathThinking && local.mathThinking[w];
+      const cm = cloud.mathThinking && cloud.mathThinking[w];
+      merged.mathThinking[w] = mergeMathChild(lm,cm);
+    });
+    merged.mathThinking.version = Math.max(
+      Number(local.mathThinking && local.mathThinking.version || 0),
+      Number(cloud.mathThinking && cloud.mathThinking.version || 0)
+    );
     return merged;
   }
 
@@ -2234,6 +2267,7 @@ const Cloud = (() => {
     getFamilyCode: () => familyCode,
   };
 })();
+window.Cloud = Cloud;
 
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
@@ -2435,13 +2469,14 @@ function validPausedMission(who) {
 }
 
 function paintDailyMissionStatus() {
-  const saved = validPausedMission(state.activePlayer);
+  const who = state.activePlayer;
+  const saved = validPausedMission(who);
   const progress = $('daily-card-progress');
   const landingStatus = $('landing-mission-status');
-  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : '30 questions · 10 basic math';
+  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : (who === 'alex' ? '18 adaptive questions' : '20 adaptive questions');
   if (landingStatus) landingStatus.textContent = saved
     ? `Mission paused at question ${saved.i + 1} of ${saved.questions.length}. Tap to resume exactly where you stopped.`
-    : '30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.';
+    : `${who === 'alex' ? 18 : 20} adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.`;
 }
 
 function setPlayer(w) {
@@ -2466,10 +2501,10 @@ const MISSIONS = [
   { id:'daily', name:'Daily Math Mission', icon:'brain', cls:'m-blue', xp:140, topic:'daily' }
 ];
 $('missions').innerHTML = MISSIONS.map(m => `
-  <div class="mcard ${m.cls} daily-only" onclick="startMission('daily')">
+  <div class="mcard ${m.cls} daily-only" role="button" tabindex="0" aria-label="Start or resume Daily Math Mission" onclick="startMission('daily')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startMission('daily')}">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog" id="daily-card-progress">30 questions &middot; 10 basic math</div>
+    <div class="mprog" id="daily-card-progress">18–20 adaptive questions</div>
     <div class="mxp">+${m.xp} XP + accuracy coins</div>
   </div>`).join('');
 
@@ -2970,7 +3005,16 @@ const STRATEGY_BADGES = [
   { id:'doubling-halving', name:'Doubling & Halving', icon:'🏆', rules:[{ who:'alex', topic:'ratios', threshold:6 }, { who:'katya', topic:'multiplication', threshold:12 }] },
   { id:'equivalent-fractions', name:'Equivalent Fractions', icon:'🏆', rules:[{ who:'alex', topic:'fractions', threshold:6 }, { who:'katya', topic:'fractions', threshold:6 }] }
 ];
-function strategyFor(topic) { return STRATEGY_LIBRARY[topic] || null; }
+function strategyFor(topic) {
+  if (window.MathThinkingSystem && window.MathThinkingSystem.strategyForTopic) {
+    const child = M && M.player ? M.player : state.activePlayer;
+    const contextual = window.MathThinkingSystem.strategyForTopic(topic, {
+      child, grade: getCurrentGrade(child), question: M && M.q ? M.q : null
+    });
+    if (contextual) return contextual;
+  }
+  return STRATEGY_LIBRARY[topic] || null;
+}
 
 // Defensive net: whatever a generator computes, the keyboard the child gets
 // must be able to type it. A whole-number answer gets the plain numeric pad;
@@ -2986,14 +3030,48 @@ function applyKeyboardMode(item) {
   }
   return item;
 }
+function questionOperation(item) {
+  const text = String(item.q || '');
+  if (text.includes('÷') || /shared|per |speed|unit rate/i.test(text)) return 'division';
+  if (text.includes('×') || /\bof\b/i.test(text)) return 'multiplication';
+  if (text.includes('+')) return 'addition';
+  if (text.includes('−') || text.includes(' - ')) return 'subtraction';
+  if (/perimeter/i.test(text)) return 'perimeter';
+  if (/surface area/i.test(text)) return 'surface-area';
+  if (/\barea\b/i.test(text)) return 'area';
+  if (/volume/i.test(text)) return 'volume';
+  if (/probability|chance/i.test(text)) return 'probability';
+  if (/solve for x|equation/i.test(text)) return 'solve-equation';
+  return 'reasoning';
+}
+function fallbackWorkedExample(item) {
+  const examples = {
+    addition:'12 + 7 = 19. Start at 12 and count on 7.',
+    subtraction:'24 − 9 = 15. Subtract 10, then add 1 back.',
+    multiplication:'14 × 6 = (10 × 6) + (4 × 6) = 84.',
+    division:'96 ÷ 6 = 60 ÷ 6 + 36 ÷ 6 = 10 + 6 = 16.',
+    perimeter:'A 7 cm by 3 cm rectangle has perimeter 2(7 + 3) = 20 cm.',
+    area:'A 7 cm by 3 cm rectangle has area 7 × 3 = 21 cm².',
+    'surface-area':'A 2 × 3 × 4 prism has surface area 2(6 + 8 + 12) = 52 units².',
+    volume:'A 2 × 3 × 4 prism has volume 2 × 3 × 4 = 24 units³.',
+    probability:'With 3 red and 2 blue counters, P(red) = 3/5.',
+    'solve-equation':'For 3x + 4 = 19, subtract 4 and divide by 3, so x = 5.'
+  };
+  return examples[item.operation || questionOperation(item)] || null;
+}
+function addQuestionMetadata(item, who, topic, idx) {
+  item.topic = topic;
+  item.skill = item.skill || `${topic}.generator-${idx + 1}`;
+  item.operation = item.operation || questionOperation(item);
+  item.genIdx = idx;
+  item.who = who;
+  return applyKeyboardMode(item);
+}
 function genQuestion(who, topic, diff) {
   const pool = TOPIC_BANK[who][topic];
   const idx = R(0, pool.length - 1);
   const item = pool[idx](diff);
-  item.topic = topic;
-  item.genIdx = idx;
-  item.who = who;
-  return applyKeyboardMode(item);
+  return addQuestionMetadata(item, who, topic, idx);
 }
 
 // Regenerates a fresh instance of the SAME generator (same method, different
@@ -3005,10 +3083,7 @@ function similarQuestion(who, topic, genIdx, diff) {
   const pool = TOPIC_BANK[who] && TOPIC_BANK[who][topic];
   if (!pool || !pool[genIdx]) return null;
   const item = pool[genIdx](diff);
-  item.topic = topic;
-  item.genIdx = genIdx;
-  item.who = who;
-  return applyKeyboardMode(item);
+  return addQuestionMetadata(item, who, topic, genIdx);
 }
 
 // Every other topic is designed so its answer can never be negative (see the
@@ -3092,6 +3167,10 @@ function checkStrategyUnlocks(who) {
 }
 function topicWeight(who, topic) {
   const m = getMastery(who, topic);
+  if (window.MathThinkingSystem) {
+    const normalized = topic === 'bedmas' ? 'orderops' : topic === 'logic' ? 'patterns' : topic;
+    if (window.MathThinkingSystem.dueReviews(who).some(review => review.topic === normalized)) return 5;
+  }
   if (m.seen < 4) return 3; // explore under-practiced topics
   const acc = topicAccuracy(m);
   if (acc < 0.6) return 4;  // struggling -> more practice
@@ -3117,7 +3196,7 @@ function weakStrongSubjects(who) {
   return { weak, strong };
 }
 
-/* ---- Build a fresh mission: 10 basic warm-ups + 20 adaptive questions ---- */
+/* ---- Build a fresh mission with child-appropriate session length ---- */
 function buildTopicSequence(who, count) {
   const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
   const weights = topics.map(t => topicWeight(who, t));
@@ -3146,8 +3225,9 @@ function buildTopicSequence(who, count) {
   return seq;
 }
 function generateDailyMission(who) {
-  const basics = generateBasicArithmetic();
-  const seq = buildTopicSequence(who, QCOUNT - DAILY_BASIC_COUNT);
+  const targetCount = who === 'alex' ? 18 : 20;
+  const basics = generateBasicArithmetic().slice(0, who === 'alex' ? 6 : 8);
+  const seq = buildTopicSequence(who, targetCount - basics.length);
   const recent = state.recentQ[who] || (state.recentQ[who] = []);
   const questions = seq.map(topic => {
     const diff = topicDifficulty(who, topic);
@@ -3297,7 +3377,7 @@ function advanceBrainBoost(prefix) {
     card.className += ' bb-example';
     card.innerHTML = ex
       ? `<span class="bb-label">🔍 Similar Example</span>Same method, different numbers — try this one in your head or on the scratchpad: <b>${ex.q}</b><br>Worked answer: <b>${ex.a}</b>${ex.hint ? ' — ' + ex.hint : ''}`
-      : `<span class="bb-label">🔍 Similar Example</span>${lib ? lib.example : ''}`;
+      : `<span class="bb-label">🔍 Similar Example</span>${fallbackWorkedExample(M.q) || (lib ? lib.example : '')}`;
   } else if (prefix === 'ms' && level === 4) {
     card.innerHTML = `<span class="bb-label">💡 Remember This</span>${lib ? lib.memoryHook : ''}`;
   } else if ((prefix === 'ms' && level === 5) || (prefix === 'b' && level === 3)) {
@@ -3371,7 +3451,7 @@ function showWalkthrough(q) {
   const panel = $('ms-walkthrough');
   if (!panel) return;
   const steps = explainStepByStep(q);
-  panel.innerHTML = '<span class="wt-title">📘 Let\'s solve this one together</span>' + steps.map(s => `<div class="wt-step">${s}</div>`).join('');
+  panel.innerHTML = '<span class="wt-title">📘 Let\'s solve this one together</span>' + steps.map(s => `<div class="wt-step">${s}</div>`).join('') + '<button type="button" class="ms-submit" id="ms-walkthrough-next">I\'M READY FOR THE NEXT QUESTION</button>';
   panel.style.display = 'block';
 }
 function updateAttemptDots() {
@@ -3401,7 +3481,7 @@ function queueReinforcement(topic) {
 
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
-const QCOUNT = 30, DAILY_BASIC_COUNT = 10, XP_PER_Q = 8;
+const QCOUNT = 20, DAILY_BASIC_COUNT = 8, XP_PER_Q = 8;
 function savePausedMission() {
   if (!M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
   const snapshot = JSON.parse(JSON.stringify(M));
@@ -3425,7 +3505,7 @@ function startMission(id) {
   const sc = $('mission-screen');
   sc.classList.add('on');
   sc.classList.toggle('th-katya', M.player === 'katya');
-  $('ms-title').textContent = M.player === 'alex' ? 'DAILY GRADE 8 PREP MISSION' : 'DAILY GRADE 5 PREP MISSION';
+  $('ms-title').textContent = `DAILY GRADE ${getCurrentGrade(M.player) + 1} PREP MISSION`;
   $('ms-player').textContent = (M.player === 'alex' ? 'ALEX ⚡ ' : 'KATYA 🔍 ') + GRADE[M.player];
   $('ms-xp-pill').textContent = '? +' + def.xp + ' XP + accuracy coins';
   $('ms-result').style.display = 'none';
@@ -3455,6 +3535,9 @@ function nextQ() {
   if (M.i >= M.questions.length) return showResult();
   M.attempts = 0;
   M.q = M.questions[M.i];
+  if (window.MathThinkingSystem) {
+    window.MathThinkingSystem.questionPresented({ child:M.player, grade:getCurrentGrade(M.player), question:M.q });
+  }
   $('ms-story').textContent = M.q.s;
   $('ms-q').textContent = M.q.q;
   const reinforceBadge = $('ms-reinforce-badge');
@@ -3513,11 +3596,23 @@ function submitQ() {
     }
     burst(M.combo >= 3 ? 26 : 12);
     recordAnswer(M.player, M.q.topic, M.attempts === 0);
+    if (window.MathThinkingSystem) {
+      window.MathThinkingSystem.answerRecorded({
+        child:M.player, grade:getCurrentGrade(M.player), question:M.q,
+        correct:true, attempts:M.attempts + 1, answer:raw, usedStrategy:M.bbLevel > 0
+      });
+    }
     if (M.bbLevel > 0) markStrategyHelped(M.player, M.q.topic);
     M.i++; lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
     M.attempts++;
+    if (window.MathThinkingSystem) {
+      window.MathThinkingSystem.answerRecorded({
+        child:M.player, grade:getCurrentGrade(M.player), question:M.q,
+        correct:false, attempts:M.attempts, answer:raw, usedStrategy:M.bbLevel > 0
+      });
+    }
     updateAttemptDots();
     const lib = strategyFor(M.q.topic);
     if (M.attempts >= 3) {
@@ -3533,7 +3628,11 @@ function submitQ() {
       fb.textContent = 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
       fb.className = 'feedback fb-bad';
       document.querySelectorAll('.choice-answer').forEach(b => b.disabled = true);
-      M.i++; lockThen(nextQ, 6500);
+      $('ms-answer').disabled = true;
+      $('ms-submit').disabled = true;
+      M.i++;
+      const continueButton = $('ms-walkthrough-next');
+      if (continueButton) continueButton.onclick = nextQ;
     } else if (M.attempts === 2) {
       fb.textContent = 'Not quite yet — here’s a strategy and an example to help.';
       fb.className = 'feedback fb-bad';
@@ -3824,6 +3923,16 @@ function decideRequest(rid, ok) {
 
 /* ============ PARENT ZONE — PIN gate + approvals ============ */
 let parentUnlocked = false;
+const PIN_MAX_FAILURES = 5, PIN_LOCK_MS = 30000;
+let pinFailures = 0, pinLockedUntil = 0;
+function verifyParentPin(value) {
+  const now = Date.now();
+  if (now < pinLockedUntil) return { ok:false, wait:Math.ceil((pinLockedUntil-now)/1000) };
+  if (value === state.parentPin) { pinFailures = 0; pinLockedUntil = 0; return { ok:true, wait:0 }; }
+  pinFailures++;
+  if (pinFailures >= PIN_MAX_FAILURES) { pinFailures = 0; pinLockedUntil = now + PIN_LOCK_MS; return { ok:false, wait:30 }; }
+  return { ok:false, wait:0 };
+}
 function openParent() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Parent'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
@@ -3844,13 +3953,14 @@ function closeParent() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
 }
 function checkPin() {
-  if ($('pin-input').value === state.parentPin) {
+  const result = verifyParentPin($('pin-input').value);
+  if (result.ok) {
     parentUnlocked = true;
     $('pin-gate').style.display = 'none';
     $('parent-content').style.display = 'block';
     renderParent();
   } else {
-    $('pin-err').textContent = '✕ Wrong PIN — try again.';
+    $('pin-err').textContent = result.wait ? `Too many attempts. Try again in ${result.wait} seconds.` : '✕ Wrong PIN — try again.';
     $('pin-input').value = '';
   }
 }
@@ -4056,6 +4166,7 @@ function renderParent() {
   renderDashboard();
   renderInsights();
   renderActivity();
+  if (window.MathParentReport) window.MathParentReport.render();
   syncMuteBtn();
   syncVersionDisplay();
 }
@@ -4436,13 +4547,14 @@ function closeGrant() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
 }
 function gCheckPin() {
-  if ($('g-pin-input').value === state.parentPin) {
+  const result = verifyParentPin($('g-pin-input').value);
+  if (result.ok) {
     parentUnlocked = true;
     $('g-pin-gate').style.display = 'none';
     $('g-setup').style.display = 'block';
     gInitSetup();
   } else {
-    $('g-pin-err').textContent = '✕ Wrong PIN — try again.';
+    $('g-pin-err').textContent = result.wait ? `Too many attempts. Try again in ${result.wait} seconds.` : '✕ Wrong PIN — try again.';
     $('g-pin-input').value = '';
   }
 }
@@ -5463,6 +5575,13 @@ showPicker();
 // Auto-relink cloud sync if this device was already linked to a Family Sync
 // Code (no-ops entirely if cloud sync isn't configured yet).
 Cloud.boot();
+</script>
+<script type="module" src="/math-secrets.js"></script>
+<script type="module" src="/math-parent-report.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}), { once:true });
+}
 </script>
 </body>
 </html>
