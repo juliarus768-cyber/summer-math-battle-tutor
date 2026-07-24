@@ -1161,12 +1161,12 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   </div>
 
   <!-- FEATURED ACTION: DAILY MISSION -->
-  <div class="land-featured" id="land-featured" onclick="startMission('daily')">
+  <div class="land-featured" id="land-featured" role="button" tabindex="0" aria-label="Start or resume Daily Math Mission" onclick="startMission('daily')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startMission('daily')}">
     <div class="lf-emoji">🧠</div>
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED · ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub" id="landing-mission-status">30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub" id="landing-mission-status">18–20 adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -1892,7 +1892,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
 <div class="footer">
   <span>Summer Math Battle Tutor © 2026</span>
-  <span>v1.1.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
+  <span>v1.2.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
 </div>
 </div><!-- /wrap -->
 
@@ -1903,7 +1903,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
    __BUILD_ID__ is stamped in by vite.config.js at build time (see
    injectBuildInfo). If you ever see "__BUILD_ID__" literally on screen, the
    page was opened from raw source rather than a built/deployed copy. */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const APP_BUILD = '__BUILD_ID__';
 
 /* ============ SAFE STORAGE (localStorage with in-memory fallback) ============ */
@@ -1917,8 +1917,8 @@ const Store = (() => {
       // Every save of the main game state also queues a debounced cloud push, so
       // no individual call site needs to know about sync. No-ops if cloud sync
       // isn't configured/linked yet.
-      if (k === 'smbt-state-v2' && typeof Cloud !== 'undefined' && Cloud.scheduleDebouncedPush) {
-        Cloud.scheduleDebouncedPush();
+      if (k === 'smbt-state-v2' && window.Cloud && window.Cloud.scheduleDebouncedPush) {
+        window.Cloud.scheduleDebouncedPush();
       }
     }
   };
@@ -1930,11 +1930,17 @@ const FRESH = {
   alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
   katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
 };
-const state = Store.get('smbt-state-v2', JSON.parse(JSON.stringify(FRESH)));
+const storedState = Store.get('smbt-state-v2', null);
+const state = storedState && typeof storedState === 'object' && !Array.isArray(storedState)
+  ? storedState
+  : JSON.parse(JSON.stringify(FRESH));
 if (!state.activePlayer) state.activePlayer = 'alex';
 // Back-fill new fields for existing saves
 const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
+  if (!state[w] || typeof state[w] !== 'object' || Array.isArray(state[w])) {
+    state[w] = JSON.parse(JSON.stringify(FRESH[w]));
+  }
   if (state[w].keys == null) state[w].keys = 0;
   if (state[w].updatedAt == null) state[w].updatedAt = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
@@ -2129,6 +2135,16 @@ const Cloud = (() => {
     merged.parentPin = local.parentPin || cloud.parentPin;
     merged.settings = cloud.settings || local.settings;
     merged.rewards = cloud.rewards || local.rewards;
+    merged.mathThinking = merged.mathThinking || {};
+    ['alex','katya'].forEach(w => {
+      const lm = local.mathThinking && local.mathThinking[w];
+      const cm = cloud.mathThinking && cloud.mathThinking[w];
+      merged.mathThinking[w] = lm && (!cm || Number(lm.updatedAt||0) >= Number(cm.updatedAt||0)) ? lm : (cm || lm);
+    });
+    merged.mathThinking.version = Math.max(
+      Number(local.mathThinking && local.mathThinking.version || 0),
+      Number(cloud.mathThinking && cloud.mathThinking.version || 0)
+    );
     return merged;
   }
 
@@ -2234,6 +2250,7 @@ const Cloud = (() => {
     getFamilyCode: () => familyCode,
   };
 })();
+window.Cloud = Cloud;
 
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
@@ -2435,13 +2452,14 @@ function validPausedMission(who) {
 }
 
 function paintDailyMissionStatus() {
-  const saved = validPausedMission(state.activePlayer);
+  const who = state.activePlayer;
+  const saved = validPausedMission(who);
   const progress = $('daily-card-progress');
   const landingStatus = $('landing-mission-status');
-  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : '30 questions · 10 basic math';
+  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : (who === 'alex' ? '18 adaptive questions' : '20 adaptive questions');
   if (landingStatus) landingStatus.textContent = saved
     ? `Mission paused at question ${saved.i + 1} of ${saved.questions.length}. Tap to resume exactly where you stopped.`
-    : '30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.';
+    : `${who === 'alex' ? 18 : 20} adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.`;
 }
 
 function setPlayer(w) {
@@ -2466,10 +2484,10 @@ const MISSIONS = [
   { id:'daily', name:'Daily Math Mission', icon:'brain', cls:'m-blue', xp:140, topic:'daily' }
 ];
 $('missions').innerHTML = MISSIONS.map(m => `
-  <div class="mcard ${m.cls} daily-only" onclick="startMission('daily')">
+  <div class="mcard ${m.cls} daily-only" role="button" tabindex="0" aria-label="Start or resume Daily Math Mission" onclick="startMission('daily')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startMission('daily')}">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog" id="daily-card-progress">30 questions &middot; 10 basic math</div>
+    <div class="mprog" id="daily-card-progress">18–20 adaptive questions</div>
     <div class="mxp">+${m.xp} XP + accuracy coins</div>
   </div>`).join('');
 
@@ -2970,7 +2988,16 @@ const STRATEGY_BADGES = [
   { id:'doubling-halving', name:'Doubling & Halving', icon:'🏆', rules:[{ who:'alex', topic:'ratios', threshold:6 }, { who:'katya', topic:'multiplication', threshold:12 }] },
   { id:'equivalent-fractions', name:'Equivalent Fractions', icon:'🏆', rules:[{ who:'alex', topic:'fractions', threshold:6 }, { who:'katya', topic:'fractions', threshold:6 }] }
 ];
-function strategyFor(topic) { return STRATEGY_LIBRARY[topic] || null; }
+function strategyFor(topic) {
+  if (window.MathThinkingSystem && window.MathThinkingSystem.strategyForTopic) {
+    const child = M && M.player ? M.player : state.activePlayer;
+    const contextual = window.MathThinkingSystem.strategyForTopic(topic, {
+      child, grade: getCurrentGrade(child), question: M && M.q ? M.q : null
+    });
+    if (contextual) return contextual;
+  }
+  return STRATEGY_LIBRARY[topic] || null;
+}
 
 // Defensive net: whatever a generator computes, the keyboard the child gets
 // must be able to type it. A whole-number answer gets the plain numeric pad;
@@ -3092,6 +3119,10 @@ function checkStrategyUnlocks(who) {
 }
 function topicWeight(who, topic) {
   const m = getMastery(who, topic);
+  if (window.MathThinkingSystem) {
+    const normalized = topic === 'bedmas' ? 'orderops' : topic === 'logic' ? 'patterns' : topic;
+    if (window.MathThinkingSystem.dueReviews(who).some(review => review.topic === normalized)) return 5;
+  }
   if (m.seen < 4) return 3; // explore under-practiced topics
   const acc = topicAccuracy(m);
   if (acc < 0.6) return 4;  // struggling -> more practice
@@ -3117,7 +3148,7 @@ function weakStrongSubjects(who) {
   return { weak, strong };
 }
 
-/* ---- Build a fresh mission: 10 basic warm-ups + 20 adaptive questions ---- */
+/* ---- Build a fresh mission with child-appropriate session length ---- */
 function buildTopicSequence(who, count) {
   const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
   const weights = topics.map(t => topicWeight(who, t));
@@ -3146,8 +3177,9 @@ function buildTopicSequence(who, count) {
   return seq;
 }
 function generateDailyMission(who) {
-  const basics = generateBasicArithmetic();
-  const seq = buildTopicSequence(who, QCOUNT - DAILY_BASIC_COUNT);
+  const targetCount = who === 'alex' ? 18 : 20;
+  const basics = generateBasicArithmetic().slice(0, who === 'alex' ? 6 : 8);
+  const seq = buildTopicSequence(who, targetCount - basics.length);
   const recent = state.recentQ[who] || (state.recentQ[who] = []);
   const questions = seq.map(topic => {
     const diff = topicDifficulty(who, topic);
@@ -3371,7 +3403,7 @@ function showWalkthrough(q) {
   const panel = $('ms-walkthrough');
   if (!panel) return;
   const steps = explainStepByStep(q);
-  panel.innerHTML = '<span class="wt-title">📘 Let\'s solve this one together</span>' + steps.map(s => `<div class="wt-step">${s}</div>`).join('');
+  panel.innerHTML = '<span class="wt-title">📘 Let\'s solve this one together</span>' + steps.map(s => `<div class="wt-step">${s}</div>`).join('') + '<button type="button" class="ms-submit" id="ms-walkthrough-next">I\'M READY FOR THE NEXT QUESTION</button>';
   panel.style.display = 'block';
 }
 function updateAttemptDots() {
@@ -3401,7 +3433,7 @@ function queueReinforcement(topic) {
 
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
-const QCOUNT = 30, DAILY_BASIC_COUNT = 10, XP_PER_Q = 8;
+const QCOUNT = 20, DAILY_BASIC_COUNT = 8, XP_PER_Q = 8;
 function savePausedMission() {
   if (!M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
   const snapshot = JSON.parse(JSON.stringify(M));
@@ -3425,7 +3457,7 @@ function startMission(id) {
   const sc = $('mission-screen');
   sc.classList.add('on');
   sc.classList.toggle('th-katya', M.player === 'katya');
-  $('ms-title').textContent = M.player === 'alex' ? 'DAILY GRADE 8 PREP MISSION' : 'DAILY GRADE 5 PREP MISSION';
+  $('ms-title').textContent = `DAILY GRADE ${getCurrentGrade(M.player) + 1} PREP MISSION`;
   $('ms-player').textContent = (M.player === 'alex' ? 'ALEX ⚡ ' : 'KATYA 🔍 ') + GRADE[M.player];
   $('ms-xp-pill').textContent = '? +' + def.xp + ' XP + accuracy coins';
   $('ms-result').style.display = 'none';
@@ -3455,6 +3487,9 @@ function nextQ() {
   if (M.i >= M.questions.length) return showResult();
   M.attempts = 0;
   M.q = M.questions[M.i];
+  if (window.MathThinkingSystem) {
+    window.MathThinkingSystem.questionPresented({ child:M.player, grade:getCurrentGrade(M.player), question:M.q });
+  }
   $('ms-story').textContent = M.q.s;
   $('ms-q').textContent = M.q.q;
   const reinforceBadge = $('ms-reinforce-badge');
@@ -3513,11 +3548,23 @@ function submitQ() {
     }
     burst(M.combo >= 3 ? 26 : 12);
     recordAnswer(M.player, M.q.topic, M.attempts === 0);
+    if (window.MathThinkingSystem) {
+      window.MathThinkingSystem.answerRecorded({
+        child:M.player, grade:getCurrentGrade(M.player), question:M.q,
+        correct:true, attempts:M.attempts + 1, answer:raw, usedStrategy:M.bbLevel > 0
+      });
+    }
     if (M.bbLevel > 0) markStrategyHelped(M.player, M.q.topic);
     M.i++; lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
     M.attempts++;
+    if (window.MathThinkingSystem) {
+      window.MathThinkingSystem.answerRecorded({
+        child:M.player, grade:getCurrentGrade(M.player), question:M.q,
+        correct:false, attempts:M.attempts, answer:raw, usedStrategy:M.bbLevel > 0
+      });
+    }
     updateAttemptDots();
     const lib = strategyFor(M.q.topic);
     if (M.attempts >= 3) {
@@ -3533,7 +3580,11 @@ function submitQ() {
       fb.textContent = 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
       fb.className = 'feedback fb-bad';
       document.querySelectorAll('.choice-answer').forEach(b => b.disabled = true);
-      M.i++; lockThen(nextQ, 6500);
+      $('ms-answer').disabled = true;
+      $('ms-submit').disabled = true;
+      M.i++;
+      const continueButton = $('ms-walkthrough-next');
+      if (continueButton) continueButton.onclick = nextQ;
     } else if (M.attempts === 2) {
       fb.textContent = 'Not quite yet — here’s a strategy and an example to help.';
       fb.className = 'feedback fb-bad';
@@ -4056,6 +4107,7 @@ function renderParent() {
   renderDashboard();
   renderInsights();
   renderActivity();
+  if (window.MathParentReport) window.MathParentReport.render();
   syncMuteBtn();
   syncVersionDisplay();
 }
@@ -5463,6 +5515,13 @@ showPicker();
 // Auto-relink cloud sync if this device was already linked to a Family Sync
 // Code (no-ops entirely if cloud sync isn't configured yet).
 Cloud.boot();
+</script>
+<script type="module" src="/math-secrets.js"></script>
+<script type="module" src="/math-parent-report.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}), { once:true });
+}
 </script>
 </body>
 </html>

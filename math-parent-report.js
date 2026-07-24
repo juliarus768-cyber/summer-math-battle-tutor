@@ -1,38 +1,43 @@
-/* Parent-facing Math Thinking analytics for Summer Math Battle Tutor. */
+/* PIN-gated Parent Dashboard analytics for Math Thinking System v3. */
 (() => {
 'use strict';
-const $=id=>document.getElementById(id);
-function ready(){return typeof state!=='undefined'&&window.MathThinkingSystem}
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function mastery(w,t){try{return typeof getMastery==='function'?getMastery(w,t):{seen:0,correct:0,recent:[]}}catch(e){return{seen:0,correct:0,recent:[]}}}
-function accuracy(m){return m.seen?Math.round((m.correct/m.seen)*100):0}
-function reportFor(w){
- const api=window.MathThinkingSystem,topics=api.topics,secrets=api.secrets,p=state.mathSecrets&&state.mathSecrets[w]?state.mathSecrets[w]:{unlocked:[],review:{},patternWins:0};
- const unlocked=new Set(p.unlocked||[]),now=Date.now();
- const rows=Object.entries(topics).map(([id,t])=>{const m=mastery(w,id),topicSecrets=secrets.filter(s=>s.topic===id),u=topicSecrets.filter(s=>unlocked.has(s.id)).length;return{id,name:t.name,icon:t.icon,seen:m.seen||0,correct:m.correct||0,accuracy:accuracy(m),unlocked:u,total:topicSecrets.length}}).filter(r=>r.seen||r.unlocked).sort((a,b)=>(b.seen-a.seen)||(a.accuracy-b.accuracy));
- const due=(p.unlocked||[]).filter(id=>{const r=p.review&&p.review[id];return !r||!r.due||r.due<=now}).length;
- const totalCorrect=rows.reduce((n,r)=>n+r.correct,0),totalSeen=rows.reduce((n,r)=>n+r.seen,0);
- return{rows,due,totalUnlocked:unlocked.size,totalSecrets:secrets.length,patternWins:p.patternWins||0,totalCorrect,totalSeen,accuracy:totalSeen?Math.round(totalCorrect/totalSeen*100):0};
+if (window.__MATH_PARENT_REPORT_LOADED__) return;
+window.__MATH_PARENT_REPORT_LOADED__ = true;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+function api(){return window.MathThinkingSystem}
+function summary(w){
+ const system=api(),p=system.reportData(w),events=p.events||[],now=Date.now(),recent=events.filter(e=>e.t>=now-14*86400000),correct=events.filter(e=>e.correct).length,recentCorrect=recent.filter(e=>e.correct).length;
+ const topics=Object.entries(p.topic||{}).map(([id,t])=>({id,name:system.topics[id]?.name||id,seen:t.seen||0,correct:t.correct||0,accuracy:pct(t.correct,t.seen),recent:(t.recent||[]).slice(-10)})).sort((a,b)=>b.seen-a.seen);
+ const errors=Object.entries(p.errors||{}).sort((a,b)=>b[1]-a[1]);
+ const due=system.dueReviews(w).length,unlocked=(p.unlocked||[]).length;
+ const first=events.slice(0,Math.ceil(events.length/2)),last=events.slice(Math.ceil(events.length/2));
+ const improvement=events.length>=8?pct(last.filter(e=>e.correct).length,last.length)-pct(first.filter(e=>e.correct).length,first.length):null;
+ const rushed=events.filter(e=>!e.correct&&e.attempts===1).length;
+ const weak=topics.filter(t=>t.seen>=2).sort((a,b)=>a.accuracy-b.accuracy)[0];
+ const coverage=Object.keys(system.topics).length?Math.round(topics.filter(t=>t.seen>0).length/Object.keys(system.topics).length*100):0;
+ return{p,events,recent,topics,errors,due,unlocked,accuracy:pct(correct,events.length),recentAccuracy:pct(recentCorrect,recent.length),improvement,rushed,focus:weak?weak.name:'Complete more questions to establish a focus',coverage};
 }
-function recommendations(data){
- const active=data.rows.filter(r=>r.seen>=2);if(!active.length)return['Complete a few missions to begin strategy analytics.'];
- const weak=[...active].sort((a,b)=>a.accuracy-b.accuracy).slice(0,3);
- const strong=[...active].sort((a,b)=>b.accuracy-a.accuracy).slice(0,2);
- const out=[];
- if(weak[0]&&weak[0].accuracy<75)out.push(`Prioritize ${weak.map(r=>r.name).join(', ')} with guided examples and untimed practice.`);
- if(data.due)out.push(`Complete ${data.due} due Math Secret review${data.due===1?'':'s'} before introducing harder work.`);
- if(data.patternWins<5)out.push('Use Pattern Hunter before difficult questions to strengthen strategy selection.');
- if(strong.length)out.push(`Current strengths: ${strong.map(r=>`${r.name} (${r.accuracy}%)`).join(', ')}.`);
- return out.slice(0,4);
+function card(w){
+ const d=summary(w),name=w==='alex'?'Alex':'Katya',errorLabel=x=>x.replaceAll('-',' ');
+ const mastery=d.topics.length?d.topics.map(t=>`<div class="mpr-row"><span>${esc(t.name)}</span><span>${t.accuracy}%</span><span>${t.correct}/${t.seen}</span></div>`).join(''):'<p class="mpr-empty">No question evidence yet.</p>';
+ return`<article class="mpr-child"><header><div><h3>${name}</h3><p>Updated ${new Date(d.p.updatedAt||Date.now()).toLocaleString()}</p></div><span class="mpr-version">System ${esc(api().version)}</span></header>
+ <div class="mpr-kpis"><span><b>${d.accuracy}%</b> overall accuracy</span><span><b>${d.recentAccuracy}%</b> recent accuracy</span><span><b>${d.p.hintsUsed||0}</b> hints</span><span><b>${d.p.strategyViews||0}</b> strategy views</span><span><b>${d.p.patternAttempts||0}</b> Pattern attempts</span><span><b>${d.p.patternUseful||0}</b> useful patterns</span><span><b>${d.unlocked}</b> secrets</span><span><b>${d.due}</b> reviews due</span></div>
+ <div class="mpr-grid"><section><h4>Recommended next focus</h4><p>${esc(d.focus)}${d.due?` · Complete ${d.due} due review${d.due===1?'':'s'} in upcoming missions.`:''}</p><p>Curriculum coverage: ${d.coverage}%</p><p>Improvement over time: ${d.improvement==null?'More evidence needed':`${d.improvement>=0?'+':''}${d.improvement} percentage points`}</p><p>Rushed-answer signal: ${d.rushed} first-attempt miss${d.rushed===1?'':'es'} (a signal to slow down, not a diagnosis).</p></section>
+ <section><h4>Recurring error patterns</h4>${d.errors.length?d.errors.slice(0,5).map(([e,n])=>`<p>${esc(errorLabel(e))}: <b>${n}</b></p>`).join(''):'<p>No recurring pattern recorded yet.</p>'}</section></div>
+ <section><h4>Mastery by topic</h4><div class="mpr-table"><div class="mpr-row mpr-title"><span>Topic</span><span>Accuracy</span><span>Correct</span></div>${mastery}</div></section></article>`;
 }
-function childCard(w){const d=reportFor(w),name=w==='alex'?'Alex':'Katya';return`<section class="mpr-child"><div class="mpr-child-head"><div><h2>${name}</h2><p>${d.accuracy}% overall accuracy · ${d.totalCorrect}/${d.totalSeen} correct</p></div><div class="mpr-kpis"><span><b>${d.totalUnlocked}</b> secrets</span><span><b>${d.due}</b> due</span><span><b>${d.patternWins}</b> patterns</span></div></div><div class="mpr-recs"><h3>Recommended next focus</h3>${recommendations(d).map(x=>`<p>• ${esc(x)}</p>`).join('')}</div><div class="mpr-table"><div class="mpr-row mpr-title"><span>Topic</span><span>Accuracy</span><span>Practice</span><span>Secrets</span></div>${d.rows.length?d.rows.map(r=>`<div class="mpr-row"><span>${esc(r.icon)} ${esc(r.name)}</span><span class="${r.accuracy>=80?'good':r.accuracy>=65?'mid':'needs'}">${r.accuracy}%</span><span>${r.correct}/${r.seen}</span><span>${r.unlocked}/${r.total}</span></div>`).join(''):'<p class="mpr-empty">No math activity recorded yet.</p>'}</div></section>`}
-function render(){if(!ready())return;const body=$('mpr-body');if(body)body.innerHTML=childCard('alex')+childCard('katya')}
-const style=document.createElement('style');style.textContent=`.mpr-btn{position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;z-index:185;display:none;border:2px solid rgba(61,255,139,.6);background:#0a1820;color:#fff;border-radius:14px;padding:10px 13px;font:800 12px var(--raj);letter-spacing:1px}.mpr-btn.show{display:block}.mpr-modal{position:fixed;inset:0;z-index:280;background:rgba(2,4,12,.92);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:16px}.mpr-modal.open{display:flex}.mpr-panel{width:min(1100px,100%);max-height:94dvh;overflow:auto;background:#0a0f1f;border:1px solid rgba(61,255,139,.45);border-radius:24px;padding:22px}.mpr-head{display:flex;justify-content:space-between;gap:12px;align-items:start;margin-bottom:16px}.mpr-head h1{font:900 clamp(22px,5vw,34px) var(--orb);color:#3dff8b}.mpr-head p{color:#8fa3c8;margin-top:5px}.mpr-close{min-width:48px;min-height:48px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;font-size:22px}.mpr-child{border:1px solid rgba(120,150,255,.18);border-radius:18px;padding:16px;margin-top:14px;background:rgba(255,255,255,.025)}.mpr-child-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.mpr-child h2{font:900 22px var(--orb);color:#ffc93c}.mpr-child p{color:#cbd8f2}.mpr-kpis{display:flex;gap:7px;flex-wrap:wrap}.mpr-kpis span{background:rgba(255,255,255,.05);border:1px solid rgba(120,150,255,.2);border-radius:11px;padding:7px 9px;color:#8fa3c8}.mpr-kpis b{color:#fff}.mpr-recs{margin:14px 0;padding:12px;border-left:3px solid #19c9ff;background:rgba(25,201,255,.05)}.mpr-recs h3{font:800 13px var(--orb);color:#19c9ff;margin-bottom:5px}.mpr-recs p{line-height:1.4}.mpr-table{overflow:auto}.mpr-row{display:grid;grid-template-columns:minmax(170px,1.6fr) repeat(3,minmax(80px,.6fr));gap:8px;padding:9px;border-bottom:1px solid rgba(255,255,255,.06);align-items:center}.mpr-title{font-weight:800;color:#8fa3c8;text-transform:uppercase;font-size:11px;letter-spacing:1px}.good{color:#3dff8b}.mid{color:#ffc93c}.needs{color:#ff6b86}.mpr-empty{padding:14px}@media(max-width:700px){.mpr-panel{padding:14px}.mpr-child-head{align-items:flex-start;flex-direction:column}.mpr-row{grid-template-columns:minmax(145px,1.4fr) repeat(3,minmax(70px,.6fr));font-size:13px}.mpr-btn{top:auto;bottom:58px;right:8px}}`;document.head.appendChild(style);
-const btn=document.createElement('button');btn.className='mpr-btn';btn.type='button';btn.textContent='📊 MATH REPORT';document.body.appendChild(btn);
-const modal=document.createElement('div');modal.className='mpr-modal';modal.id='mpr-modal';modal.innerHTML='<section class="mpr-panel" role="dialog" aria-modal="true"><div class="mpr-head"><div><h1>📊 Math Thinking Report</h1><p>Mastery, strategy use, Math Secrets, reviews, and recommended next steps.</p></div><button class="mpr-close" aria-label="Close">×</button></div><div id="mpr-body"></div></section>';document.body.appendChild(modal);
-btn.onclick=()=>{render();modal.classList.add('open')};modal.querySelector('.mpr-close').onclick=()=>modal.classList.remove('open');modal.onclick=e=>{if(e.target===modal)modal.classList.remove('open')};
-function visibility(){try{btn.classList.toggle('show',state.activeProfile==='parent'||state.activePlayer==='parent'||window.parentUnlocked===true)}catch(e){}}
-if(typeof paint==='function'){const old=paint;window.paint=function(){const out=old();visibility();return out};try{paint=window.paint}catch(e){}}
-setInterval(visibility,1000);visibility();
-window.MathParentReport={open:()=>{render();modal.classList.add('open')},reportFor};
+function ensureHost(){
+ const parent=document.getElementById('parent-content');if(!parent)return null;
+ let host=document.getElementById('math-thinking-report');
+ if(!host){host=document.createElement('section');host.id='math-thinking-report';host.className='parent-section';host.innerHTML='<h2 style="margin-top:24px">📊 Math Thinking Report</h2><p class="mgr-note">Deterministic learning analytics from saved question and strategy evidence.</p><div id="mpr-body"></div>';parent.appendChild(host)}
+ return host.querySelector('#mpr-body');
+}
+function render(){if(!api())return;const body=ensureHost();if(body)body.innerHTML=card('alex')+card('katya')}
+const style=document.createElement('style');style.textContent=`
+.mpr-child{border:1px solid rgba(120,150,255,.2);border-radius:18px;padding:16px;margin:14px 0;background:rgba(255,255,255,.025)}.mpr-child header{display:flex;justify-content:space-between;gap:12px;align-items:start}.mpr-child h3{font:900 20px var(--orb);color:var(--gold)}.mpr-child h4{font:800 13px var(--orb);color:var(--cyan);margin:14px 0 7px}.mpr-child p{color:var(--muted);line-height:1.45}.mpr-version{color:var(--green);font-size:12px}.mpr-kpis{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.mpr-kpis span{padding:8px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted)}.mpr-kpis b{color:var(--text)}.mpr-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mpr-grid section{background:rgba(255,255,255,.025);padding:12px;border-radius:12px}.mpr-table{overflow-x:auto}.mpr-row{display:grid;grid-template-columns:minmax(160px,1fr) 90px 90px;gap:8px;padding:8px;border-bottom:1px solid rgba(255,255,255,.06)}.mpr-title{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:800}@media(max-width:720px){.mpr-grid{grid-template-columns:1fr}.mpr-row{grid-template-columns:minmax(130px,1fr) 75px 75px}.mpr-child{padding:12px}}`;
+document.head.appendChild(style);
+window.MathParentReport={render,summary};
+window.addEventListener('math-thinking-ready',render,{once:true});
+render();
 })();

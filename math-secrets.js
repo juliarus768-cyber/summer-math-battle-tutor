@@ -3,7 +3,10 @@
    spaced review, mastery tracking, and a child-friendly strategy library. */
 (() => {
 'use strict';
-const VERSION='2.0.0';
+if(window.__MATH_THINKING_LOADED__)return;
+window.__MATH_THINKING_LOADED__=true;
+const VERSION='3.0.0';
+const STATE_VERSION=3;
 const DAY=86400000;
 const REVIEW_GAPS=[1,3,7,14,30];
 
@@ -28,6 +31,12 @@ const TOPICS={
  money:{name:'Money Math',icon:'💰',grades:[4,5,6,7,8],strategy:'Find the cost of one item, multiply by quantity, and count up for change. Use percent anchors for tax, tips, and discounts.',example:'Change from $20 for $13: count 13→15 (+2), 15→20 (+5), total $7.',memoryHook:'One item, all items, check the total.',commonMistake:'forgetting quantity or discount direction',patternQuestion:'Is this unit price, total cost, change, or percent?'},
  measurement:{name:'Measurement',icon:'📏',grades:[4,5,6,7,8],strategy:'Choose the correct unit and direction. Bigger unit to smaller unit means multiply; smaller to bigger means divide.',example:'3 m = 300 cm because 1 m = 100 cm.',memoryHook:'Smaller units mean more pieces.',commonMistake:'multiplying and dividing backwards',patternQuestion:'Are you converting to a larger or smaller unit?'},
  wordproblems:{name:'Word Problems',icon:'📖',grades:[4,5,6,7,8],strategy:'Read, highlight, draw, plan, solve, check. Follow the order of events and label the answer.',example:'18 stickers shared by 3 friends, then each finds 2 more: 18÷3=6, then 6+2=8 each.',memoryHook:'Read → Plan → Solve → Check.',commonMistake:'calculating before understanding the question',patternQuestion:'What is being asked, and which operation matches the story?'}
+ ,factors:{name:'Factors, Multiples & Primes',icon:'🧱',grades:[4,5,6,7,8],strategy:'Build factor pairs in order and use divisibility checks to avoid missing a pair.',example:'Factors of 24: 1×24, 2×12, 3×8, 4×6.',memoryHook:'Pairs build the number.',commonMistake:'listing a factor twice or missing its partner',patternQuestion:'Which factor pair should come next?'}
+ ,data:{name:'Data Literacy',icon:'📊',grades:[4,5,6,7,8],strategy:'Read the title, labels, units, scale, and legend before comparing values.',example:'If each graph symbol means 5 votes, 4 symbols mean 20 votes.',memoryHook:'Title, labels, scale, legend.',commonMistake:'counting symbols without using the scale',patternQuestion:'What does one mark or interval represent?'}
+ ,statistics:{name:'Mean, Median, Mode & Range',icon:'📈',grades:[5,6,7,8],strategy:'Sort the data first, then choose the measure the question asks for.',example:'For 2, 4, 4, 9: median=4, mode=4, range=7, mean=4.75.',memoryHook:'Sort before statistics.',commonMistake:'finding the middle before ordering the values',patternQuestion:'Which measure best answers the question?'}
+ ,angles:{name:'Angles',icon:'📐',grades:[4,5,6,7,8],strategy:'Use known totals: right angle 90°, straight line 180°, full turn 360°, triangle 180°.',example:'An angle beside 68° on a straight line is 180°−68°=112°.',memoryHook:'Corner 90, line 180, turn 360.',commonMistake:'using 360° when the angles form a straight line',patternQuestion:'What total do these angles make?'}
+ ,transformations:{name:'Transformations',icon:'🗺️',grades:[5,6,7,8],strategy:'Track every vertex using the same translation, reflection, or rotation rule.',example:'Translate (2,−1) by (+3,+4) to get (5,3).',memoryHook:'Same move for every point.',commonMistake:'moving only one coordinate or changing the shape size',patternQuestion:'What stays the same under this transformation?'}
+ ,surfacearea:{name:'Perimeter, Area, Surface Area & Volume',icon:'📦',grades:[4,5,6,7,8],strategy:'Decide whether you need a boundary, a flat covering, all outside faces, or inside capacity.',example:'A 3×4×5 prism has volume 60 units³ and surface area 2(12+15+20)=94 units².',memoryHook:'Around, cover, wrap, fill.',commonMistake:'using cubic units for surface area',patternQuestion:'Is the problem asking around, cover, wrap, or fill?'}
 };
 
 const SECRET_GROUPS={
@@ -163,11 +172,74 @@ const SECRET_GROUPS={
  ['draw-model','Draw a Model','Use a bar, array, number line, or diagram to organize information.'],
  ['extra-information','Ignore Extra Information','Not every number in a word problem must be used.'],
  ['two-step-order','Follow Story Order','Complete operations in the order the events happen unless the structure says otherwise.']
+ ],
+ factors:[
+ ['factor-pairs','Factor Pairs','List factor pairs from 1 upward until the pairs meet.'],
+ ['multiple-ladder','Multiple Ladder','Generate multiples by repeated equal jumps.'],
+ ['prime-test','Prime Test','A prime has exactly two positive factors: 1 and itself.'],
+ ['common-factors','Greatest Common Factor','Compare complete factor lists or use prime factors to find the greatest shared factor.'],
+ ['common-multiples','Least Common Multiple','Find the first positive multiple shared by both numbers.'],
+ ['prime-factor-tree','Prime Factor Tree','Split a composite number until every branch ends in a prime.'],
+ ['divisibility-plan','Divisibility Plan','Test easy divisibility rules before attempting long division.']
+ ],
+ data:[
+ ['read-scale','Read the Scale','Find the value of one interval before reading a graph.'],
+ ['legend-units','Legend and Units','Use the legend and unit label when translating marks into quantities.'],
+ ['fair-graph','Fair Graph Check','Check whether a truncated axis exaggerates a difference.'],
+ ['table-compare','Compare Table Rows','Align the same categories before calculating a difference.'],
+ ['double-bar','Double-Bar Match','Compare matching bars within each category, not neighbouring categories.'],
+ ['line-trend','Read a Trend','Describe overall change and important peaks or drops without claiming a cause.'],
+ ['data-question','Answerable Data Question','Make sure the collected data can actually answer the question asked.']
+ ],
+ statistics:[
+ ['median-order','Order for Median','Sort values before choosing the middle one or averaging the two middle values.'],
+ ['mode-frequency','Mode Is Most Frequent','Count occurrences; a data set may have no mode or more than one mode.'],
+ ['range-spread','Range Measures Spread','Subtract the minimum from the maximum.'],
+ ['mean-share','Mean as Fair Share','Add all values and share the total equally among the data points.'],
+ ['outlier-effect','Outlier Effect','A far-away value usually changes the mean more than the median.'],
+ ['choose-measure','Choose a Centre','Use context and outliers to decide whether mean or median is more representative.'],
+ ['missing-mean','Recover a Missing Value','Multiply mean by count to get the total, then subtract known values.']
+ ],
+ angles:[
+ ['angle-type','Classify Angles','Acute is under 90°, right is 90°, obtuse is between 90° and 180°, straight is 180°.'],
+ ['complement','Complement to 90','Angles forming a right angle total 90°.'],
+ ['supplement','Supplement to 180','Angles on a straight line total 180°.'],
+ ['around-point','Around a Point','Angles around one point total 360°.'],
+ ['triangle-sum','Triangle Sum','The interior angles of every triangle total 180°.'],
+ ['opposite-angles','Vertically Opposite Angles','Opposite angles made by two crossing lines are equal.'],
+ ['parallel-lines','Parallel Line Angles','Use corresponding and alternate angle relationships only when lines are parallel.']
+ ],
+ transformations:[
+ ['translation-vector','Translation Vector','Add the horizontal and vertical movement to every coordinate.'],
+ ['reflect-y-axis','Reflect in the y-axis','Change the sign of x and keep y.'],
+ ['reflect-x-axis','Reflect in the x-axis','Keep x and change the sign of y.'],
+ ['quarter-turn','Quarter-Turn Rotation','For a 90° counter-clockwise turn about the origin, (x,y) becomes (−y,x).'],
+ ['transformation-invariants','What Stays Fixed','Translations, rotations, and reflections preserve lengths and angles.'],
+ ['describe-transform','Describe a Transformation','Name the transformation and include its vector, mirror line, or centre and angle.']
+ ],
+ surfacearea:[
+ ['perimeter-boundary','Perimeter Boundary','Add every outside side length once.'],
+ ['rectangle-area','Rectangle Area','Multiply length by width and use square units.'],
+ ['triangle-area-2','Triangle Area','Multiply base by perpendicular height, then divide by two.'],
+ ['prism-volume','Rectangular Prism Volume','Multiply length, width, and height and use cubic units.'],
+ ['net-surface-area','Surface Area from a Net','Find the area of every outside face and add them.'],
+ ['missing-dimension','Missing Dimension','Divide the known area or volume by the product of known dimensions.']
  ]
 };
 
 const SECRETS=[];
-Object.entries(SECRET_GROUPS).forEach(([topic,items])=>items.forEach(([id,name,text],index)=>SECRETS.push({id,topic,name,text,level:index<2?1:index<5?2:3})));
+Object.entries(SECRET_GROUPS).forEach(([topic,items])=>items.forEach(([id,name,text],index)=>{
+ const meta=TOPICS[topic];
+ SECRETS.push({
+  id:`${topic}.${id}`,title:name,name,topic,strand:topic,
+  minGrade:meta.grades[0],maxGrade:meta.grades[meta.grades.length-1],
+  prerequisiteIds:index? [`${topic}.${items[Math.max(0,index-1)][0]}`] : [],
+  explanation:text,workedExample:meta.example,memoryHook:meta.memoryHook,
+  commonMistake:meta.commonMistake,patternHunterQuestion:meta.patternQuestion,
+  childVariants:{alex:`Strategy move: ${text}`,katya:`Detective clue: ${text}`},
+  reviewTags:[topic,id],text,level:index<2?1:index<5?2:3
+ });
+}));
 
 const PATTERN_CHOICES={
  multiplication:['Friendly fact or shortcut','Break into parts','Estimate first','No useful pattern'],
@@ -184,41 +256,59 @@ const PATTERN_CHOICES={
  orderops:['Brackets first','Exponent first','×/÷ left to right','+/− left to right']
 };
 
-function safeState(){return typeof state!=='undefined'?state:null}
+function safeState(){try{return typeof state!=='undefined'&&state&&typeof state==='object'?state:null}catch(e){return null}}
 function save(){try{if(typeof Store!=='undefined')Store.set('smbt-state-v2',state)}catch(e){}}
 function player(){const s=safeState();return s&&s.activePlayer==='katya'?'katya':'alex'}
-function ensure(){const s=safeState();if(!s)return false;if(!s.mathSecrets||typeof s.mathSecrets!=='object')s.mathSecrets={};['alex','katya'].forEach(w=>{if(!s.mathSecrets[w])s.mathSecrets[w]={unlocked:[],seen:{},review:{},patternWins:0,weekly:[]};const p=s.mathSecrets[w];if(!Array.isArray(p.unlocked))p.unlocked=[];if(!p.seen)p.seen={};if(!p.review)p.review={};if(!Array.isArray(p.weekly))p.weekly=[];if(!Number.isFinite(p.patternWins))p.patternWins=0});return true}
+function freshChild(){return{updatedAt:0,unlocked:[],seen:{},review:{},events:[],topic:{},errors:{},strategyViews:0,usefulSelections:0,patternAttempts:0,patternUseful:0,hintsUsed:0}}
+function ensure(){
+ const s=safeState();if(!s)return false;
+ if(!s.mathThinking||typeof s.mathThinking!=='object'||Array.isArray(s.mathThinking))s.mathThinking={version:0};
+ ['alex','katya'].forEach(w=>{
+  const legacy=s.mathSecrets&&s.mathSecrets[w];
+  if(!s.mathThinking[w]||typeof s.mathThinking[w]!=='object')s.mathThinking[w]=freshChild();
+  const p=s.mathThinking[w],f=freshChild();Object.keys(f).forEach(k=>{if(p[k]==null)p[k]=Array.isArray(f[k])?[]:typeof f[k]==='object'?{}:f[k]});
+  if(legacy&&s.mathThinking.version<STATE_VERSION){
+   (legacy.unlocked||[]).forEach(old=>{const hit=SECRETS.find(x=>x.id===old||x.id.endsWith('.'+old));if(hit&&!p.unlocked.includes(hit.id))p.unlocked.push(hit.id)});
+   Object.assign(p.review,legacy.review||{});p.patternUseful=Math.max(p.patternUseful||0,legacy.patternWins||0);
+  }
+ });
+ s.mathThinking.version=STATE_VERSION;s.mathThinking.migratedAt=s.mathThinking.migratedAt||new Date().toISOString();
+ return true;
+}
 function mastery(w,t){try{return typeof getMastery==='function'?getMastery(w,t):{seen:0,correct:0,recent:[]}}catch(e){return{seen:0,correct:0,recent:[]}}}
 function viewed(w,t){try{return state.strategy&&state.strategy[w]&&state.strategy[w].viewed?(state.strategy[w].viewed[t]||0):0}catch(e){return 0}}
-function dueInfo(w,id){ensure();const r=state.mathSecrets[w].review[id];if(!r)return{stage:0,due:0};return r}
-function scheduleReview(w,id,correct=true){ensure();const now=Date.now();const old=dueInfo(w,id);let stage=correct?Math.min(old.stage+1,REVIEW_GAPS.length-1):0;state.mathSecrets[w].review[id]={stage,due:now+REVIEW_GAPS[stage]*DAY,last:now};save()}
-function unlockEligible(w){if(!ensure())return;let unlockedNow=[];SECRETS.forEach(sec=>{if(state.mathSecrets[w].unlocked.includes(sec.id))return;const m=mastery(w,sec.topic);const enough=sec.level===1?m.correct>=2:sec.level===2?m.correct>=5:m.correct>=9;const discovered=viewed(w,sec.topic)>0||m.seen>=4;if(enough&&discovered){state.mathSecrets[w].unlocked.push(sec.id);scheduleReview(w,sec.id,true);unlockedNow.push(sec)}});if(unlockedNow.length){save();unlockedNow.slice(0,2).forEach(sec=>{try{if(typeof logEvent==='function')logEvent(w,'🧠',`Math Secret unlocked: ${sec.name}`);if(typeof toast==='function')toast(`🧠 Math Secret Unlocked: ${sec.name}!`);if(typeof burst==='function')burst(40)}catch(e){}})}}
-function dueReviews(w){if(!ensure())return[];const now=Date.now();return state.mathSecrets[w].unlocked.map(id=>SECRETS.find(s=>s.id===id)).filter(Boolean).filter(sec=>{const r=dueInfo(w,sec.id);return !r.due||r.due<=now}).slice(0,5)}
-
-const originalStrategy=typeof strategyFor==='function'?strategyFor:null;
-window.strategyFor=function(topic){return TOPICS[topic]||(originalStrategy?originalStrategy(topic):null)};
-try{strategyFor=window.strategyFor}catch(e){}
-
-if(typeof recordAnswer==='function'){
- const originalRecord=recordAnswer;
- window.recordAnswer=function(w,t,correct){const out=originalRecord(w,t,correct);unlockEligible(w);if(correct){const due=dueReviews(w).find(s=>s.topic===t);if(due)scheduleReview(w,due.id,true)}return out};
- try{recordAnswer=window.recordAnswer}catch(e){}
+function childState(w){ensure();return state.mathThinking[w]}
+function dueInfo(w,id){const r=childState(w).review[id];return r||{stage:-1,due:0}}
+function scheduleReview(w,id,correct=true){const p=childState(w),now=Date.now(),old=dueInfo(w,id);let stage=correct?Math.min(Math.max(0,old.stage+1),REVIEW_GAPS.length-1):Math.max(0,old.stage-1);p.review[id]={stage,due:now+REVIEW_GAPS[stage]*DAY,last:now,remembered:!!correct};p.updatedAt=now}
+function unlockEligible(w){const p=childState(w),unlockedNow=[];SECRETS.forEach(sec=>{if(p.unlocked.includes(sec.id))return;const prereqs=sec.prerequisiteIds.every(id=>p.unlocked.includes(id));const m=mastery(w,normalizeTopic(sec.topic));const enough=sec.level===1?m.correct>=2:sec.level===2?m.correct>=5:m.correct>=9;if(prereqs&&enough&&(viewed(w,normalizeTopic(sec.topic))>0||m.seen>=4)){p.unlocked.push(sec.id);scheduleReview(w,sec.id,true);unlockedNow.push(sec)}});if(unlockedNow.length){save();unlockedNow.slice(0,2).forEach(sec=>{try{logEvent(w,'🧠',`Math Secret unlocked: ${sec.name}`);toast(`🧠 Math Secret Unlocked: ${sec.name}!`);burst(40)}catch(e){}})}}
+function dueReviews(w){const p=childState(w),now=Date.now();return p.unlocked.map(id=>SECRETS.find(s=>s.id===id)).filter(Boolean).filter(sec=>{const r=dueInfo(w,sec.id);return !r.due||r.due<=now})}
+function normalizeTopic(topic){return({bedmas:'orderops',logic:'patterns',time:'measurement',mentalmath:'estimation'}[topic]||topic||'wordproblems')}
+function operationFor(q){const text=String(q&&q.q||'');if(text.includes('÷'))return'division';if(text.includes('×'))return'multiplication';if(text.includes('+'))return'addition';if(text.includes('−')||text.includes('-'))return'subtraction';if(/area/i.test(text))return'area';if(/perimeter/i.test(text))return'perimeter';return q&&q.operation||'reasoning'}
+function detectError(q,answer){
+ const text=String(q&&q.q||''),raw=String(answer||'').trim(),expected=String(q&&q.a!=null?q.a:'');
+ if(/\/.+\+.+\//.test(text)&&/^\d+\/\d+$/.test(raw)){const dens=[...text.matchAll(/\/(\d+)/g)].map(x=>+x[1]);const got=+raw.split('/')[1];if(dens.length>1&&got===dens[0]+dens[1])return'added-fraction-denominators'}
+ if(/perimeter/i.test(text)&&Number(raw)>0&&/rectangle/i.test(text))return'perimeter-area-confusion';
+ if(text.includes('÷')&&Number(raw)!==Number(expected))return'reversed-or-incomplete-division';
+ if(/\d+\.\d+/.test(text)&&Number(raw)!==Number(expected))return'decimal-place-value';
+ if(/²|³|exponent|power/i.test(text)&&Number(raw)!==Number(expected))return'exponent-as-multiplication';
+ if(/[+−].*[×÷]/.test(text)&&Number(raw)!==Number(expected))return'bedmas-left-to-right';
+ if(/solve for x/i.test(text)&&Number(raw)!==Number(expected))return'equation-balance';
+ if(/\(\s*-?\d+\s*,\s*-?\d+\s*\)/.test(text)&&raw.includes(','))return'coordinate-order';
+ if(/remainder|round up/i.test(text)&&Number(raw)!==Number(expected))return'dropped-remainder';
+ if(/integer|−\s*-|\(-/.test(text)&&Number(raw)!==Number(expected))return'integer-sign-direction';
+ return'other';
 }
-if(typeof markStrategyViewed==='function'){
- const originalViewed=markStrategyViewed;
- window.markStrategyViewed=function(w,t){const out=originalViewed(w,t);ensure();state.mathSecrets[w].seen[t]=(state.mathSecrets[w].seen[t]||0)+1;unlockEligible(w);save();return out};
- try{markStrategyViewed=window.markStrategyViewed}catch(e){}
+function selectStrategy(topic,ctx={}){
+ const t=normalizeTopic(topic),grade=Math.max(4,Math.min(8,Number(ctx.grade||5))),p=childState(ctx.child||player());
+ const eligible=SECRETS.filter(s=>s.topic===t&&s.minGrade<=grade&&s.maxGrade>=grade&&s.prerequisiteIds.every(id=>p.unlocked.includes(id)||s.level===1));
+ const due=eligible.find(s=>{const r=p.review[s.id];return r&&r.due<=Date.now()});
+ return due||eligible.find(s=>!p.seen[s.id])||eligible[0]||SECRETS.find(s=>s.topic===t)||null;
 }
-
-function currentQuestion(){try{return typeof M!=='undefined'&&M&&M.q?M.q:null}catch(e){return null}}
-function currentTopic(){const q=currentQuestion();if(q&&q.topic)return q.topic;const text=q&&q.q?q.q:'';if(text.includes('%'))return'percent';if(text.includes('×'))return'multiplication';if(text.includes('÷'))return'division';if(/solve for x/i.test(text))return'algebra';if(/perimeter|area|triangle|volume/i.test(text))return'geometry';return'wordproblems'}
-const originalHint=typeof hintFor==='function'?hintFor:null;
-window.hintFor=function(){const t=currentTopic(),topic=TOPICS[t];if(topic)return`🧠 Winning Strategy: ${topic.strategy} Pattern Hunter: ${topic.patternQuestion}`;return originalHint?originalHint():'Look for a pattern, choose a friendly first step, and estimate before solving.'};
-try{hintFor=window.hintFor}catch(e){}
+function strategyForTopic(topic,ctx={}){const sec=selectStrategy(topic,ctx),meta=TOPICS[normalizeTopic(topic)];if(!sec||!meta)return null;return{...meta,id:sec.id,name:sec.title,strategy:sec.explanation,example:sec.workedExample,memoryHook:sec.memoryHook,commonMistake:sec.commonMistake,patternQuestion:sec.patternHunterQuestion}}
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function unlockedFor(w){ensure();return state.mathSecrets[w].unlocked}
-function stats(w){const unlocked=unlockedFor(w);return{unlocked:unlocked.length,total:SECRETS.length,due:dueReviews(w).length,patterns:state.mathSecrets[w].patternWins||0}}
+function unlockedFor(w){return childState(w).unlocked}
+function stats(w){const p=childState(w),unlocked=p.unlocked;return{unlocked:unlocked.length,total:SECRETS.length,due:dueReviews(w).length,patterns:p.patternUseful||0,hints:p.hintsUsed||0,strategyViews:p.strategyViews||0,usefulSelections:p.usefulSelections||0}}
 function renderLibrary(filter='all'){
  const w=player(),u=unlockedFor(w),st=stats(w),grid=document.getElementById('mts-grid'),summary=document.getElementById('mts-summary');if(!grid)return;
  summary.textContent=`${st.unlocked} of ${st.total} unlocked · ${st.due} reviews due · ${st.patterns} Pattern Hunter wins`;
@@ -226,22 +316,52 @@ function renderLibrary(filter='all'){
  grid.innerHTML=list.map(sec=>{const open=u.includes(sec.id),r=dueInfo(w,sec.id),due=open&&(!r.due||r.due<=Date.now());return`<article class="mts-card ${open?'':'locked'}"><div class="mts-topic">${open?'🧠 UNLOCKED':'🔒 LOCKED'} · ${esc(TOPICS[sec.topic]?.name||sec.topic)} ${due?'<b>· REVIEW</b>':''}</div><h3>${open?esc(sec.name):'Hidden Math Secret'}</h3><p>${open?esc(sec.text):'Use the related Brain Boost and solve questions correctly to reveal this secret.'}</p>${open?`<button class="mts-review" data-id="${esc(sec.id)}">I REMEMBER THIS</button>`:''}</article>`}).join('');
  grid.querySelectorAll('.mts-review').forEach(btn=>btn.onclick=()=>{scheduleReview(w,btn.dataset.id,true);btn.textContent='REVIEWED ✓';btn.disabled=true;renderLibrary(filter)})
 }
-function showPatternHunter(){const t=currentTopic(),topic=TOPICS[t]||TOPICS.wordproblems,choices=PATTERN_CHOICES[t]||['Find a pattern','Choose an operation','Draw a model','Estimate first'];const panel=document.getElementById('mph-panel');panel.innerHTML=`<div class="mph-label">👀 PATTERN HUNTER</div><h2>${esc(topic.patternQuestion)}</h2><div class="mph-choices">${choices.map((c,i)=>`<button data-i="${i}">${esc(c)}</button>`).join('')}</div><div class="mph-result" id="mph-result"></div>`;document.getElementById('mph-modal').classList.add('open');panel.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{const result=document.getElementById('mph-result');result.innerHTML=`<strong>Winning Strategy</strong><br>${esc(topic.strategy)}<br><br><strong>Memory Hook</strong><br>${esc(topic.memoryHook)}<br><br><strong>Try this example</strong><br>${esc(topic.example)}`;ensure();state.mathSecrets[player()].patternWins++;save();unlockEligible(player());panel.querySelectorAll('button').forEach(b=>b.disabled=true)})}
+let activeContext={child:'alex',grade:5,question:null,strategy:null};
+function patternChoicesFor(sec){return[sec.title,'Guess without a plan','Use an unrelated rule','Choose by colour']}
+function showPatternHunter(ctx=activeContext){
+ const q=ctx.question||{},sec=selectStrategy(q.topic,ctx),topic=TOPICS[normalizeTopic(q.topic)]||TOPICS.wordproblems;if(!sec)return;
+ const choices=patternChoicesFor(sec),order=choices.map((x,i)=>({x,i})).sort(()=>Math.random()-.5),panel=document.getElementById('mph-panel'),p=childState(ctx.child||player());
+ p.patternAttempts++;p.updatedAt=Date.now();save();
+ panel.innerHTML=`<div class="mph-label">👀 PATTERN HUNTER</div><h2>${esc(sec.patternHunterQuestion)}</h2><div class="mph-choices">${order.map(c=>`<button data-useful="${c.i===0}">${esc(c.x)}</button>`).join('')}</div><div class="mph-result" id="mph-result" aria-live="polite"></div><button class="mts-close mph-close" aria-label="Close Pattern Hunter">Close</button>`;
+ openModal(document.getElementById('mph-modal'));
+ panel.querySelectorAll('.mph-choices button').forEach(btn=>btn.onclick=()=>{
+  const useful=btn.dataset.useful==='true',result=document.getElementById('mph-result');
+  if(useful){p.patternUseful++;p.usefulSelections++;p.strategyViews++;p.seen[sec.id]=(p.seen[sec.id]||0)+1;scheduleReview(ctx.child,sec.id,true);result.innerHTML=`<strong>Useful choice!</strong><br>${esc(sec.explanation)}<br><br><strong>Memory Hook</strong><br>${esc(sec.memoryHook)}<br><br><strong>Different-number example</strong><br>${esc(sec.workedExample)}`}
+  else{result.textContent='Good try. That choice does not match this question yet. Look at the operation and what the question asks.'}
+  save();unlockEligible(ctx.child);panel.querySelectorAll('.mph-choices button').forEach(b=>b.disabled=true)
+ });
+ panel.querySelector('.mph-close').onclick=()=>closeModal(document.getElementById('mph-modal'));
+}
+function recordEvent(ctx){
+ const p=childState(ctx.child),q=ctx.question||{},topic=normalizeTopic(q.topic),now=Date.now(),ts=p.topic[topic]||(p.topic[topic]={seen:0,correct:0,recent:[],hints:0,strategyViews:0});
+ ts.seen++;if(ctx.correct)ts.correct++;if(ctx.usedStrategy){ts.strategyViews++;p.strategyViews++}if(!ctx.correct&&ctx.attempts===1){ts.hints++;p.hintsUsed++}
+ ts.recent.push({t:now,correct:!!ctx.correct,attempts:ctx.attempts});ts.recent=ts.recent.slice(-30);
+ const error=ctx.correct?null:detectError(q,ctx.answer);if(error)p.errors[error]=(p.errors[error]||0)+1;
+ const sec=selectStrategy(q.topic,ctx);if(sec){p.seen[sec.id]=(p.seen[sec.id]||0)+(ctx.usedStrategy?1:0);if(ctx.correct&&ctx.usedStrategy){p.usefulSelections++;scheduleReview(ctx.child,sec.id,true)}else if(!ctx.correct&&ctx.attempts>=3&&p.review[sec.id])scheduleReview(ctx.child,sec.id,false)}
+ p.events.push({t:now,topic,skill:q.skill||topic,operation:operationFor(q),correct:!!ctx.correct,attempts:ctx.attempts,error,strategyId:sec&&sec.id,usedStrategy:!!ctx.usedStrategy});p.events=p.events.slice(-500);p.updatedAt=now;unlockEligible(ctx.child);save();
+}
+function questionPresented(ctx){activeContext={...ctx,strategy:selectStrategy(ctx.question&&ctx.question.topic,ctx)};const btn=document.getElementById('mts-pattern-action');if(btn)btn.hidden=true}
+function answerRecorded(ctx){recordEvent(ctx);const btn=document.getElementById('mts-pattern-action');if(btn&&ctx.attempts>=2&&!ctx.correct)btn.hidden=false}
+function openModal(modal){if(!modal)return;modal.classList.add('open');modal._returnFocus=document.activeElement;const focusable=modal.querySelector('button,input,[href]');if(focusable)focusable.focus()}
+function closeModal(modal){if(!modal)return;modal.classList.remove('open');if(modal._returnFocus)modal._returnFocus.focus()}
 
 const style=document.createElement('style');style.textContent=`
+#mts-pattern-action[hidden]{display:none!important}
 .mts-fab,.mph-fab{position:fixed;z-index:180;border:2px solid rgba(255,201,60,.75);background:linear-gradient(135deg,#16112c,#24163c);color:#fff;border-radius:18px;padding:12px 15px;font:800 13px var(--raj);letter-spacing:1px;box-shadow:0 0 24px rgba(255,201,60,.28);cursor:pointer}.mts-fab{right:18px;bottom:max(18px,env(safe-area-inset-bottom))}.mph-fab{left:18px;bottom:max(18px,env(safe-area-inset-bottom));border-color:rgba(25,201,255,.75);box-shadow:0 0 24px rgba(25,201,255,.24)}
 .mts-modal,.mph-modal{position:fixed;inset:0;z-index:260;background:rgba(2,4,12,.9);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:18px}.mts-modal.open,.mph-modal.open{display:flex}.mts-panel,.mph-panel{width:min(1050px,100%);max-height:92dvh;overflow:auto;background:#0a0f1f;border:1px solid rgba(255,201,60,.45);border-radius:24px;padding:22px}.mph-panel{max-width:760px;border-color:rgba(25,201,255,.5)}
 .mts-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.mts-head h2,.mph-panel h2{font:900 clamp(22px,5vw,34px) var(--orb);color:#ffc93c}.mph-panel h2{color:#19c9ff;margin:8px 0 18px}.mts-head p{color:#8fa3c8;margin-top:6px}.mts-close{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;min-width:48px;min-height:48px;font-size:22px}.mts-filter{display:flex;gap:8px;overflow:auto;margin-bottom:14px;padding-bottom:4px}.mts-filter button{white-space:nowrap;border:1px solid rgba(120,150,255,.25);background:rgba(255,255,255,.04);color:#cbd8f2;border-radius:12px;padding:8px 11px;font-weight:700}.mts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.mts-card{border:1px solid rgba(120,150,255,.18);background:rgba(255,255,255,.035);border-radius:16px;padding:14px}.mts-card.locked{opacity:.45;filter:saturate(.4)}.mts-card h3{font:800 15px var(--orb);margin:7px 0}.mts-card p{font-size:15px;line-height:1.4;color:#cbd8f2}.mts-topic{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:#19c9ff}.mts-review{margin-top:12px;border:1px solid rgba(61,255,139,.5);background:rgba(61,255,139,.08);color:#3dff8b;border-radius:10px;padding:8px 10px;font-weight:800}.mph-label{font:800 12px var(--orb);letter-spacing:2px;color:#ffc93c}.mph-choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.mph-choices button{min-height:58px;border:1px solid rgba(25,201,255,.5);background:rgba(25,201,255,.08);color:#fff;border-radius:14px;font:800 15px var(--raj)}.mph-result{margin-top:16px;padding:16px;border-radius:14px;background:rgba(255,255,255,.04);line-height:1.5;color:#dce8ff}.mph-result strong{color:#ffc93c}
 @media(max-width:720px){.mts-fab,.mph-fab{bottom:max(8px,env(safe-area-inset-bottom));padding:10px 11px;font-size:11px}.mts-fab{right:8px}.mph-fab{left:8px}.mts-panel,.mph-panel{padding:15px}.mts-grid,.mph-choices{grid-template-columns:1fr}}
 `;document.head.appendChild(style);
 
-const libBtn=document.createElement('button');libBtn.className='mts-fab';libBtn.type='button';libBtn.textContent='🧠 MATH SECRETS';document.body.appendChild(libBtn);
-const patternBtn=document.createElement('button');patternBtn.className='mph-fab';patternBtn.type='button';patternBtn.textContent='👀 PATTERN HUNTER';document.body.appendChild(patternBtn);
 const lib=document.createElement('div');lib.id='mts-modal';lib.className='mts-modal';lib.innerHTML=`<section class="mts-panel" role="dialog" aria-modal="true"><div class="mts-head"><div><h2>🧠 Math Secrets Library</h2><p id="mts-summary">Understand math instead of memorizing it.</p></div><button class="mts-close" aria-label="Close">×</button></div><div class="mts-filter"><button data-topic="all">All</button>${Object.entries(TOPICS).map(([id,t])=>`<button data-topic="${esc(id)}">${esc(t.icon)} ${esc(t.name)}</button>`).join('')}</div><div class="mts-grid" id="mts-grid"></div></section>`;document.body.appendChild(lib);
 const ph=document.createElement('div');ph.id='mph-modal';ph.className='mph-modal';ph.innerHTML='<section class="mph-panel" id="mph-panel" role="dialog" aria-modal="true"></section>';document.body.appendChild(ph);
-libBtn.onclick=()=>{renderLibrary();lib.classList.add('open')};patternBtn.onclick=showPatternHunter;lib.querySelector('.mts-close').onclick=()=>lib.classList.remove('open');lib.onclick=e=>{if(e.target===lib)lib.classList.remove('open')};ph.onclick=e=>{if(e.target===ph)ph.classList.remove('open')};lib.querySelectorAll('[data-topic]').forEach(btn=>btn.onclick=()=>renderLibrary(btn.dataset.topic));
+const brainButton=document.getElementById('ms-bb-btn');if(brainButton){const patternAction=document.createElement('button');patternAction.id='mts-pattern-action';patternAction.type='button';patternAction.className=brainButton.className;patternAction.textContent='👀 PATTERN HUNTER';patternAction.hidden=true;patternAction.onclick=()=>showPatternHunter(activeContext);brainButton.insertAdjacentElement('afterend',patternAction)}
+const strategyScreen=document.getElementById('strategy-screen');if(strategyScreen&&!document.getElementById('mts-library-action')){const libraryAction=document.createElement('button');libraryAction.id='mts-library-action';libraryAction.type='button';libraryAction.className='btn btn-gold';libraryAction.textContent='🧠 OPEN ALL MATH SECRETS';libraryAction.style.margin='12px';libraryAction.onclick=()=>{renderLibrary();openModal(lib)};strategyScreen.insertBefore(libraryAction,strategyScreen.firstChild)}
+lib.querySelector('.mts-close').onclick=()=>closeModal(lib);lib.onclick=e=>{if(e.target===lib)closeModal(lib)};ph.onclick=e=>{if(e.target===ph)closeModal(ph)};lib.querySelectorAll('[data-topic]').forEach(btn=>btn.onclick=()=>renderLibrary(btn.dataset.topic));
+document.addEventListener('keydown',e=>{const modal=document.querySelector('.mts-modal.open,.mph-modal.open');if(!modal)return;if(e.key==='Escape')closeModal(modal);if(e.key==='Tab'){const nodes=[...modal.querySelectorAll('button:not([disabled]),input:not([disabled]),[href]')];if(!nodes.length)return;const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
 
 ensure();unlockEligible('alex');unlockEligible('katya');save();
-window.MathThinkingSystem={version:VERSION,topics:TOPICS,secrets:SECRETS,getStats:()=>stats(player()),dueReviews:()=>dueReviews(player()),openLibrary:()=>{renderLibrary();lib.classList.add('open')},openPatternHunter:showPatternHunter};
+window.MathThinkingSystem={version:VERSION,stateVersion:STATE_VERSION,topics:TOPICS,secrets:SECRETS,getStats:(w=player())=>stats(w),dueReviews:(w=player())=>dueReviews(w),strategyForTopic,selectStrategy,questionPresented,answerRecorded,openLibrary:()=>{renderLibrary();openModal(lib)},openPatternHunter:()=>showPatternHunter(activeContext),reportData:w=>childState(w)};
+window.dispatchEvent(new CustomEvent('math-thinking-ready'));
 console.info(`Math Thinking System v${VERSION} loaded: ${SECRETS.length} secrets across ${Object.keys(TOPICS).length} topics.`);
 })();
