@@ -10,7 +10,13 @@ function injectBuildInfo() {
   return {
     name: 'inject-build-info',
     transformIndexHtml(html) {
-      return html.replaceAll('__BUILD_ID__', buildId);
+      const stamped = html.replaceAll('__BUILD_ID__', buildId);
+      // Load after the main inline game script so Math Secrets can extend the
+      // existing mastery, Brain Boost, hint, and localStorage systems safely.
+      return stamped.replace(
+        '</body>',
+        '  <script type="module" src="/math-secrets.js"></script>\n</body>'
+      );
     },
   };
 }
