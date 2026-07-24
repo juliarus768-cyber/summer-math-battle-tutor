@@ -1200,7 +1200,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="xp-row"><span>XP <b id="alex-xp">645</b> / <span id="alex-xpmax">800</span></span><span id="alex-xppct">81%</span></div>
     <div class="bar bar-blue"><i id="alex-xpbar" style="width:81%"></i></div>
     <div class="hero-stats">
-      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="alex-coins">305</span></div><div class="k">COINS</div></div>
+      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="alex-coins">80</span></div><div class="k">COINS</div></div>
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="alex-streak">11</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#7FB6FF"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8Z" fill="#FFC93C" opacity=".9"/></svg>BATTLE<br>RANK</div><div class="k">DIVISION II</div></div>
     </div>
@@ -1359,7 +1359,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="xp-row"><span>XP <b id="katya-xp">435</b> / <span id="katya-xpmax">600</span></span><span id="katya-xppct">73%</span></div>
     <div class="bar bar-pink"><i id="katya-xpbar" style="width:73%"></i></div>
     <div class="hero-stats">
-      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="katya-coins">205</span></div><div class="k">COINS</div></div>
+      <div class="hstat"><div class="v gold-num"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#FFC93C" stroke="#B8860B" stroke-width="2.5"/></svg><span id="katya-coins">110</span></div><div class="k">COINS</div></div>
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="katya-streak">9</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#FF8FB8"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M12 2 20 6v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6Z" fill="rgba(255,46,126,.2)" stroke="#FF2E7E" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="none" stroke="#FF6FA5" stroke-width="1.8"/><path d="M13.2 13.2 16 16" stroke="#FF6FA5" stroke-width="1.8"/></svg>DETECTIVE<br>RANK</div><div class="k">CASE SOLVER</div></div>
     </div>
@@ -1924,11 +1924,11 @@ const Store = (() => {
   };
 })();
 
-/* ============ GAME STATE — fresh start, both players at 0 ============ */
+/* ============ GAME STATE — family defaults for brand-new profiles ============ */
 const FRESH = {
   activePlayer: 'alex',
-  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
-  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
+  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 80, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
+  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 110, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
 };
 const storedState = Store.get('smbt-state-v2', null);
 const state = storedState && typeof storedState === 'object' && !Array.isArray(storedState)
@@ -1941,7 +1941,10 @@ const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
   if (!state[w] || typeof state[w] !== 'object' || Array.isArray(state[w])) {
     state[w] = JSON.parse(JSON.stringify(FRESH[w]));
   }
-  if (state[w].keys == null) state[w].keys = 0;
+  // Nullish checks are intentional: an existing zero balance is real progress
+  // and must never be replaced by a default.
+  if (state[w].coins == null) state[w].coins = FRESH[w].coins;
+  if (state[w].keys == null) state[w].keys = FRESH[w].keys;
   if (state[w].updatedAt == null) state[w].updatedAt = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
   if (state[w].birthday == null) state[w].birthday = BIRTHDAYS[w];
@@ -1951,36 +1954,6 @@ if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
 if (!state.pausedDaily || typeof state.pausedDaily !== 'object') state.pausedDaily = { alex:null, katya:null };
 if (state.pausedDaily.alex === undefined) state.pausedDaily.alex = null;
 if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
-
-/* ============ JULY 15 PROGRESS SAFETY RESTORE ============
-   Keep this even with cloud sync enabled. It protects any phone/browser that was
-   zeroed during the recent icon/progress incident before that zeroed state can
-   be pushed to the cloud. It only raises values to the remembered floor and
-   never lowers anything higher that still exists on the device. */
-function restoreRememberedJuly15Progress() {
-  const floor = {
-    alex: { lvl: 7, coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
-    katya: { lvl: 13, coins: 500, keys: 1, streak: 4, xpMax: 700, totalXP: 4500 }
-  };
-  let changed = false;
-  ['alex', 'katya'].forEach(w => {
-    const p = state[w] || (state[w] = JSON.parse(JSON.stringify(FRESH[w])));
-    Object.entries(floor[w]).forEach(([key, value]) => {
-      if (Number(p[key] || 0) < value) {
-        p[key] = value;
-        changed = true;
-      }
-    });
-  });
-  if (changed) {
-    state.progressRestore = {
-      appliedAt: new Date().toISOString(),
-      source: 'July remembered baseline before cloud sync'
-    };
-    Store.set('smbt-state-v2', state);
-  }
-}
-restoreRememberedJuly15Progress();
 
 /* ============ CLOUD SYNC (optional) ============
    Cross-device progress sync via Firestore, linked by a short "Family Sync Code"
@@ -2091,8 +2064,8 @@ const Cloud = (() => {
   // exact numbers the old permanent "July restore" hack used to force on every
   // load -- but here it's a one-time floor applied once at migration time.
   const RECOVERY_SEED_FLOOR = {
-    alex:  { lvl: 7,  coins: 510, keys: 2, streak: 5, xpMax: 400, totalXP: 1350 },
-    katya: { lvl: 13, coins: 500, keys: 1, streak: 4, xpMax: 700, totalXP: 4500 }
+    alex:  { lvl: 7,  coins: 80, keys: 0, streak: 5, xpMax: 400, totalXP: 1350 },
+    katya: { lvl: 13, coins: 110, keys: 0, streak: 4, xpMax: 700, totalXP: 4500 }
   };
   function applyRecoverySeed(snap) {
     ['alex','katya'].forEach(w => {
