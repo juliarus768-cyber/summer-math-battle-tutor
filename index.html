@@ -1567,7 +1567,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="pin-wrap">
       <div style="font-family:var(--orb);font-weight:900;letter-spacing:2px;font-size:18px">ENTER PARENT PIN</div>
       <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Default PIN is <b>1234</b> &mdash; you can change it below.</div>
-      <input class="pin-in" id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+      <input class="pin-in" id="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Parent PIN" placeholder="••••">
       <button class="b-start" style="background:linear-gradient(90deg,#19C9FF,#2D6BFF);box-shadow:0 6px 22px rgba(25,201,255,.4);width:100%" onclick="checkPin()">UNLOCK</button>
       <div id="pin-err" style="color:var(--pink);font-weight:700;font-size:13px;margin-top:10px;min-height:18px"></div>
     </div>
@@ -1765,7 +1765,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="pin-wrap">
       <div style="font-family:var(--orb);font-weight:900;letter-spacing:2px;font-size:18px">PARENTS ONLY</div>
       <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Enter the parent PIN to grant a surprise prize.</div>
-      <input class="pin-in" id="g-pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+      <input class="pin-in" id="g-pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Parent PIN for prize chest" placeholder="••••">
       <button class="b-start" style="background:linear-gradient(90deg,#FFC93C,#FF8C28);box-shadow:0 6px 22px rgba(255,140,40,.4);width:100%;color:#04060E" onclick="gCheckPin()">UNLOCK CHEST</button>
       <div id="g-pin-err" style="color:var(--pink);font-weight:700;font-size:13px;margin-top:10px;min-height:18px"></div>
     </div>
@@ -2135,11 +2135,55 @@ const Cloud = (() => {
     merged.parentPin = local.parentPin || cloud.parentPin;
     merged.settings = cloud.settings || local.settings;
     merged.rewards = cloud.rewards || local.rewards;
+    const mergeNumberMap = (a, b) => {
+      const safeA = a && typeof a === 'object' && !Array.isArray(a) ? a : {};
+      const safeB = b && typeof b === 'object' && !Array.isArray(b) ? b : {};
+      const out = { ...safeA };
+      Object.entries(safeB).forEach(([key,value]) => { out[key] = Math.max(Number(out[key]||0), Number(value||0)); });
+      return out;
+    };
+    const mergeMathChild = (a, b) => {
+      const arrayValue = value => Array.isArray(value) ? value : [];
+      const objectValue = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      a = objectValue(a);
+      b = objectValue(b);
+      const out = { ...b, ...a, updatedAt: Math.max(Number(a.updatedAt||0), Number(b.updatedAt||0)) };
+      out.unlocked = [...new Set([...arrayValue(a.unlocked), ...arrayValue(b.unlocked)])];
+      out.seen = mergeNumberMap(a.seen, b.seen);
+      out.errors = mergeNumberMap(a.errors, b.errors);
+      out.review = { ...objectValue(b.review) };
+      Object.entries(objectValue(a.review)).forEach(([id,review]) => {
+        if (!out.review[id] || Number(review.last||0) >= Number(out.review[id].last||0)) out.review[id] = review;
+      });
+      const eventMap = new Map();
+      [...arrayValue(b.events), ...arrayValue(a.events)].forEach(event => {
+        if (!event || typeof event !== 'object') return;
+        const key = [event.questionKey||'',event.t||0,event.topic||'',event.attempts||0,event.correct?1:0].join('|');
+        eventMap.set(key,event);
+      });
+      out.events = [...eventMap.values()].sort((x,y)=>Number(x.t||0)-Number(y.t||0)).slice(-500);
+      out.topic = { ...objectValue(b.topic) };
+      Object.entries(objectValue(a.topic)).forEach(([topic,row]) => {
+        row = objectValue(row);
+        const prior = objectValue(out.topic[topic]), recent = [...arrayValue(prior.recent), ...arrayValue(row.recent)];
+        out.topic[topic] = {
+          seen: Math.max(Number(prior.seen||0),Number(row.seen||0)),
+          correct: Math.max(Number(prior.correct||0),Number(row.correct||0)),
+          hints: Math.max(Number(prior.hints||0),Number(row.hints||0)),
+          strategyViews: Math.max(Number(prior.strategyViews||0),Number(row.strategyViews||0)),
+          recent: recent.sort((x,y)=>Number(x.t||0)-Number(y.t||0)).slice(-30)
+        };
+      });
+      ['strategyViews','usefulSelections','patternAttempts','patternUseful','hintsUsed'].forEach(key => {
+        out[key] = Math.max(Number(a[key]||0), Number(b[key]||0));
+      });
+      return out;
+    };
     merged.mathThinking = merged.mathThinking || {};
     ['alex','katya'].forEach(w => {
       const lm = local.mathThinking && local.mathThinking[w];
       const cm = cloud.mathThinking && cloud.mathThinking[w];
-      merged.mathThinking[w] = lm && (!cm || Number(lm.updatedAt||0) >= Number(cm.updatedAt||0)) ? lm : (cm || lm);
+      merged.mathThinking[w] = mergeMathChild(lm,cm);
     });
     merged.mathThinking.version = Math.max(
       Number(local.mathThinking && local.mathThinking.version || 0),
@@ -3013,14 +3057,48 @@ function applyKeyboardMode(item) {
   }
   return item;
 }
+function questionOperation(item) {
+  const text = String(item.q || '');
+  if (text.includes('÷') || /shared|per |speed|unit rate/i.test(text)) return 'division';
+  if (text.includes('×') || /\bof\b/i.test(text)) return 'multiplication';
+  if (text.includes('+')) return 'addition';
+  if (text.includes('−') || text.includes(' - ')) return 'subtraction';
+  if (/perimeter/i.test(text)) return 'perimeter';
+  if (/surface area/i.test(text)) return 'surface-area';
+  if (/\barea\b/i.test(text)) return 'area';
+  if (/volume/i.test(text)) return 'volume';
+  if (/probability|chance/i.test(text)) return 'probability';
+  if (/solve for x|equation/i.test(text)) return 'solve-equation';
+  return 'reasoning';
+}
+function fallbackWorkedExample(item) {
+  const examples = {
+    addition:'12 + 7 = 19. Start at 12 and count on 7.',
+    subtraction:'24 − 9 = 15. Subtract 10, then add 1 back.',
+    multiplication:'14 × 6 = (10 × 6) + (4 × 6) = 84.',
+    division:'96 ÷ 6 = 60 ÷ 6 + 36 ÷ 6 = 10 + 6 = 16.',
+    perimeter:'A 7 cm by 3 cm rectangle has perimeter 2(7 + 3) = 20 cm.',
+    area:'A 7 cm by 3 cm rectangle has area 7 × 3 = 21 cm².',
+    'surface-area':'A 2 × 3 × 4 prism has surface area 2(6 + 8 + 12) = 52 units².',
+    volume:'A 2 × 3 × 4 prism has volume 2 × 3 × 4 = 24 units³.',
+    probability:'With 3 red and 2 blue counters, P(red) = 3/5.',
+    'solve-equation':'For 3x + 4 = 19, subtract 4 and divide by 3, so x = 5.'
+  };
+  return examples[item.operation || questionOperation(item)] || null;
+}
+function addQuestionMetadata(item, who, topic, idx) {
+  item.topic = topic;
+  item.skill = item.skill || `${topic}.generator-${idx + 1}`;
+  item.operation = item.operation || questionOperation(item);
+  item.genIdx = idx;
+  item.who = who;
+  return applyKeyboardMode(item);
+}
 function genQuestion(who, topic, diff) {
   const pool = TOPIC_BANK[who][topic];
   const idx = R(0, pool.length - 1);
   const item = pool[idx](diff);
-  item.topic = topic;
-  item.genIdx = idx;
-  item.who = who;
-  return applyKeyboardMode(item);
+  return addQuestionMetadata(item, who, topic, idx);
 }
 
 // Regenerates a fresh instance of the SAME generator (same method, different
@@ -3032,10 +3110,7 @@ function similarQuestion(who, topic, genIdx, diff) {
   const pool = TOPIC_BANK[who] && TOPIC_BANK[who][topic];
   if (!pool || !pool[genIdx]) return null;
   const item = pool[genIdx](diff);
-  item.topic = topic;
-  item.genIdx = genIdx;
-  item.who = who;
-  return applyKeyboardMode(item);
+  return addQuestionMetadata(item, who, topic, genIdx);
 }
 
 // Every other topic is designed so its answer can never be negative (see the
@@ -3329,7 +3404,7 @@ function advanceBrainBoost(prefix) {
     card.className += ' bb-example';
     card.innerHTML = ex
       ? `<span class="bb-label">🔍 Similar Example</span>Same method, different numbers — try this one in your head or on the scratchpad: <b>${ex.q}</b><br>Worked answer: <b>${ex.a}</b>${ex.hint ? ' — ' + ex.hint : ''}`
-      : `<span class="bb-label">🔍 Similar Example</span>${lib ? lib.example : ''}`;
+      : `<span class="bb-label">🔍 Similar Example</span>${fallbackWorkedExample(M.q) || (lib ? lib.example : '')}`;
   } else if (prefix === 'ms' && level === 4) {
     card.innerHTML = `<span class="bb-label">💡 Remember This</span>${lib ? lib.memoryHook : ''}`;
   } else if ((prefix === 'ms' && level === 5) || (prefix === 'b' && level === 3)) {
@@ -3875,6 +3950,16 @@ function decideRequest(rid, ok) {
 
 /* ============ PARENT ZONE — PIN gate + approvals ============ */
 let parentUnlocked = false;
+const PIN_MAX_FAILURES = 5, PIN_LOCK_MS = 30000;
+let pinFailures = 0, pinLockedUntil = 0;
+function verifyParentPin(value) {
+  const now = Date.now();
+  if (now < pinLockedUntil) return { ok:false, wait:Math.ceil((pinLockedUntil-now)/1000) };
+  if (value === state.parentPin) { pinFailures = 0; pinLockedUntil = 0; return { ok:true, wait:0 }; }
+  pinFailures++;
+  if (pinFailures >= PIN_MAX_FAILURES) { pinFailures = 0; pinLockedUntil = now + PIN_LOCK_MS; return { ok:false, wait:30 }; }
+  return { ok:false, wait:0 };
+}
 function openParent() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Parent'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
@@ -3895,13 +3980,14 @@ function closeParent() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
 }
 function checkPin() {
-  if ($('pin-input').value === state.parentPin) {
+  const result = verifyParentPin($('pin-input').value);
+  if (result.ok) {
     parentUnlocked = true;
     $('pin-gate').style.display = 'none';
     $('parent-content').style.display = 'block';
     renderParent();
   } else {
-    $('pin-err').textContent = '✕ Wrong PIN — try again.';
+    $('pin-err').textContent = result.wait ? `Too many attempts. Try again in ${result.wait} seconds.` : '✕ Wrong PIN — try again.';
     $('pin-input').value = '';
   }
 }
@@ -4488,13 +4574,14 @@ function closeGrant() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
 }
 function gCheckPin() {
-  if ($('g-pin-input').value === state.parentPin) {
+  const result = verifyParentPin($('g-pin-input').value);
+  if (result.ok) {
     parentUnlocked = true;
     $('g-pin-gate').style.display = 'none';
     $('g-setup').style.display = 'block';
     gInitSetup();
   } else {
-    $('g-pin-err').textContent = '✕ Wrong PIN — try again.';
+    $('g-pin-err').textContent = result.wait ? `Too many attempts. Try again in ${result.wait} seconds.` : '✕ Wrong PIN — try again.';
     $('g-pin-input').value = '';
   }
 }
