@@ -1659,6 +1659,16 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
         <button class="rq-ok" style="border-color:var(--blue);color:var(--blue);background:rgba(25,201,255,.1)" onclick="checkForUpdates()">&#128260; CHECK FOR UPDATES / REFRESH APP</button>
       </div>
+      <div style="padding:14px;border:1.5px solid var(--line);border-radius:14px;margin-bottom:16px">
+        <div style="font-weight:700;margin-bottom:8px">&#128190; Progress backup &amp; recovery</div>
+        <div class="mgr-note" style="margin-bottom:12px">Export a complete JSON backup from this device. Imports are validated, backed up, and previewed before anything changes.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="mgr-toggle" onclick="exportProgressJSON()">EXPORT FULL PROGRESS JSON</button>
+          <button class="mgr-toggle" onclick="chooseProgressImport()">CHOOSE JSON TO IMPORT</button>
+          <input id="progress-import-file" type="file" accept="application/json,.json" style="display:none" onchange="prepareProgressImport(event)">
+        </div>
+        <div id="progress-import-preview" style="display:none;margin-top:12px;padding:12px;border:1.5px solid var(--blue);border-radius:12px"></div>
+      </div>
       <div id="reset-progress-zone">
         <button class="rq-no" onclick="confirmResetProgress()">&#128465;&#65039; RESET LOCAL PROGRESS</button>
         <div id="reset-warning" style="display:none;margin-top:12px;padding:14px;border:1.5px solid var(--pink);border-radius:14px;background:rgba(255,46,126,.08)">
@@ -2002,6 +2012,8 @@ const Cloud = (() => {
   let debounceTimer = null;
   let syncing = false;
   let sdkLoadPromise = null;
+  let initialPullPromise = null;
+  let initialPullComplete = false;
 
   function configured() {
     return !!(FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_'));
@@ -2059,23 +2071,6 @@ const Cloud = (() => {
     return JSON.parse(JSON.stringify(rest));
   }
 
-  // Recovery seed: applied ONLY when a device explicitly asks to recover into a
-  // brand-new family record (no cloud doc exists yet). This carries forward the
-  // exact numbers the old permanent "July restore" hack used to force on every
-  // load -- but here it's a one-time floor applied once at migration time.
-  const RECOVERY_SEED_FLOOR = {
-    alex:  { lvl: 7,  coins: 80, keys: 0, streak: 5, xpMax: 400, totalXP: 1350 },
-    katya: { lvl: 13, coins: 110, keys: 0, streak: 4, xpMax: 700, totalXP: 4500 }
-  };
-  function applyRecoverySeed(snap) {
-    ['alex','katya'].forEach(w => {
-      const p = snap[w], floor = RECOVERY_SEED_FLOOR[w];
-      if (!p || !floor) return;
-      Object.entries(floor).forEach(([k,v]) => { if (Number(p[k]||0) < v) p[k] = v; });
-    });
-    return snap;
-  }
-
   // Merge rule: for each child, whichever snapshot has the newer updatedAt is
   // considered "more advanced" and wins WHOLESALE for that child's stats -- we
   // never cherry-pick individual fields (e.g. take xp from one side and xpMax
@@ -2092,7 +2087,16 @@ const Cloud = (() => {
     ['alex','katya'].forEach(w => {
       const l = local[w], c = cloud[w];
       if (!l) return;
-      if (!c || Number(l.updatedAt||0) > Number(c.updatedAt||0)) merged[w] = l;
+      const meaningful = p => !!p && (
+        Number(p.totalXP||0) > 0 || Number(p.lvl||1) > 1 ||
+        Number(p.streak||0) > 0 || Number(p.updatedAt||0) > 0
+      );
+      // A freshly initialized profile must never replace a progressed profile,
+      // even if a later initialization accidentally stamped its timestamp.
+      if (!c || (meaningful(l) && !meaningful(c)) ||
+          (meaningful(l) === meaningful(c) && Number(l.updatedAt||0) > Number(c.updatedAt||0))) {
+        merged[w] = l;
+      }
     });
     const reqById = new Map();
     (cloud.requests||[]).forEach(r => reqById.set(r.id, r));
@@ -2172,21 +2176,23 @@ const Cloud = (() => {
     if (typeof paint === 'function') paint();
   }
 
-  async function linkFamily(code, opts = {}) {
+  async function linkFamily(code) {
     if (!await ensureApp()) return { ok:false, reason:'not-configured' };
     code = (code||'').trim().toUpperCase();
-    if (!code) return { ok:false, reason:'no-code' };
+    if (!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) return { ok:false, reason:'invalid-code' };
     try {
       const ref = db.collection('families').doc(code);
       const snap = await ref.get();
-      const cloudState = snap.exists ? snap.data().state : null;
+      const docData = snap.exists ? snap.data() : null;
+      const cloudState = docData && docData.state;
       const localState = snapshotForCloud();
-      const finalState = !cloudState
-        ? (opts.applyRecoverySeed ? applyRecoverySeed(localState) : localState)
+      const mergedState = !cloudState
+        ? localState
         : mergeState(localState, cloudState);
-      await ref.set({ state: finalState, updatedAt: Date.now() }, { merge:false });
-      applyMergedState(finalState);
+      await ref.set({ state: mergedState, updatedAt: Date.now() }, { merge:true });
+      applyMergedState(mergedState);
       familyCode = code;
+      initialPullComplete = true;
       try { localStorage.setItem(FAMILY_CODE_KEY, code); } catch(e){}
       setLastSynced(Date.now());
       scheduleAutoSync();
@@ -2199,9 +2205,13 @@ const Cloud = (() => {
 
   async function pushNow() {
     if (!familyCode || !await ensureApp()) return false;
+    if (initialPullPromise && !initialPullComplete) await initialPullPromise;
+    // Never let a default/offline boot push before the linked cloud record has
+    // been read and merged at least once.
+    if (!initialPullComplete) return false;
     try {
       await db.collection('families').doc(familyCode)
-        .set({ state: snapshotForCloud(), updatedAt: Date.now() }, { merge:false });
+        .set({ state: snapshotForCloud(), updatedAt: Date.now() }, { merge:true });
       setLastSynced(Date.now());
       return true;
     } catch (e) { console.warn('cloud push failed', e); return false; }
@@ -2210,9 +2220,13 @@ const Cloud = (() => {
   async function pullAndMergeNow() {
     if (!familyCode || !await ensureApp()) return false;
     try {
-      const snap = await db.collection('families').doc(familyCode).get();
+      const ref = db.collection('families').doc(familyCode);
+      const snap = await ref.get();
       if (!snap.exists) return false;
-      applyMergedState(mergeState(snapshotForCloud(), snap.data().state));
+      const docData = snap.data();
+      const merged = mergeState(snapshotForCloud(), docData.state);
+      applyMergedState(merged);
+      initialPullComplete = true;
       setLastSynced(Date.now());
       return true;
     } catch (e) { console.warn('cloud pull failed', e); return false; }
@@ -2255,9 +2269,10 @@ const Cloud = (() => {
     if (!configured()) { renderSyncStatus(); return; }
     let saved = null;
     try { saved = localStorage.getItem(FAMILY_CODE_KEY); } catch(e){}
-    if (!saved) { renderSyncStatus(); return; }
-    familyCode = saved;
-    pullAndMergeNow().finally(() => { scheduleAutoSync(); renderSyncStatus(); });
+    if (!saved || !/^[A-HJ-NP-Z2-9]{8}$/.test(saved)) { renderSyncStatus(); return; }
+    familyCode = saved.toUpperCase();
+    initialPullPromise = pullAndMergeNow();
+    initialPullPromise.finally(() => { scheduleAutoSync(); renderSyncStatus(); });
     window.addEventListener('online', () => syncNow());
   }
 
@@ -2265,6 +2280,7 @@ const Cloud = (() => {
     configured, linkFamily, syncNow, pushNow, pullAndMergeNow, genCode, boot,
     scheduleDebouncedPush, renderSyncStatus, mergeState,
     getFamilyCode: () => familyCode,
+    getLastSynced,
   };
 })();
 window.Cloud = Cloud;
@@ -3923,6 +3939,7 @@ function decideRequest(rid, ok) {
 
 /* ============ PARENT ZONE — PIN gate + approvals ============ */
 let parentUnlocked = false;
+let pendingProgressImport = null;
 const PIN_MAX_FAILURES = 5, PIN_LOCK_MS = 30000;
 let pinFailures = 0, pinLockedUntil = 0;
 function verifyParentPin(value) {
@@ -3972,11 +3989,172 @@ function changePin() {
   toast('🔐 Parent PIN updated.');
   renderParent();
 }
+function requireUnlockedParent() {
+  if (parentUnlocked) return true;
+  toast('Unlock the Parent Dashboard first.');
+  return false;
+}
+function downloadJSONFile(name, value) {
+  const blob = new Blob([JSON.stringify(value, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function buildProgressExportEnvelope(currentState, reason = 'manual Parent Dashboard export') {
+  return {
+    format:'summer-math-battle-state',
+    formatVersion:1,
+    storageKey:'smbt-state-v2',
+    appVersion:APP_VERSION,
+    exportedAt:new Date().toISOString(),
+    reason,
+    familySync:{
+      code:Cloud.getFamilyCode() || null,
+      lastSynced:Cloud.getLastSynced() || null,
+      note:'Metadata only. Importing this file never links a device or writes to Firebase.'
+    },
+    state:JSON.parse(JSON.stringify(currentState))
+  };
+}
+function exportProgressJSON() {
+  if (!requireUnlockedParent()) return;
+  const envelope = buildProgressExportEnvelope(state);
+  downloadJSONFile(
+    'summer-math-battle-progress-' + envelope.exportedAt.replace(/[:.]/g,'-') + '.json',
+    envelope
+  );
+  toast('Full progress backup exported.');
+}
+function chooseProgressImport() {
+  if (!requireUnlockedParent()) return;
+  const input = $('progress-import-file');
+  input.value = '';
+  input.click();
+}
+function validateImportedProgress(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return { ok:false, error:'The JSON root must be an object.' };
+  if (payload.format !== 'summer-math-battle-state' || payload.formatVersion !== 1 || payload.storageKey !== 'smbt-state-v2') {
+    return { ok:false, error:'This is not a valid Summer Math Battle progress export.' };
+  }
+  if (payload.familySync != null && (typeof payload.familySync !== 'object' || Array.isArray(payload.familySync))) {
+    return { ok:false, error:'Family Sync metadata is invalid.' };
+  }
+  const imported = payload.state;
+  if (!imported || typeof imported !== 'object' || Array.isArray(imported)) return { ok:false, error:'The export has no valid state object.' };
+  for (const who of ['alex','katya']) {
+    const child = imported[who];
+    if (!child || typeof child !== 'object' || Array.isArray(child)) return { ok:false, error:'The export is missing the ' + who + ' profile.' };
+    for (const key of ['lvl','xp','xpMax','coins','streak','totalXP','keys']) {
+      if (!Number.isFinite(Number(child[key])) || Number(child[key]) < 0) return { ok:false, error:who + '.' + key + ' is invalid.' };
+    }
+  }
+  for (const key of ['requests','rewards','log']) {
+    if (imported[key] != null && !Array.isArray(imported[key])) return { ok:false, error:key + ' must be a list.' };
+  }
+  for (const key of ['mastery','mathThinking','settings','activity','daily']) {
+    if (imported[key] != null && (typeof imported[key] !== 'object' || Array.isArray(imported[key]))) {
+      return { ok:false, error:key + ' must be an object.' };
+    }
+  }
+  return {
+    ok:true,
+    state:JSON.parse(JSON.stringify(imported)),
+    familySync:payload.familySync ? JSON.parse(JSON.stringify(payload.familySync)) : null
+  };
+}
+function summarizeImportDifferences(current, imported) {
+  const rows = [];
+  ['alex','katya'].forEach(who => {
+    const before = current[who] || {}, after = imported[who] || {};
+    const label = who === 'alex' ? 'Alex' : 'Katya';
+    rows.push(label + ': Level ' + Number(before.lvl||1) + ' → ' + Number(after.lvl||1) +
+      ', XP ' + Number(before.totalXP||0).toLocaleString() + ' → ' + Number(after.totalXP||0).toLocaleString() +
+      ', coins ' + Number(before.coins||0) + ' → ' + Number(after.coins||0) +
+      ', keys ' + Number(before.keys||0) + ' → ' + Number(after.keys||0) +
+      ', streak ' + Number(before.streak||0) + ' → ' + Number(after.streak||0));
+  });
+  rows.push('Mastery profiles: ' + Object.keys(imported.mastery||{}).length);
+  rows.push('Math Secrets: Alex ' + (((imported.mathThinking||{}).alex||{}).unlocked||[]).length +
+    ', Katya ' + (((imported.mathThinking||{}).katya||{}).unlocked||[]).length);
+  rows.push('Reward requests: ' + (imported.requests||[]).length);
+  return rows;
+}
+async function prepareProgressImport(event) {
+  if (!requireUnlockedParent()) return;
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Import file is too large.'); return; }
+  try {
+    const payload = JSON.parse(await file.text());
+    const checked = validateImportedProgress(payload);
+    if (!checked.ok) { toast(checked.error); return; }
+    pendingProgressImport = { state:checked.state, familySync:checked.familySync, sourceName:file.name };
+    const rows = summarizeImportDifferences(state, checked.state);
+    const preview = $('progress-import-preview');
+    preview.style.display = 'block';
+    preview.innerHTML =
+      '<div style="font-weight:700;margin-bottom:8px">Review before importing</div>' +
+      '<div class="mgr-note" style="margin-bottom:8px">Source: ' + esc(file.name) + '</div>' +
+      '<div class="mgr-note" style="margin-bottom:8px">Family Sync metadata: ' +
+        esc(checked.familySync && checked.familySync.code ? checked.familySync.code + ' (not linked automatically)' : 'not linked') + '</div>' +
+      '<ul style="margin:0 0 12px 20px">' + rows.map(row => '<li>' + esc(row) + '</li>').join('') + '</ul>' +
+      '<div style="color:var(--orange);font-weight:700;margin-bottom:10px">A complete local backup will be downloaded before import. Nothing changes until you press the confirmation button.</div>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+        '<button class="rq-ok" onclick="confirmProgressImport()">IMPORT AFTER REVIEW</button>' +
+        '<button class="mgr-toggle" onclick="cancelProgressImport()">Cancel</button>' +
+      '</div>';
+  } catch (e) {
+    pendingProgressImport = null;
+    toast('Could not read that JSON file.');
+  }
+}
+function cancelProgressImport() {
+  pendingProgressImport = null;
+  const preview = $('progress-import-preview');
+  if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+}
+function confirmProgressImport() {
+  if (!requireUnlockedParent() || !pendingProgressImport) return;
+  const imported = pendingProgressImport.state;
+  const newer = ['alex','katya'].filter(who =>
+    Number((state[who]||{}).updatedAt||0) > Number((imported[who]||{}).updatedAt||0)
+  );
+  if (newer.length) {
+    toast('Import stopped: this device has a newer ' + newer.join(' and ') + ' profile.');
+    return;
+  }
+  const backedUpAt = new Date().toISOString();
+  const backupEnvelope = buildProgressExportEnvelope(state, 'automatic backup before reviewed import');
+  backupEnvelope.exportedAt = backedUpAt;
+  try {
+    localStorage.setItem('smbt-state-v2-backup-before-import-' + Date.now(), JSON.stringify(backupEnvelope));
+  } catch (e) {
+    toast('Import stopped: the safety backup could not be saved.');
+    return;
+  }
+  downloadJSONFile(
+    'summer-math-battle-before-import-' + backedUpAt.replace(/[:.]/g,'-') + '.json',
+    backupEnvelope
+  );
+  const next = JSON.parse(JSON.stringify(imported));
+  Object.keys(state).forEach(key => delete state[key]);
+  Object.assign(state, next);
+  Store.set('smbt-state-v2', state);
+  pendingProgressImport = null;
+  toast('Progress imported after backup. Review both profiles before syncing.');
+  paint();
+  renderParent();
+}
 async function generateFamilyCodeUI() {
   if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
   const code = Cloud.genCode();
   toast('⏳ Creating family record...');
-  const res = await Cloud.linkFamily(code, { applyRecoverySeed: false });
+  const res = await Cloud.linkFamily(code);
   if (res.ok) {
     $('family-code-input').value = code;
     toast('✅ New Family Sync Code created: ' + code + ' \u2014 write it down!');
@@ -3986,11 +4164,11 @@ async function generateFamilyCodeUI() {
   renderParent();
 }
 async function linkFamilyCodeUI() {
-  const code = ($('family-code-input').value || '').trim();
+  const code = ($('family-code-input').value || '').trim().toUpperCase();
   if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
-  if (!code) { toast('Enter the Family Sync Code first.'); return; }
+  if (!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) { toast('Enter the complete 8-character Family Sync Code.'); return; }
   toast('⏳ Linking and syncing...');
-  const res = await Cloud.linkFamily(code, { applyRecoverySeed: false });
+  const res = await Cloud.linkFamily(code);
   if (res.ok) toast(res.wasNew ? '✅ New family record created and linked.' : '✅ Linked \u2014 progress merged with the cloud.');
   else toast('⚠️ Couldn\u2019t link right now. Check the code and your connection.');
   renderParent();
