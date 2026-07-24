@@ -35,7 +35,10 @@ jobs:
       - name: Production build
         run: npm run build
 
-      - name: Verify Math Thinking script was injected
+      - name: Verify release features are bundled
         run: |
           test -f dist/index.html
-          grep -q 'math-secrets.js' dist/index.html
+          grep -R -q 'Math Thinking System v' dist
+          grep -R -q 'Math Thinking Report' dist
+          grep -R -q 'PATTERN HUNTER' dist
+          grep -R -q "APP_VERSION = '1.2.0'" dist
