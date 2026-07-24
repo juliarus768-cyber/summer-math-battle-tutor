@@ -5,3 +5,4 @@ dist/
 *.zip
 claude-version/
 preview*.log
+.recovery-backups/

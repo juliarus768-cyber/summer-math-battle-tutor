@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/validate-math-thinking.mjs && node tests/validate-parent-report.mjs && node tests/validate-profile-defaults.mjs",
+    "test": "node tests/validate-math-thinking.mjs && node tests/validate-parent-report.mjs && node tests/validate-profile-defaults.mjs && node tests/validate-progress-transfer.mjs",
     "check": "node --check math-secrets.js && node --check math-parent-report.js && npm test"
   },
   "devDependencies": {

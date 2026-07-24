@@ -28,5 +28,17 @@ assert.doesNotMatch(
   /restoreRememberedJuly15Progress/,
   'an unconditional historical balance floor must not overwrite stored progress'
 );
+assert.match(source, /initialPullComplete/, 'cloud pushes must wait for the initial pull');
+assert.match(
+  source,
+  /meaningful\(l\) && !meaningful\(c\)/,
+  'a default local child must not replace meaningful cloud progress'
+);
+assert.doesNotMatch(source, /PROFILE_RECOVERY_FLOOR/, 'family-specific recovery values must never ship globally');
+assert.match(source, /\^\[A-HJ-NP-Z2-9\]\{8\}\$/, 'Family Sync Codes must be exactly eight valid characters');
+assert.match(source, /function exportProgressJSON\(/, 'Parent Dashboard must support full JSON export');
+assert.match(source, /function validateImportedProgress\(/, 'progress imports must be validated');
+assert.match(source, /function summarizeImportDifferences\(/, 'progress imports must preview differences');
+assert.match(source, /function confirmProgressImport\(/, 'progress imports must require explicit confirmation');
 
 console.log('Validated fresh child balance defaults and non-destructive missing-field initialization.');
