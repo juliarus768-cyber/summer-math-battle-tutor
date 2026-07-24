@@ -11,6 +11,6 @@
     "check": "node --check math-secrets.js && node --check math-parent-report.js && npm test"
   },
   "devDependencies": {
-    "vite": "^8.0.16"
+    "vite": "^8.1.5"
   }
 }
