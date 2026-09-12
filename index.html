@@ -1889,13 +1889,46 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 const APP_VERSION = '1.1.0';
 const APP_BUILD = '__BUILD_ID__';
 
-/* ============ SAFE STORAGE (localStorage with in-memory fallback) ============ */
+/* ============ SAFE STORAGE (validated persistence with recovery) ============ */
 const Store = (() => {
-  let mem = {}, ok = false;
+  let mem = {}, ok = false, lastGood = {};
   try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ok = true; } catch(e) {}
+  const readRaw = k => ok ? localStorage.getItem(k) : (mem[k] ?? null);
+  const writeRaw = (k,v) => { if (ok) localStorage.setItem(k,v); else mem[k] = v; };
+  const reportFailure = reason => { window.__storageStatus={recovery:true, reason}; window.__storageWarningPending=true; if (typeof toast === 'function') toast('⚠️ Progress could not be saved.'); };
   return {
-    get(k,d){ try { const v = ok ? localStorage.getItem(k) : mem[k]; return v != null ? JSON.parse(v) : d; } catch(e){ return d; } },
-    set(k,v){ try { if (ok) localStorage.setItem(k, JSON.stringify(v)); else mem[k] = JSON.stringify(v); } catch(e){} }
+    available: () => ok,
+    get(k,d){
+      const raw = readRaw(k);
+      if (raw == null) return { value:d, status:'missing' };
+      try { const value=JSON.parse(raw); return { value, status:'ok' }; }
+      catch(e) {
+        try { writeRaw(k + '-corrupt', raw); } catch (_) {}
+        return { value:d, status:'corrupt', raw };
+      }
+    },
+    markGood(k){ const raw=readRaw(k); if(raw!=null) { try { JSON.parse(raw); lastGood[k]=raw; } catch(_) {} } },
+    set(k,v){
+      if (k === 'smbt-state-v2' && window.__storageStatus && window.__storageStatus.recovery) {
+        reportFailure('recovery-readonly'); return { ok:false, reason:'recovery-readonly' };
+      }
+      if (k === 'smbt-state-v2' && typeof normalizeLoadedState === 'function' && !normalizeLoadedState(v).safe) {
+        reportFailure('validation'); return { ok:false, reason:'validation' };
+      }
+      let serialized;
+      try { serialized = JSON.stringify(v); JSON.parse(serialized); } catch(e) { reportFailure('serialize'); return { ok:false, reason:'serialize' }; }
+      try {
+        const previous = lastGood[k];
+        if (previous != null) writeRaw(k + '-backup', previous);
+        writeRaw(k, serialized);
+        const check = readRaw(k);
+        if (check !== serialized) { reportFailure('readback'); return { ok:false, reason:'readback' }; }
+        JSON.parse(check);
+        lastGood[k]=serialized;
+        return { ok:true };
+      } catch(e) { reportFailure('write'); return { ok:false, reason:'write' }; }
+    },
+    remove(k){ try { if (ok) localStorage.removeItem(k); else delete mem[k]; return {ok:true}; } catch(e) { return {ok:false, reason:'remove'}; } }
   };
 })();
 
@@ -1905,8 +1938,29 @@ const FRESH = {
   alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0 },
   katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0 }
 };
-const state = Store.get('smbt-state-v2', JSON.parse(JSON.stringify(FRESH)));
-if (!state.activePlayer) state.activePlayer = 'alex';
+function cloneFresh(){ return JSON.parse(JSON.stringify(FRESH)); }
+function normalizeLoadedState(raw) {
+  const out = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : cloneFresh();
+  let safe = !!(raw && typeof raw === 'object' && !Array.isArray(raw));
+  if (!['alex','katya'].includes(out.activePlayer)) { out.activePlayer = 'alex'; if (raw) safe = false; }
+  ['alex','katya'].forEach(w => {
+    if (!out[w] || typeof out[w] !== 'object' || Array.isArray(out[w])) { out[w] = cloneFresh()[w]; safe = false; }
+    const defaults = cloneFresh()[w];
+    ['lvl','xp','xpMax','coins','streak','totalXP','keys','lastKeyMilestone'].forEach(field => {
+      if (out[w][field] != null && Number.isFinite(out[w][field]) && out[w][field] >= 0) return;
+      out[w][field] = defaults[field] ?? 0; safe = false;
+    });
+  });
+  return { state:out, safe };
+}
+const loadedState = Store.get('smbt-state-v2', cloneFresh());
+const normalizedState = normalizeLoadedState(loadedState.value);
+const state = normalizedState.state;
+let resetInProgress = false;
+if (loadedState.status === 'ok' && normalizedState.safe) Store.markGood('smbt-state-v2');
+window.__storageStatus = loadedState.status === 'corrupt' || !normalizedState.safe
+  ? { recovery:true, reason:loadedState.status === 'corrupt' ? 'corrupt' : 'invalid-shape' }
+  : (!Store.available() ? { recovery:true, reason:'unavailable' } : null);
 // Back-fill new fields for existing saves
 const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
@@ -1919,6 +1973,7 @@ if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
 if (!state.pausedDaily || typeof state.pausedDaily !== 'object') state.pausedDaily = { alex:null, katya:null };
 if (state.pausedDaily.alex === undefined) state.pausedDaily.alex = null;
 if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
+if (!window.__storageStatus && loadedState.status === 'missing') Store.set('smbt-state-v2', state);
 
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
@@ -3090,6 +3145,7 @@ function queueReinforcement(topic) {
 let M = null;
 const QCOUNT = 30, DAILY_BASIC_COUNT = 10, XP_PER_Q = 8;
 function savePausedMission() {
+  if (resetInProgress) return;
   if (!M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
   const snapshot = JSON.parse(JSON.stringify(M));
   const isCurrentQuestion = M.q === M.questions[M.i];
@@ -3631,7 +3687,9 @@ function cancelResetProgress() {
 // is inherently PIN-protected; the extra click-through warning guards
 // against an accidental tap on a destructive, unrecoverable action.
 function doResetProgress() {
-  try { localStorage.removeItem('smbt-state-v2'); } catch (e) {}
+  resetInProgress = true;
+  if (!window.__storageStatus) Store.set('smbt-state-v2', state);
+  Store.remove('smbt-state-v2');
   toast('🗑️ Local progress reset — reloading…');
   setTimeout(() => { location.href = location.pathname + '?reset=' + Date.now(); }, 500);
 }
@@ -5031,6 +5089,11 @@ function toast(msg) {
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.remove('show'), 2600);
 }
+if (window.__storageStatus || window.__storageWarningPending) setTimeout(() => {
+  toast(window.__storageStatus.reason === 'unavailable'
+    ? '⚠️ Progress storage is unavailable; changes may not persist.'
+    : '⚠️ Storage recovery mode: existing progress was preserved for parent review.');
+}, 0);
 (function stars(){
   const c = $('stars');
   for (let i = 0; i < 60; i++) {
