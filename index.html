@@ -3147,7 +3147,15 @@ function nextQ() {
   if (signBtn) { signBtn.style.display = (!M.q.choices && topicAllowsNegative(M.q.topic)) ? '' : 'none'; signBtn.classList.remove('active'); }
   if (M.q.choices) {
     choices.style.display = 'grid';
-    choices.innerHTML = M.q.choices.map(c => '<button class="choice-answer" onclick="chooseMissionAnswer(\'' + c + '\')">' + c + '</button>').join('');
+    choices.innerHTML = '';
+    M.q.choices.forEach((choice) => {
+      const button = document.createElement('button');
+      button.className = 'choice-answer';
+      button.type = 'button';
+      button.textContent = choice;
+      button.addEventListener('click', () => chooseMissionAnswer(choice));
+      choices.appendChild(button);
+    });
     inp.style.display = 'none';
   } else {
     choices.style.display = 'none'; choices.innerHTML = '';
