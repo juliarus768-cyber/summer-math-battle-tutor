@@ -2302,6 +2302,15 @@ katya: {
    text is remembered so the SAME question rarely repeats back to back. */
 function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a || 1; }
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=R(0,i); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function uniqueChoices(values){ return [...new Set(values.map(v=>String(v)))]; }
+function missionChoices(correct, candidates){
+  const out=uniqueChoices([correct,...candidates]);
+  for(const fallback of ['0/1','1/3','2/3','1/4','3/4','1/5','2/5','3/5','4/5','1']){
+    if(out.length>=3) break;
+    if(!out.includes(fallback)) out.push(fallback);
+  }
+  return shuffle(out.slice(0,3));
+}
 
 function generateBasicArithmetic() {
   const addition = Array.from({length:2}, () => {
@@ -2367,7 +2376,7 @@ alex: {
   ],
   ratios: [
     (d)=>{ const cups=R(2,6), pancakes=R(2,9), k=R(2,4+d); return { s:'💰 Scale the recipe.', q:`A recipe uses ${cups} cups flour for ${pancakes} pancakes. How many cups for ${pancakes*k} pancakes?`, a: cups*k, hint:`${pancakes*k} is ${k} times ${pancakes}, so multiply the cups by ${k} too.` }; },
-    (d)=>{ const pairs=[[2,3],[3,4],[1,2],[3,5],[2,5],[4,5],[1,3],[3,7]]; const [x,y]=pick(pairs); const g=R(2,5+d); const a=x*g, b=y*g; return { s:'🕵 Simplify the ratio clue.', q:`Simplify the ratio ${a}:${b}.`, a:`${x}:${y}`, choices: shuffle([`${x}:${y}`, `${y}:${x}`, `${a}:${b}`]), hint:`Divide both numbers by their greatest common factor (${g}).` }; },
+    (d)=>{ const pairs=[[2,3],[3,4],[1,2],[3,5],[2,5],[4,5],[1,3],[3,7]]; const [x,y]=pick(pairs); const g=R(2,5+d); const a=x*g, b=y*g, correct=`${x}:${y}`; return { s:'🕵 Simplify the ratio clue.', q:`Simplify the ratio ${a}:${b}.`, a:correct, choices: missionChoices(correct,[`${y}:${x}`,`${a}:${b}`]), hint:`Divide both numbers by their greatest common factor (${g}).` }; },
     (d)=>{ const rate=R(20,60+d*20), hrs=R(2,6); return { s:'🏎 Rate check!', q:`A car travels ${rate*hrs} km in ${hrs} hours. Speed in km/h?`, a:rate, hint:'Speed = distance ÷ time.' }; }
   ],
   algebra: [
@@ -2385,9 +2394,9 @@ alex: {
     (d)=>{ const r=pick([2,3,4,5,6,7]); return { s:'🔵 Circular energy shield.', q:`A circle has radius ${r} cm. What is its CIRCUMFERENCE? Use π ≈ 3.14, round to 1 decimal.`, a: Math.round(2*3.14*r*10)/10, mode:'decimal', hint:'Circumference = 2 × π × radius.' }; }
   ],
   probability: [
-    (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total); return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:`${red/g}/${total/g}`, choices: shuffle([`${red/g}/${total/g}`, `${blue/g}/${total/g}`, `${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
+    (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total), correct=`${red/g}/${total/g}`; return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:correct, choices: missionChoices(correct,[`${blue/g}/${total/g}`,`${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
     (d)=>{ return { s:'🎲 Dice roll probability.', q:'Rolling a standard 6-sided die, what is the probability of rolling an EVEN number?', a:'1/2', choices: shuffle(['1/2','1/3','2/3']), hint:'List the even faces on a die (2, 4, 6), count them, then write that count over the total number of faces — and simplify.' }; },
-    (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total); return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:`${green/g}/${total/g}`, choices: shuffle([`${green/g}/${total/g}`, `${yellow/g}/${total/g}`, `${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
+    (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total), correct=`${green/g}/${total/g}`; return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:correct, choices: missionChoices(correct,[`${yellow/g}/${total/g}`,`${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
   ],
   money: [
     (d)=>{ const r=R(3,9+d*2), w=R(6,15+d*3); return { s:'💰 Grinding coins in the arena.', q:`You earn ${r} coins per win. Coins after ${w} wins?`, a:r*w, hint:'Multiply coins-per-win by the number of wins.' }; },
@@ -2424,7 +2433,7 @@ katya: {
   fractions: [
     (d)=>{ const den=pick([2,3,4,5,10]), num=R(1,den-1), whole=den*R(2,6+d); return { s:'🔍 Fraction of the clue stash.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
     (d)=>{ const den=pick([3,4,5,6,8]); const nums=Array.from({length:den-1},(_,i)=>i+1); const correct=pick(nums); const wrong1=pick(nums.filter(n=>n!==correct)) || correct; return { s:'🔍 Fraction clue match.', q:`Which fraction means ${correct} out of ${den} equal parts?`, a:`${correct}/${den}`, choices: shuffle([`${correct}/${den}`, `${wrong1}/${den}`, `${den}/${correct}`]), hint:'The top number (numerator) counts the parts you have; the bottom counts the total equal parts.' }; },
-    (d)=>{ const pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5]]; const [n,dd]=pick(pairs); const correct = String(Math.round((n/dd)*100)/100); const w1 = String(Math.round((n/dd+0.1)*100)/100), w2 = String(Math.round((n/dd-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:`Which decimal equals ${n}/${dd}?`, a: correct, choices: shuffle([correct, w1, w2]), hint:'Divide the top number by the bottom number to get the decimal.' }; }
+    (d)=>{ const exactPairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[1,10],[3,10],[7,10],[1,20],[3,20]], roundedPairs=[[1,3],[2,3],[1,6],[5,6]]; const [n,dd]=pick([...exactPairs,...roundedPairs]); const value=n/dd, rounded=String(Math.round(value*100)/100), exact=exactPairs.some(([a,b])=>a===n&&b===dd), correct=rounded, w1=String(Math.round((value+0.1)*100)/100), w2=String(Math.round((value-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:exact?`Which decimal equals ${n}/${dd}?`:`What is ${n}/${dd} rounded to the nearest hundredth?`, a:correct, choices:missionChoices(correct,[w1,w2]), hint:exact?'Divide the top number by the bottom number to get the exact decimal.':'Divide the top number by the bottom number, then round to the nearest hundredth.' }; }
   ],
   decimals: [
     (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'🔍 Decimal clue combine.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
@@ -3175,8 +3184,15 @@ function answerOk(q, raw) {
   const val = String(raw || '').trim();
   if (!val) return false;
   if (q.choices) return val === String(q.a);
-  const n = parseFloat(val.replace(',', '.').replace(/^\$/, ''));
-  return !isNaN(n) && Math.abs(n - Number(q.a)) < 0.001;
+  const n = parseAnswerNumber(val, true);
+  return n !== null && Math.abs(n - Number(q.a)) < 0.001;
+}
+function parseAnswerNumber(raw, currency=false) {
+  let val=String(raw ?? '').trim();
+  if(currency && val.startsWith('$')) val=val.slice(1).trim();
+  if(!/^[+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+)$/.test(val)) return null;
+  const n=Number(val.replace(',', '.'));
+  return Number.isFinite(n)?n:null;
 }
 function submitQ() {
   const raw = $('ms-answer').value.trim();
@@ -4030,9 +4046,9 @@ function mlNextQ() {
   $('ml-submit').disabled = false;
 }
 function mlCheck() {
-  const v = parseFloat($('ml-answer').value.trim().replace(',', '.'));
+  const v = parseAnswerNumber($('ml-answer').value, true);
   const fb = $('ml-fb');
-  if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
+  if (v === null) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
     const reward = 15;
     const mlXp = 5 * weekendXpMult();
@@ -4507,9 +4523,9 @@ function gmPickStrategy(btn, ok) {
 
 function gmCheckSolve() {
   const inp = $('gm-answer'); if (!inp) return;
-  const v = parseFloat(inp.value.trim().replace(',', '.'));
+  const v = parseAnswerNumber(inp.value, GM.prob.unit === '$');
   const fb = $('gm-solve-fb');
-  if (isNaN(v)) { fb.textContent = 'Type your answer first!'; fb.className = 'gm-fb bad'; return; }
+  if (v === null) { fb.textContent = 'Type your answer first!'; fb.className = 'gm-fb bad'; return; }
   if (Math.abs(v - GM.prob.answer) < 0.001) {
     GM.solveOk = GM.attempts === 0 && !GM.usedHint;
     fb.textContent = '✔ Correct! Well solved.'; fb.className = 'gm-fb good';
@@ -4879,9 +4895,9 @@ function bNextQ() {
 }
 
 function bSubmit() {
-  const v = parseFloat($('b-answer').value.trim().replace(',', '.'));
+  const v = parseAnswerNumber($('b-answer').value);
   const fb = $('b-fb');
-  if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
+  if (v === null) { fb.textContent = 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
   if (Math.abs(v - B.q.a) < 0.001) {
     B.score[B.turn]++;
     const sEl = $(B.turn === 'alex' ? 'b-score-a' : 'b-score-k');
