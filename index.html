@@ -2946,6 +2946,13 @@ if (!state.daily || !state.daily.alex || !state.daily.katya) {
   if (typeof state.daily[w].date !== 'string' || (state.daily[w].date && !/^\d{4}-\d{2}-\d{2}$/.test(state.daily[w].date))) state.daily[w].date = '';
   if (!Number.isFinite(state.daily[w].count) || state.daily[w].count < 0) state.daily[w].count = 0;
 });
+if (!state.moneyLabDaily || typeof state.moneyLabDaily !== 'object' || Array.isArray(state.moneyLabDaily)) state.moneyLabDaily = {};
+['alex','katya'].forEach(w => {
+  if (!state.moneyLabDaily[w] || typeof state.moneyLabDaily[w] !== 'object' || Array.isArray(state.moneyLabDaily[w])) state.moneyLabDaily[w] = { date:'', rewarded:0 };
+  if (typeof state.moneyLabDaily[w].date !== 'string' || (state.moneyLabDaily[w].date && !/^\d{4}-\d{2}-\d{2}$/.test(state.moneyLabDaily[w].date))) state.moneyLabDaily[w].date = '';
+  if (!Number.isFinite(state.moneyLabDaily[w].rewarded) || state.moneyLabDaily[w].rewarded < 0) state.moneyLabDaily[w].rewarded = 0;
+  state.moneyLabDaily[w].rewarded = Math.min(10, Math.floor(state.moneyLabDaily[w].rewarded));
+});
 function dailyCountFor(who) {
   const d = state.daily[who];
   return d && d.date === todayStr() ? d.count : 0;
@@ -4204,15 +4211,20 @@ function mlCheck() {
   if (v === null) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
     mlQ.completed = true;
-    const reward = 15;
-    const mlXp = 5 * weekendXpMult();
+    const daily = state.moneyLabDaily[mlOwner];
+    const today = localDateKey();
+    if (daily.date !== today) { daily.date = today; daily.rewarded = 0; }
+    const rewarded = daily.rewarded < 10;
+    if (rewarded) daily.rewarded++;
+    const reward = rewarded ? 15 : 0;
+    const mlXp = rewarded ? 5 * weekendXpMult() : 0;
     state[mlOwner].coins += reward;
     gainXP(mlOwner, mlXp);
     mlStats.solved++; mlStats.earned += reward;
     state.activity[mlOwner].money++;
     $('ml-solved').textContent = mlStats.solved;
     $('ml-earned').textContent = mlStats.earned;
-    fb.textContent = pick(['✔ Correct! +15 coins 💰', '✔ Smart money move! +15 coins', '✔ Cha-ching! +15 coins']);
+    fb.textContent = rewarded ? pick(['✔ Correct! +15 coins 💰', '✔ Smart money move! +15 coins', '✔ Cha-ching! +15 coins']) : '✔ Correct! Daily rewards complete — keep practicing for fun.';
     fb.style.color = 'var(--green)';
     burst(16);
     paint();

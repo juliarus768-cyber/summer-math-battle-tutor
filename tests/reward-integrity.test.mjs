@@ -10,6 +10,7 @@ if(rewards(100).completionCoins!==45||rewards(100).completionCoins*2!==90)throw 
 const repeat={coins:0}; const complete=a=>{repeat.coins+=rewards(a).completionCoins}; complete(100); complete(100); if(repeat.coins!==90)throw new Error('repeat payout blocked');
 let completed=false, payouts=0; const show=()=>{if(completed)return;completed=true;payouts++};show();show();if(payouts!==1)throw new Error('idempotency failed');
 const owner='alex'; let awarded=owner; if(awarded!=='alex')throw new Error('ownership failed');
-for(const marker of ['Math.max(4, XP_PER_Q - Math.min(M.attempts, 2) * 2)','3 * Math.min(M.combo - 1, 4)','if (M.q.reinforcement) gain += 4','const wMult = weekendXpMult()','const teamBonus = dailyCountFor(sibling) >= 1','const mlXp = 5 * weekendXpMult()']) if(!s.includes(marker))throw new Error('missing unchanged formula '+marker);
+for(const marker of ['Math.max(4, XP_PER_Q - Math.min(M.attempts, 2) * 2)','3 * Math.min(M.combo - 1, 4)','if (M.q.reinforcement) gain += 4','const wMult = weekendXpMult()','const teamBonus = dailyCountFor(sibling) >= 1','5 * weekendXpMult()']) if(!s.includes(marker))throw new Error('missing unchanged formula '+marker);
 for(const marker of ['gainXP(state.alex','gainXP(state.katya','const coins = Math.round(xp / 3)']) if(!s.includes(marker))throw new Error('other economy marker missing '+marker);
 console.log('reward integrity regression checks passed');
+
