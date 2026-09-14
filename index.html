@@ -2165,7 +2165,7 @@ function paintLanding(p, isA) {
 
 function validPausedMission(who) {
   const saved = state.pausedDaily && state.pausedDaily[who];
-  return saved && saved.player === who && Array.isArray(saved.questions) && saved.questions.length >= 1 && saved.i >= 0 && saved.i < saved.questions.length ? saved : null;
+  return saved && saved.player === who && Array.isArray(saved.questions) && saved.questions.length >= 1 && saved.questions.length <= 36 && saved.i >= 0 && saved.i < saved.questions.length ? saved : null;
 }
 
 function paintDailyMissionStatus() {
@@ -3162,18 +3162,25 @@ function updateAttemptDots() {
 // earned" question always gets a second real chance before the mission
 // ends. Total mission length is capped so sessions stay in the
 // EDUCATION.md 15-20 minute band even after reinforcement is added.
-const MAX_MISSION_LEN = 26;
+const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 36;
 function queueReinforcement(topic) {
-  const room = MAX_MISSION_LEN - M.questions.length;
+  const room = Math.min(MAX_REMEDIATION - (M.remediationQueued || 0), MAX_MISSION_LEN - M.questions.length);
   if (room <= 0) return;
   const count = Math.min(R(1, 3), room);
   const diff = topicDifficulty(M.player, topic);
+  const existing = new Set(M.questions.map(q => q.q));
+  let added = 0;
   for (let i = 0; i < count; i++) {
-    let item = (M.q.genIdx != null) ? similarQuestion(M.player, topic, M.q.genIdx, diff) : null;
-    if (!item) item = genQuestion(M.player, topic, diff);
+    let item = null;
+    for (let tries = 0; tries < 6 && !item; tries++) {
+      const candidate = (M.q.genIdx != null) ? similarQuestion(M.player, topic, M.q.genIdx, diff) : genQuestion(M.player, topic, diff);
+      if (candidate && !existing.has(candidate.q) && String(candidate.a) !== String(M.q.a)) item = candidate;
+    }
+    if (!item) continue;
     item.reinforcement = true;
-    M.questions.push(item);
+    M.questions.push(item); existing.add(item.q); added++;
   }
+  M.remediationQueued = Math.min(MAX_REMEDIATION, (M.remediationQueued || 0) + added);
 }
 
 /* ============ ACTIVE MISSION FLOW ============ */
@@ -3199,7 +3206,8 @@ function startMission(id) {
   const saved = validPausedMission(state.activePlayer);
   M = saved
     ? { ...JSON.parse(JSON.stringify(saved)), def }
-    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
+    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, remediationQueued: 0, questions: generateDailyMission(state.activePlayer) };
+  M.remediationQueued = Math.min(MAX_REMEDIATION, Math.max(0, Number(M.remediationQueued) || 0));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   const sc = $('mission-screen');
   sc.classList.add('on');
