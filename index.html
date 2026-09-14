@@ -3143,10 +3143,11 @@ function queueReinforcement(topic) {
 
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
+let missionRunToken = 0;
 const QCOUNT = 30, DAILY_BASIC_COUNT = 10, XP_PER_Q = 8;
 function savePausedMission() {
   if (resetInProgress) return;
-  if (!M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
+  if (!M || M.completed || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
   const snapshot = JSON.parse(JSON.stringify(M));
   const isCurrentQuestion = M.q === M.questions[M.i];
   snapshot.answer = isCurrentQuestion && $('ms-answer') ? $('ms-answer').value : '';
@@ -3157,13 +3158,12 @@ function savePausedMission() {
 }
 
 function startMission(id) {
+  missionRunToken++;
   const def = MISSIONS[0];
   const saved = validPausedMission(state.activePlayer);
   M = saved
     ? { ...JSON.parse(JSON.stringify(saved)), def }
     : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
-  const restoredAttempts = M.attempts || 0;
-  const restoredAnswer = M.answer || '';
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   const sc = $('mission-screen');
   sc.classList.add('on');
@@ -3177,12 +3177,9 @@ function startMission(id) {
   if (padCard) padCard.classList.remove('mobile-open');
   if (padToggle) padToggle.textContent = '✏️ SCRATCHPAD';
   initPad();
-  nextQ();
+  nextQ(!!saved);
   if (saved) {
-    M.attempts = restoredAttempts;
     updateAttemptDots();
-    $('ms-answer').value = restoredAnswer;
-    if (M.q.choices) document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === restoredAnswer));
     $('ms-fb').textContent = 'Mission resumed — keep going!';
     $('ms-fb').className = 'feedback fb-good';
     toast(`▶ Resumed question ${M.i + 1} of ${M.questions.length}`);
@@ -3194,9 +3191,9 @@ function segs() {
   $('ms-segs').innerHTML = Array.from({length:total},(_,j)=>`<i class="${j<M.i?'done':j===M.i?'cur':''}"></i>`).join('');
   $('ms-count').textContent = M.i < total ? `Question ${M.i+1} of ${total}` : 'Mission complete!';
 }
-function nextQ() {
+function nextQ(restoring=false) {
   if (M.i >= M.questions.length) return showResult();
-  M.attempts = 0;
+  if (!restoring) M.attempts = 0;
   M.q = M.questions[M.i];
   $('ms-story').textContent = M.q.s;
   $('ms-q').textContent = M.q.q;
@@ -3207,7 +3204,7 @@ function nextQ() {
   if (wt) { wt.style.display = 'none'; wt.innerHTML = ''; }
   const choices = $('ms-choices');
   const inp = $('ms-answer');
-  inp.value = ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
+  inp.value = restoring ? (M.answer || '') : ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
   const signBtn = $('ms-sign-btn');
   if (signBtn) { signBtn.style.display = (!M.q.choices && topicAllowsNegative(M.q.topic)) ? '' : 'none'; signBtn.classList.remove('active'); }
   if (M.q.choices) {
@@ -3229,7 +3226,7 @@ function nextQ() {
   }
   $('ms-fb').textContent = ''; $('ms-fb').className = 'feedback';
   $('ms-submit').disabled = false;
-  resetBrainBoost('ms');
+  if (!restoring) resetBrainBoost('ms');
   segs();
 }
 function chooseMissionAnswer(v) {
@@ -3272,7 +3269,7 @@ function submitQ() {
     burst(M.combo >= 3 ? 26 : 12);
     recordAnswer(M.player, M.q.topic, M.attempts === 0);
     if (M.bbLevel > 0) markStrategyHelped(M.player, M.q.topic);
-    M.i++; lockThen(nextQ);
+    M.i++; savePausedMission(); lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
     M.attempts++;
@@ -3291,7 +3288,7 @@ function submitQ() {
       fb.textContent = 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
       fb.className = 'feedback fb-bad';
       document.querySelectorAll('.choice-answer').forEach(b => b.disabled = true);
-      M.i++; lockThen(nextQ, 6500);
+      M.i++; savePausedMission(); lockThen(nextQ, 6500);
     } else if (M.attempts === 2) {
       fb.textContent = 'Not quite yet — here’s a strategy and an example to help.';
       fb.className = 'feedback fb-bad';
@@ -3307,8 +3304,10 @@ function submitQ() {
     }
   }
 }
-function lockThen(f, delay) { $('ms-answer').disabled = true; $('ms-submit').disabled = true; setTimeout(f, delay || 1300); }
+function lockThen(f, delay) { const token=missionRunToken; $('ms-answer').disabled = true; $('ms-submit').disabled = true; setTimeout(() => { if (token !== missionRunToken || !M) return; f(); }, delay || 1300); }
 function showResult() {
+  if (!M || M.completed) return;
+  M.completed = true;
   const total = M.questions.length;
   const accuracy = Math.round((M.correct / total) * 100);
   const bonus = Math.round(accuracy / 3);
@@ -3347,6 +3346,7 @@ function showResult() {
 }
 function closeMission() {
   savePausedMission();
+  missionRunToken++;
   $('mission-screen').classList.remove('on');
   $('battle-screen').classList.remove('on');
   $('store-screen').classList.remove('on');
@@ -3688,6 +3688,7 @@ function cancelResetProgress() {
 // against an accidental tap on a destructive, unrecoverable action.
 function doResetProgress() {
   resetInProgress = true;
+  missionRunToken++;
   if (!window.__storageStatus) Store.set('smbt-state-v2', state);
   Store.remove('smbt-state-v2');
   toast('🗑️ Local progress reset — reloading…');
@@ -5137,6 +5138,8 @@ function pickProfile(who) {
   playCue('request');
 }
 function switchProfile() {
+  savePausedMission();
+  missionRunToken++;
   parentUnlocked = false;
   // Close any open screen and return to picker.
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(id => { const el=$(id); if(el) el.classList.remove('on'); });
