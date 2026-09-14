@@ -1935,8 +1935,8 @@ const Store = (() => {
 /* ============ GAME STATE — fresh start, both players at 0 ============ */
 const FRESH = {
   activePlayer: 'alex',
-  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0 },
-  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0 }
+  alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, lastDay: '' },
+  katya: { lvl: 1, xp: 0, xpMax: 100, coins: 0, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, lastDay: '' }
 };
 function cloneFresh(){ return JSON.parse(JSON.stringify(FRESH)); }
 function normalizeLoadedState(raw) {
@@ -1951,6 +1951,7 @@ function normalizeLoadedState(raw) {
       out[w][field] = defaults[field] ?? 0; safe = false;
     });
   });
+  ['alex','katya'].forEach(w => { if (out[w].lastDay != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(out[w].lastDay))) { out[w].lastDay = ''; safe = false; } });
   return { state:out, safe };
 }
 const loadedState = Store.get('smbt-state-v2', cloneFresh());
@@ -1972,6 +1973,7 @@ const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
   if (state[w].gradeOverride === undefined) state[w].gradeOverride = null;
 });
 if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
+['alex','katya'].forEach(w => { if (typeof state[w].lastDay !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(state[w].lastDay)) state[w].lastDay = ''; });
 if (!state.pausedDaily || typeof state.pausedDaily !== 'object') state.pausedDaily = { alex:null, katya:null };
 if (state.pausedDaily.alex === undefined) state.pausedDaily.alex = null;
 if (state.pausedDaily.katya === undefined) state.pausedDaily.katya = null;
@@ -2928,11 +2930,22 @@ function generateDailyMission(who) {
 }
 
 /* ============ HELPERS: dates, confetti, hints ============ */
-const todayStr = () => new Date().toISOString().slice(0,10);
-const yestStr = () => new Date(Date.now() - 864e5).toISOString().slice(0,10);
+function localDateKey(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+const todayStr = () => localDateKey();
+const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return localDateKey(d); };
 if (!state.daily || !state.daily.alex || !state.daily.katya) {
   state.daily = { alex: { date: '', count: 0 }, katya: { date: '', count: 0 } };
 }
+['alex','katya'].forEach(w => {
+  if (!state.daily[w] || typeof state.daily[w] !== 'object' || Array.isArray(state.daily[w])) state.daily[w] = { date:'', count:0 };
+  if (typeof state.daily[w].date !== 'string' || (state.daily[w].date && !/^\d{4}-\d{2}-\d{2}$/.test(state.daily[w].date))) state.daily[w].date = '';
+  if (!Number.isFinite(state.daily[w].count) || state.daily[w].count < 0) state.daily[w].count = 0;
+});
 function dailyCountFor(who) {
   const d = state.daily[who];
   return d && d.date === todayStr() ? d.count : 0;
@@ -2963,10 +2976,10 @@ const KEY_MILESTONES = [3, 7, 14, 30];
    streak alive, walking back from today and skipping Saturday/Sunday. So
    playing Friday keeps the streak alive all through the weekend into Monday. */
 function lastRequiredDay(todayDateStr) {
-  const d = new Date(todayDateStr + 'T00:00:00');
-  d.setDate(d.getDate() - 1);
+  const [y,m,day] = String(todayDateStr).split('-').map(Number);
+  const d = new Date(y, m - 1, day - 1);
   while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0,10);
+  return localDateKey(d);
 }
 
 function bumpStreak(p, name) {
