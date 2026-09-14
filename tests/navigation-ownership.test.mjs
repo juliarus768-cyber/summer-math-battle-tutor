@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const source = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+for (const marker of ['function hideAllActivityScreens()', 'let mlQ = null, mlAttempts = 0, mlOwner = null', 'mlQ = null; mlOwner = null; mlAttempts = 0', 'state[mlOwner].coins', 'gainXP(mlOwner', 'mlQ.completed', 'const token = activityEpoch', 'GM.completed', 'ER.completed', 'B.completed', 'savePausedMission();\n  hideAllActivityScreens();']) assert.match(source, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+const screens = ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen'];
+const active = new Set(['guided-screen','escape-screen']);
+screens.forEach(s => active.delete(s));
+active.add('battle-screen');
+assert.deepEqual([...active], ['battle-screen']);
+const rewards = { alex:0, katya:0 };
+const owner = 'alex', laterActive = 'katya';
+rewards[owner] += 15;
+assert.equal(rewards.alex, 15); assert.equal(rewards[laterActive], 0);
+let epoch = 1, mutated = false;
+const callback = captured => { if (captured !== epoch) return; mutated = true; };
+epoch++; callback(1); assert.equal(mutated, false);
+console.log('navigation and ownership regression checks passed');

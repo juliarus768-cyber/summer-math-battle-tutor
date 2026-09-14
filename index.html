@@ -2180,6 +2180,8 @@ function paintDailyMissionStatus() {
 
 function setPlayer(w) {
   if (state.activePlayer === w) { paint(); return; }
+  savePausedMission();
+  hideAllActivityScreens();
   state.activePlayer = w;
   paint();
   const h = $('hero-' + w);
@@ -3158,6 +3160,7 @@ function savePausedMission() {
 }
 
 function startMission(id) {
+  hideAllActivityScreens();
   missionRunToken++;
   const def = MISSIONS[0];
   const saved = validPausedMission(state.activePlayer);
@@ -3441,6 +3444,7 @@ function catalogFor(who) {
 }
 
 function openStore() {
+  hideAllActivityScreens();
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Store'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -3581,6 +3585,7 @@ function decideRequest(rid, ok) {
 /* ============ PARENT ZONE — PIN gate + approvals ============ */
 let parentUnlocked = false;
 function openParent() {
+  hideAllActivityScreens();
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Parent'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -3734,6 +3739,7 @@ function renderStrategyLibrary() {
   $('strategy-cards').innerHTML = cardsHtml || '<div class="mgr-note">Play a Daily Mission and tap Brain Boost to start discovering strategies!</div>';
 }
 function openStrategyLib() {
+  hideAllActivityScreens();
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen'].forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
@@ -3996,9 +4002,16 @@ $('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPi
 /* ============ MONEY LAB ============ */
 let mlGoalId = null;
 let mlStats = { solved: 0, earned: 0 };
-let mlQ = null, mlAttempts = 0;
+let mlQ = null, mlAttempts = 0, mlOwner = null;
+let activityEpoch = 0;
+function hideAllActivityScreens() {
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen'].forEach(id => { const el=$(id); if (el) el.classList.remove('on'); });
+  activityEpoch++;
+}
 
 function openMoneyLab() {
+  hideAllActivityScreens();
+  mlQ = null; mlOwner = null; mlAttempts = 0;
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Money Lab'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -4012,6 +4025,7 @@ function openMoneyLab() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeMoneyLab() {
+  mlQ = null; mlOwner = null; mlAttempts = 0;
   $('moneylab-screen').classList.remove('on');
   $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
@@ -4020,7 +4034,7 @@ function mlTab(which) {
   document.querySelectorAll('.ml-tab').forEach(t => t.classList.toggle('on', t.dataset.mlt === which));
   $('ml-goal').classList.toggle('on', which === 'goal');
   $('ml-chal').classList.toggle('on', which === 'chal');
-  if (which === 'chal' && !mlQ) mlNextQ();
+  if (which === 'chal' && !mlQ) { mlOwner = state.activePlayer; mlNextQ(); }
 }
 
 /* --- Savings Goal (goals = real Store prizes) --- */
@@ -4105,16 +4119,18 @@ function mlNextQ() {
   $('ml-submit').disabled = false;
 }
 function mlCheck() {
+  if (!mlQ || mlQ.completed || !mlOwner) return;
   const v = parseAnswerNumber($('ml-answer').value, true);
   const fb = $('ml-fb');
   if (v === null) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
+    mlQ.completed = true;
     const reward = 15;
     const mlXp = 5 * weekendXpMult();
-    state[state.activePlayer].coins += reward;
-    gainXP(state.activePlayer, mlXp);
+    state[mlOwner].coins += reward;
+    gainXP(mlOwner, mlXp);
     mlStats.solved++; mlStats.earned += reward;
-    state.activity[state.activePlayer].money++;
+    state.activity[mlOwner].money++;
     $('ml-solved').textContent = mlStats.solved;
     $('ml-earned').textContent = mlStats.earned;
     fb.textContent = pick(['✔ Correct! +15 coins 💰', '✔ Smart money move! +15 coins', '✔ Cha-ching! +15 coins']);
@@ -4123,14 +4139,14 @@ function mlCheck() {
     paint();
     renderGoalTrack();
     $('ml-answer').disabled = true; $('ml-submit').disabled = true;
-    setTimeout(mlNextQ, 1300);
+    const token = activityEpoch, owner = mlOwner; setTimeout(() => { if (token === activityEpoch && owner === mlOwner && $('moneylab-screen').classList.contains('on')) mlNextQ(); }, 1300);
   } else {
     mlAttempts++;
     if (mlAttempts >= 2) {
       fb.textContent = '✖ The answer was ' + mlQ.unit + mlQ.a + '. New question coming up!';
       fb.style.color = 'var(--pink)';
       $('ml-answer').disabled = true; $('ml-submit').disabled = true;
-      setTimeout(mlNextQ, 1500);
+      const token = activityEpoch, owner = mlOwner; setTimeout(() => { if (token === activityEpoch && owner === mlOwner && $('moneylab-screen').classList.contains('on')) mlNextQ(); }, 1500);
     } else {
       fb.textContent = '✖ Not quite — read it again carefully and retry!';
       fb.style.color = 'var(--pink)';
@@ -4151,6 +4167,7 @@ const GRANTS = [
 let gWho = 'alex', gPick = null;
 
 function openGrant() {
+  hideAllActivityScreens();
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Grant Prize'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','strategy-screen'].forEach(s => $(s).classList.remove('on'));
@@ -4437,10 +4454,11 @@ function openGuided() {
   startGuided(state.activePlayer);
 }
 function startGuided(who) {
+  hideAllActivityScreens();
   gmActiveSet = (who === 'alex' || who === 'katya') ? who : state.activePlayer;
   const bank = GUIDED[gmActiveSet];
   const prob = pick(bank)();
-  GM = { who: gmActiveSet, prob, step: 0, attempts: 0, usedHint: false, strategyOk: false, explainOk: false, checks: 0 };
+  GM = { who: gmActiveSet, prob, step: 0, attempts: 0, usedHint: false, strategyOk: false, explainOk: false, checks: 0, completed: false };
 
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Missions'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
@@ -4524,7 +4542,7 @@ function renderStage() {
         ${gmHintBtn()}
         <button class="gm-action" id="gm-solve-btn" style="margin-top:14px" onclick="gmCheckSolve()">CHECK MY ANSWER</button>
       </div>`;
-    setTimeout(() => { const a = $('gm-answer'); if (a) { a.focus(); a.addEventListener('keydown', e => { if (e.key === 'Enter') gmCheckSolve(); }); } }, 50);
+    const token = activityEpoch; setTimeout(() => { if (token !== activityEpoch || !GM || !$('guided-screen').classList.contains('on')) return; const a = $('gm-answer'); if (a) { a.focus(); a.addEventListener('keydown', e => { if (e.key === 'Enter') gmCheckSolve(); }); } }, 50);
   } else if (GM.step === 3) {
     // EXPLAIN — pick the reasoning that matches
     const opts = shuffle(p.explain.map(e => ({...e})));
@@ -4636,6 +4654,8 @@ function gmToggleCheck(i) {
 }
 
 function gmFinish() {
+  if (!GM || GM.completed) return;
+  GM.completed = true;
   const who = GM.who, p = state[who];
   // reward scales with how cleanly they reasoned (no hints, first-try)
   let xp = 60;
@@ -4721,6 +4741,7 @@ function genEscape(who) {
 function openEscape() { startEscape(state.activePlayer); }
 
 function startEscape(who) {
+  hideAllActivityScreens();
   erWho = (who === 'alex' || who === 'katya') ? who : state.activePlayer;
   ER = genEscape(erWho);
   ER.attempts = 0; ER.usedHint = false; ER.cleanMoves = 0; ER.totalMoves = ER.moves.length;
@@ -4809,7 +4830,7 @@ function erPick(btn, ok) {
     fb.textContent = '✔ Gate unlocked!'; fb.className = 'er-fb good';
     $('er-eq').classList.remove('flash'); void $('er-eq').offsetWidth; $('er-eq').classList.add('flash');
     burst(16);
-    setTimeout(() => { renderEqState(); renderMove(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, 900);
+  const token = activityEpoch; setTimeout(() => { if (token !== activityEpoch || !ER || !$('escape-screen').classList.contains('on')) return; renderEqState(); renderMove(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, 900);
   } else {
     ER.attempts++;
     btn.classList.add('wrong'); btn.disabled = true;
@@ -4830,6 +4851,8 @@ function erShowHint() {
 }
 
 function erSolved() {
+  if (!ER || ER.completed) return;
+  ER.completed = true;
   // final lock opens
   const fl = $('er-lock-final'); if (fl) { fl.textContent = '🎉'; fl.classList.add('open'); }
   const who = erWho, p = state[who];
@@ -4884,6 +4907,7 @@ function pickBMode(id) {
 }
 
 function openBattle() {
+  hideAllActivityScreens();
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Battle'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -4907,7 +4931,7 @@ function closeBattle() {
 }
 
 function startBattle() {
-  B = { target: bMode.target, score: { alex: 0, katya: 0 }, turn: 'alex', round: 1, attempts: 0, lastQ: { alex:'', katya:'' }, q: null };
+  B = { target: bMode.target, score: { alex: 0, katya: 0 }, turn: 'alex', round: 1, attempts: 0, lastQ: { alex:'', katya:'' }, q: null, completed: false };
   $('b-setup').style.display = 'none';
   $('b-result').style.display = 'none';
   $('b-live').style.display = 'block';
@@ -4981,7 +5005,7 @@ function bSubmit() {
     }
   }
 }
-function bLock(f) { $('b-answer').disabled = true; $('b-submit').disabled = true; setTimeout(f, 1200); }
+function bLock(f) { const token=activityEpoch; $('b-answer').disabled = true; $('b-submit').disabled = true; setTimeout(() => { if (token !== activityEpoch || !B || !$('battle-screen').classList.contains('on')) return; f(); }, 1200); }
 function swapTurn() {
   if (B.turn === 'katya') B.round++;
   B.turn = B.turn === 'alex' ? 'katya' : 'alex';
@@ -4989,6 +5013,8 @@ function swapTurn() {
 }
 
 function endBattle() {
+  if (!B || B.completed) return;
+  B.completed = true;
   $('b-live').style.display = 'none';
   $('b-result').style.display = 'block';
   const aWin = B.score.alex > B.score.katya;
@@ -5140,6 +5166,7 @@ function pickProfile(who) {
 function switchProfile() {
   savePausedMission();
   missionRunToken++;
+  hideAllActivityScreens();
   parentUnlocked = false;
   // Close any open screen and return to picker.
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(id => { const el=$(id); if(el) el.classList.remove('on'); });
