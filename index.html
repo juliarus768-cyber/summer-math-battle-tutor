@@ -2183,6 +2183,7 @@ function paintDailyMissionStatus() {
 }
 
 function setPlayer(w) {
+  lockParent();
   if (state.activePlayer === w) { paint(); return; }
   savePausedMission();
   hideAllActivityScreens();
@@ -3434,6 +3435,7 @@ function showResult() {
   segs();
 }
 function closeMission() {
+  lockParent();
   savePausedMission();
   missionRunToken++;
   $('mission-screen').classList.remove('on');
@@ -3633,6 +3635,7 @@ function requestPrize(id) {
 // Parent decides. On APPROVE, re-check balance at this moment and deduct coins
 // (and keys, if premium). On DECLINE, nothing is deducted.
 function decideRequest(rid, ok) {
+  if (!requireParentAuth()) return;
   const r = state.requests.find(x => x.id === rid);
   if (!r || r.status !== 'pending') return;
   const p = state[r.who];
@@ -3670,8 +3673,14 @@ function decideRequest(rid, ok) {
 
 /* ============ PARENT ZONE — PIN gate + approvals ============ */
 let parentUnlocked = false;
+function lockParent() { parentUnlocked = false; }
+function requireParentAuth() {
+  if (parentUnlocked) return true;
+  if (typeof toast === 'function') toast('🔒 Parent PIN required.');
+  return false;
+}
 function openParent() {
-  hideAllActivityScreens();
+  hideAllActivityScreens(true);
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Parent'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -3686,6 +3695,7 @@ function openParent() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeParent() {
+  lockParent();
   $('parent-screen').classList.remove('on');
   $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
@@ -3702,6 +3712,7 @@ function checkPin() {
   }
 }
 function changePin() {
+  if (!requireParentAuth()) return;
   const v = $('new-pin').value.trim();
   if (!/^\d{4}$/.test(v)) { toast('PIN must be 4 digits.'); return; }
   state.parentPin = v; Store.set('smbt-state-v2', state);
@@ -3710,6 +3721,7 @@ function changePin() {
   renderParent();
 }
 function dismissPinNotice() {
+  if (!requireParentAuth()) return;
   state.pinNoticeDismissed = true;
   Store.set('smbt-state-v2', state);
   const el = $('pin-default-notice');
@@ -3778,6 +3790,7 @@ function cancelResetProgress() {
 // is inherently PIN-protected; the extra click-through warning guards
 // against an accidental tap on a destructive, unrecoverable action.
 function doResetProgress() {
+  if (!requireParentAuth()) return;
   resetInProgress = true;
   missionRunToken++;
   if (!window.__storageStatus) Store.set('smbt-state-v2', state);
@@ -3950,6 +3963,7 @@ function renderRewardsManager() {
   }).join('');
 }
 function editReward(i, field, val) {
+  if (!requireParentAuth()) return;
   const n = parseInt(val, 10);
   if (isNaN(n) || n < 0) { renderParent(); return; }
   state.rewards[i][field] = n;
@@ -3958,6 +3972,7 @@ function editReward(i, field, val) {
   toast('💾 Reward updated.');
 }
 function toggleReward(i) {
+  if (!requireParentAuth()) return;
   state.rewards[i].enabled = !state.rewards[i].enabled;
   Store.set('smbt-state-v2', state);
   renderParent();
@@ -3995,6 +4010,7 @@ function adjStat(who, field, label, val) {
   </div>`;
 }
 function adjust(who, field, delta) {
+  if (!requireParentAuth()) return;
   const step = (field === 'coins' || field === 'totalXP') ? 10 : 1;
   const p = state[who];
   p[field] = Math.max(0, (p[field] || 0) + delta * step);
@@ -4002,6 +4018,7 @@ function adjust(who, field, delta) {
   renderParent();
 }
 function markMissionDone(who) {
+  if (!requireParentAuth()) return;
   const p = state[who];
   state.activity[who].missions += 1;
   p.coins += 20;
@@ -4090,9 +4107,10 @@ let mlGoalId = null;
 let mlStats = { solved: 0, earned: 0 };
 let mlQ = null, mlAttempts = 0, mlOwner = null;
 let activityEpoch = 0;
-function hideAllActivityScreens() {
+function hideAllActivityScreens(keepParent=false) {
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen'].forEach(id => { const el=$(id); if (el) el.classList.remove('on'); });
   activityEpoch++;
+  if (!keepParent) lockParent();
 }
 
 function openMoneyLab() {
@@ -4271,6 +4289,7 @@ function openGrant() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeGrant() {
+  lockParent();
   $('grant-screen').classList.remove('on');
   $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
@@ -4313,6 +4332,7 @@ function gPickReward(id) {
   c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
 }
 function grantPrize() {
+  if (!requireParentAuth()) return;
   if (!gPick) return;
   const p = state[gWho];
   const name = gWho === 'alex' ? 'Alex' : 'Katya';

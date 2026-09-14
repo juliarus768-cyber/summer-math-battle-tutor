@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const source = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-for (const marker of ['function hideAllActivityScreens()', 'let mlQ = null, mlAttempts = 0, mlOwner = null', 'mlQ = null; mlOwner = null; mlAttempts = 0', 'state[mlOwner].coins', 'gainXP(mlOwner', 'mlQ.completed', 'const token = activityEpoch', 'GM.completed', 'ER.completed', 'B.completed', 'savePausedMission();\n  hideAllActivityScreens();']) assert.match(source, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+for (const marker of ['function hideAllActivityScreens', 'let mlQ = null, mlAttempts = 0, mlOwner = null', 'mlQ = null; mlOwner = null; mlAttempts = 0', 'state[mlOwner].coins', 'gainXP(mlOwner', 'mlQ.completed', 'const token = activityEpoch', 'GM.completed', 'ER.completed', 'B.completed', 'savePausedMission();\n  hideAllActivityScreens();']) assert.match(source, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 const screens = ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen'];
 const active = new Set(['guided-screen','escape-screen']);
 screens.forEach(s => active.delete(s));
