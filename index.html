@@ -1601,7 +1601,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="mgr-note">Manually adjust balances or log a mission on a child&rsquo;s behalf.</div>
     <div class="adj-box" id="p-adjust"></div>
 
-    <div class="s-sec-title">&#128197; WEEKLY SUMMARY</div>
+    <div class="s-sec-title">&#128197; ACTIVITY SUMMARY</div>
     <div class="wk-box" id="p-weekly"></div>
 
     <div class="s-sec-title">&#9881;&#65039; SETTINGS</div>
@@ -1956,6 +1956,8 @@ function normalizeLoadedState(raw) {
 const loadedState = Store.get('smbt-state-v2', cloneFresh());
 const normalizedState = normalizeLoadedState(loadedState.value);
 const state = normalizedState.state;
+if (!state.evidence || typeof state.evidence !== 'object' || Array.isArray(state.evidence)) state.evidence = {};
+['alex','katya'].forEach(w => { if (!Array.isArray(state.evidence[w])) state.evidence[w] = []; });
 let resetInProgress = false;
 if (loadedState.status === 'ok' && normalizedState.safe) Store.markGood('smbt-state-v2');
 window.__storageStatus = loadedState.status === 'corrupt' || !normalizedState.safe
@@ -2822,6 +2824,14 @@ function recordAnswer(who, topic, correct) {
 /* ---- Brain Boost strategy tracking: which strategies a child has
    discovered, which ones actually helped them get a question right, and
    which named "trick" badges they've earned through repeated correct use. ---- */
+const MAX_EVIDENCE_EVENTS = 500;
+function recordLearningEvent(who, event) {
+  if (!['alex','katya'].includes(who) || !event || !M || M.evidenceRecorded) return;
+  const list = state.evidence[who] || (state.evidence[who] = []);
+  list.push({ t: Date.now(), ...event });
+  if (list.length > MAX_EVIDENCE_EVENTS) list.splice(0, list.length - MAX_EVIDENCE_EVENTS);
+  M.evidenceRecorded = true;
+}
 function markStrategyViewed(who, topic) {
   if (!topic || !strategyFor(topic)) return;
   const s = state.strategy[who];
@@ -3239,6 +3249,8 @@ function nextQ(restoring=false) {
   if (M.i >= M.questions.length) return showResult();
   if (!restoring) M.attempts = 0;
   M.q = M.questions[M.i];
+  M.evidenceRecorded = false;
+  if (!restoring) M.walkthroughShown = false;
   $('ms-story').textContent = M.q.s;
   $('ms-q').textContent = M.q.q;
   const reinforceBadge = $('ms-reinforce-badge');
@@ -3313,6 +3325,8 @@ function submitQ() {
     burst(M.combo >= 3 ? 26 : 12);
     recordAnswer(M.player, M.q.topic, M.attempts === 0);
     if (M.bbLevel > 0) markStrategyHelped(M.player, M.q.topic);
+    const hintUsed = M.bbLevel > 0;
+    recordLearningEvent(M.player, { topic:M.q.topic, correct:true, attempts:M.attempts, firstAttemptCorrect:M.attempts===0 && !hintUsed && !M.q.reinforcement, hintUsed, walkthroughShown:!!M.walkthroughShown, reinforcement:!!M.q.reinforcement, outcome:M.q.reinforcement?'remediation':hintUsed?'hint-assisted':M.attempts>0?'retry':'first-attempt' });
     M.i++; savePausedMission(); lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
@@ -3327,6 +3341,7 @@ function submitQ() {
       // second chance (EDUCATION.md wrong-answer rule).
       recordAnswer(M.player, M.q.topic, false);
       showWalkthrough(M.q);
+      recordLearningEvent(M.player, { topic:M.q.topic, correct:false, attempts:M.attempts, firstAttemptCorrect:false, hintUsed:M.bbLevel>0, walkthroughShown:true, reinforcement:!!M.q.reinforcement, outcome:'miss' });
       queueReinforcement(M.q.topic);
       segs();
       fb.textContent = 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
