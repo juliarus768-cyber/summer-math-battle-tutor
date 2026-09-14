@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/choice-rendering.test.mjs && node tests/persistence.test.mjs && node tests/mission-lifecycle.test.mjs && node tests/navigation-ownership.test.mjs"
+    "test": "node tests/choice-rendering.test.mjs && node tests/persistence.test.mjs && node tests/mission-lifecycle.test.mjs && node tests/navigation-ownership.test.mjs && node tests/coaching-relevance.test.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

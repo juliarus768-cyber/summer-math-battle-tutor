@@ -2409,9 +2409,9 @@ alex: {
     (d)=>{ const b=R(2,9), c=R(2,9), a=b*c+R(2,30+d*10); return { s:'⚡ Subtract the combo damage!', q:`${a} − ${b} × ${c} = ?`, a:a-b*c, hint:'Multiply first, then subtract that result from the front number.' }; }
   ],
   fractions: [
-    (d)=>{ const den=pick([3,4,5,6,8,10,12]), num=R(1,den-1), whole=den*R(2,4+d); return { s:'🕵 Decode the fraction of loot.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
-    (d)=>{ const den=pick([4,6,8,10,12]); const n1=R(1,den-2), n2=RNZ(1,den-1-n1); const sumN=n1+n2; const g=gcd(sumN,den); const rn=sumN/g, rd=den/g; const wrong1=`${sumN}/${den*2}`, wrong2=`${n1}/${den}`; return { s:'🕵 Same-denominator fraction clue.', q:`${n1}/${den} + ${n2}/${den} = ?`, a:`${rn}/${rd}`, choices: shuffle([`${rn}/${rd}`, wrong1, wrong2]), hint:'Same denominator: just add the top numbers (numerators) and keep the denominator.' }; },
-    (d)=>{ const pairs=[[1,2,3,4],[2,3,3,4],[1,3,2,5],[3,5,2,3],[1,4,1,3],[5,6,3,4]]; const [n1,d1,n2,d2]=pick(pairs); const v1=n1/d1, v2=n2/d2; const bigger = v1>v2 ? `${n1}/${d1}` : `${n2}/${d2}`; return { s:'🕵 Which clue fraction is bigger?', q:`Which is greater: ${n1}/${d1} or ${n2}/${d2}?`, a:bigger, choices: shuffle([`${n1}/${d1}`,`${n2}/${d2}`,'They are equal']), hint:'Turn both into decimals (divide top by bottom) to compare easily.' }; }
+    (d)=>{ const den=pick([3,4,5,6,8,10,12]), num=R(1,den-1), whole=den*R(2,4+d); return { s:'🕵 Decode the fraction of loot.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, coachKey:'fraction-of-number', hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
+    (d)=>{ const den=pick([4,6,8,10,12]); const n1=R(1,den-2), n2=RNZ(1,den-1-n1); const sumN=n1+n2; const g=gcd(sumN,den); const rn=sumN/g, rd=den/g; const wrong1=`${sumN}/${den*2}`, wrong2=`${n1}/${den}`; return { s:'🕵 Same-denominator fraction clue.', q:`${n1}/${den} + ${n2}/${den} = ?`, a:`${rn}/${rd}`, coachKey:'fraction-addition', choices: shuffle([`${rn}/${rd}`, wrong1, wrong2]), hint:'Same denominator: just add the top numbers (numerators) and keep the denominator.' }; },
+    (d)=>{ const pairs=[[1,2,3,4],[2,3,3,4],[1,3,2,5],[3,5,2,3],[1,4,1,3],[5,6,3,4]]; const [n1,d1,n2,d2]=pick(pairs); const v1=n1/d1, v2=n2/d2; const bigger = v1>v2 ? `${n1}/${d1}` : `${n2}/${d2}`; return { s:'🕵 Which clue fraction is bigger?', q:`Which is greater: ${n1}/${d1} or ${n2}/${d2}?`, a:bigger, coachKey:'fraction-comparison', choices: shuffle([`${n1}/${d1}`,`${n2}/${d2}`,'They are equal']), hint:'Turn both into decimals (divide top by bottom) to compare easily.' }; }
   ],
   decimals: [
     (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'💰 Decimal supply count.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
@@ -2716,6 +2716,12 @@ const STRATEGY_BADGES = [
   { id:'equivalent-fractions', name:'Equivalent Fractions', icon:'🏆', rules:[{ who:'alex', topic:'fractions', threshold:6 }, { who:'katya', topic:'fractions', threshold:6 }] }
 ];
 function strategyFor(topic) { return STRATEGY_LIBRARY[topic] || null; }
+const COACHING_ALIASES = {
+  'fraction-equivalence':'fractions', 'fraction-comparison':'fractions', 'fraction-addition':'fractions',
+  'fraction-of-number':'fractions', 'fraction-decimal':'fractions', addition:'mentalmath', subtraction:'mentalmath',
+  bedmas:'bedmas', multiplication:'multiplication', division:'division', percent:'percent'
+};
+function coachingKeyFor(q) { return q && (q.coachKey || q.coachTopic || q.operation) || null; }
 
 // Defensive net: whatever a generator computes, the keyboard the child gets
 // must be able to type it. A whole-number answer gets the plain numeric pad;
@@ -2749,7 +2755,13 @@ function genQuestion(who, topic, diff) {
 function similarQuestion(who, topic, genIdx, diff) {
   const pool = TOPIC_BANK[who] && TOPIC_BANK[who][topic];
   if (!pool || !pool[genIdx]) return null;
-  const item = pool[genIdx](diff);
+  const live = M && M.q && M.q.topic === topic ? M.q : null;
+  let item = null;
+  for (let tries = 0; tries < 6; tries++) {
+    const candidate = pool[genIdx](diff);
+    if (!live || (candidate.q !== live.q && String(candidate.a) !== String(live.a))) { item = candidate; break; }
+  }
+  if (!item) return null;
   item.topic = topic;
   item.genIdx = genIdx;
   item.who = who;
@@ -2971,7 +2983,23 @@ function awardKeyMoment(name, streak) {
 }
 
 function hintFor() {
-  const q = M.q.q;
+  const question = M.q;
+  const explicit = question.hint;
+  if (explicit) return explicit;
+  const key = coachingKeyFor(question);
+  if (key === 'triangle-angle') return 'Triangle angles add to 180°. Subtract the two known angles from 180°.';
+  if (key === 'addition') return 'Add the numbers carefully, keeping place values aligned.';
+  if (key === 'subtraction') return 'Subtract each place value carefully, regrouping when needed.';
+  if (key === 'multiplication') return 'Break the multiplication into place-value parts, then add the partial products.';
+  if (key === 'division') return 'Use multiplication facts in reverse: ask how many equal groups fit in the total.';
+  if (key === 'bedmas') return 'Brackets first; then evaluate × and ÷ left to right, followed by + and − left to right.';
+  if (key === 'percent') return 'Find the requested percent of the whole, then follow the wording: discount, sale price, or percent of a whole.';
+  if (key === 'fraction-equivalence') return 'Equivalent fractions name the same amount; multiply or divide the numerator and denominator by the same number.';
+  if (key === 'fraction-comparison') return 'Compare the fraction values using a common denominator or decimal conversion.';
+  if (key === 'fraction-addition') return 'Add or subtract the numerators when denominators match; keep the common denominator.';
+  if (key === 'fraction-of-number') return 'Divide the whole by the denominator, then multiply by the numerator.';
+  if (key === 'fraction-decimal') return 'Divide the numerator by the denominator to convert the fraction to a decimal.';
+  const q = question.q;
   if (q.includes('Solve for x')) return q.includes('\u2212') ? 'Add the number to BOTH sides first, then divide by the number in front of x.' : 'Subtract the number from BOTH sides first, then divide by the number in front of x.';
   if (q.includes('\u00B2')) return 'Squared means multiply the number by itself.';
   if (q.includes('Pattern:')) return 'Find the jump between numbers, then keep jumping to the term you need.';
@@ -2988,7 +3016,7 @@ function hintFor() {
   if (q.includes('\u00F7') || q.includes('shared') || q.includes('Each gets')) return 'Division = sharing into equal groups. Times tables in reverse!';
   if (q.includes('(') && q.includes('\u00D7')) return 'Brackets FIRST, then multiply!';
   if (q.includes('\u00D7') && q.includes('+')) return 'Multiply FIRST, then add. (BEDMAS!)';
-  if (q.includes('\u00D7')) return 'Break it up: 7\u00D78 is the same as 7\u00D74, doubled.';
+  if (q.includes('\u00D7')) return 'Break the multiplication into place-value parts, then add the partial products.';
   if (q.includes('\u2212') && M.player === 'katya') return 'Stack the numbers \u2014 borrow when the top digit is smaller.';
   if (q.includes('\u2212')) return 'Watch the signs! Subtracting a negative = ADDING.';
   return 'Take it step by step on the scratchpad \u2014 you got this!';
@@ -3107,7 +3135,12 @@ function explainStepByStep(q) {
     steps.push(`Find 10% first: ${N} ÷ 10 = ${N / 10}`);
     steps.push(`Scale that 10% block up or down to reach ${P}% of ${N}.`);
   }
-  if (!steps.length) steps.push(lib ? lib.strategy : 'Apply the method for this topic, step by step.');
+  if (!steps.length) {
+    steps.push('Known: identify the numbers, units, and facts given in the question.');
+    steps.push('Asked: identify exactly what the question wants you to find.');
+    steps.push(lib ? `Plan: ${lib.strategy}` : 'Plan: choose the operation that matches the relationship in the question.');
+    steps.push('Calculate carefully, then check whether the result and units make sense.');
+  }
   steps.push(`So the answer to your question is ${q.a}.`);
   return steps;
 }
@@ -4962,6 +4995,8 @@ function bNextQ() {
   do { B.q = pick(BANK[B.turn][topic])(); tries++; } while (B.q.q === B.lastQ[B.turn] && tries < 8);
   B.lastQ[B.turn] = B.q.q;
   B.q.category = topic;
+  const btext = B.q.q.toLowerCase();
+  B.q.coachKey = btext.includes('²') ? 'multiplication' : btext.includes('%') ? 'percent' : btext.includes('÷') || btext.includes('shared') || btext.includes('each gets') ? 'division' : btext.includes('×') && (btext.includes('+') || btext.includes('−')) ? 'bedmas' : btext.includes('×') ? 'multiplication' : btext.includes('−') ? 'subtraction' : btext.includes('+') ? 'addition' : null;
   $('b-story').textContent = B.q.s;
   $('b-q').textContent = B.q.q;
   const signBtn = $('b-sign-btn');

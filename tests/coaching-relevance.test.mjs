@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const source = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+for (const marker of ['function coachingKeyFor(q)', "key === 'triangle-angle'", "key === 'addition'", "key === 'subtraction'", "key === 'multiplication'", "key === 'division'", "key === 'bedmas'", "key === 'percent'", 'for (let tries = 0; tries < 6; tries++)', 'Known: identify the numbers']) assert.match(source, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+const route = q => q.coachKey || 'neutral';
+assert.equal(route({coachKey:'addition'}), 'addition');
+assert.equal(route({coachKey:'subtraction'}), 'subtraction');
+assert.equal(route({coachKey:'fraction-equivalence'}), 'fraction-equivalence');
+assert.equal(route({coachKey:'fraction-comparison'}), 'fraction-comparison');
+assert.equal(route({coachKey:'fraction-addition'}), 'fraction-addition');
+assert.equal(route({coachKey:'fraction-of-number'}), 'fraction-of-number');
+assert.equal(route({coachKey:'fraction-decimal'}), 'fraction-decimal');
+assert.equal(route({}), 'neutral');
+let attempts = 0; const live = {q:'1 + 1 = ?', a:2};
+const bounded = () => { while (attempts++ < 6) { const candidate={q:'1 + 1 = ?',a:2}; if (candidate.q !== live.q && candidate.a !== live.a) return candidate; } return null; };
+assert.equal(bounded(), null); assert.equal(attempts, 7);
+console.log('coaching relevance regression checks passed');
