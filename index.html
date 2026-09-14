@@ -3377,13 +3377,23 @@ function submitQ() {
   }
 }
 function lockThen(f, delay) { const token=missionRunToken; $('ms-answer').disabled = true; $('ms-submit').disabled = true; setTimeout(() => { if (token !== missionRunToken || !M) return; f(); }, delay || 1300); }
+function dailyCompletionRewards(accuracy) {
+  const n = Number(accuracy);
+  const a = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+  if (a === 0) return { completionXp:20, completionCoins:5 };
+  if (a < 40) return { completionXp:50, completionCoins:15 };
+  if (a < 70) return { completionXp:90, completionCoins:25 };
+  if (a < 90) return { completionXp:120, completionCoins:35 };
+  return { completionXp:140, completionCoins:45 };
+}
 function showResult() {
   if (!M || M.completed) return;
   M.completed = true;
   const total = M.questions.length;
   const accuracy = Math.round((M.correct / total) * 100);
   const bonus = Math.round(accuracy / 3);
-  const baseXp = M.xpEarned + M.def.xp + bonus, coins = 35 + Math.round(accuracy / 5);
+  const completion = dailyCompletionRewards(accuracy);
+  const baseXp = M.xpEarned + completion.completionXp + bonus, coins = completion.completionCoins;
   const sibling = M.player === 'alex' ? 'katya' : 'alex';
   const teamBonus = dailyCountFor(sibling) >= 1;
   const wMult = weekendXpMult();

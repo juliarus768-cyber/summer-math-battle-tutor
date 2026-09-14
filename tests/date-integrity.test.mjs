@@ -21,6 +21,6 @@ const daily={alex:{date:'',count:0},katya:{date:'',count:0}}; const bump=(w,t)=>
 bump('alex','2026-09-14'); bump('alex','2026-09-14'); bump('alex','2026-09-15'); if(daily.alex.count!==1||daily.katya.count!==0) throw new Error('daily bucket rollover/isolation failed');
 const normalizeDaily=v=>({date:typeof v?.date==='string'&&(/^\d{4}-\d{2}-\d{2}$/.test(v.date)||v.date==='')?v.date:'',count:Number.isFinite(v?.count)&&v.count>=0?v.count:0});
 const n=normalizeDaily({date:'bad',count:{}}); if(n.date!==''||n.count!==0) throw new Error('malformed date normalization failed');
-if(!s.includes('weekendXpMult()') || !s.includes('35 + Math.round(accuracy / 5)')) throw new Error('reward behavior changed');
+if(!s.includes('weekendXpMult()') || !s.includes('dailyCompletionRewards')) throw new Error('reward behavior changed');
 console.log('local date and streak regression checks passed');
 
