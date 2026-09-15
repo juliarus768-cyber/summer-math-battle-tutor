@@ -1562,9 +1562,14 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   <div id="pin-gate">
     <div class="pin-wrap">
       <div style="font-family:var(--orb);font-weight:900;letter-spacing:2px;font-size:18px">ENTER PARENT PIN</div>
-      <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Default PIN is <b>1234</b> &mdash; you can change it below.</div>
+      <div id="pin-entry-help" style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Enter your Parent PIN to continue.</div>
       <input class="pin-in" id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
       <button class="b-start" style="background:linear-gradient(90deg,#19C9FF,#2D6BFF);box-shadow:0 6px 22px rgba(25,201,255,.4);width:100%" onclick="checkPin()">UNLOCK</button>
+      <div id="pin-setup" style="display:none">
+        <input class="pin-in" id="pin-new" type="password" inputmode="numeric" maxlength="4" placeholder="New 4-digit PIN">
+        <input class="pin-in" id="pin-confirm" type="password" inputmode="numeric" maxlength="4" placeholder="Confirm PIN">
+        <button class="b-start" style="background:linear-gradient(90deg,#19C9FF,#2D6BFF);box-shadow:0 6px 22px rgba(25,201,255,.4);width:100%" onclick="setupParentPin()">SET PARENT PIN</button>
+      </div>
       <div id="pin-err" style="color:var(--pink);font-weight:700;font-size:13px;margin-top:10px;min-height:18px"></div>
     </div>
   </div>
@@ -1572,7 +1577,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   <div id="parent-content" style="display:none">
     <div class="s-pending" id="pin-default-notice" style="display:none;border-style:solid;border-color:rgba(255,201,60,.5);background:rgba(255,201,60,.08);margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between">
-        <div style="font-weight:600;color:var(--text)">&#128272; You&rsquo;re still using the default PIN (1234). Change it in Settings below for better security.</div>
+        <div style="font-weight:600;color:var(--text)">&#128272; You&rsquo;re using the starter PIN. Change it in Settings below for better protection.</div>
         <button class="mgr-toggle" onclick="dismissPinNotice()">Got it</button>
       </div>
     </div>
@@ -3499,7 +3504,6 @@ $('ms-answer').addEventListener('focus', () => setTimeout(() => $('ms-answer').s
 
 /* ============ STORE — real prizes + parent approval ============ */
 if (!state.requests) state.requests = [];
-if (!state.parentPin) state.parentPin = '1234';
 if (!state.activity) state.activity = { alex: { missions:0, battles:0, money:0 }, katya: { missions:0, battles:0, money:0 } };
 if (!state.settings) state.settings = { muted: false };
 
@@ -3673,6 +3677,7 @@ function decideRequest(rid, ok) {
 
 /* ============ PARENT ZONE — PIN gate + approvals ============ */
 let parentUnlocked = false;
+function isValidParentPin(pin) { return typeof pin === 'string' && /^\d{4}$/.test(pin); }
 function lockParent() { parentUnlocked = false; }
 function requireParentAuth() {
   if (parentUnlocked) return true;
@@ -3690,6 +3695,11 @@ function openParent() {
   $('parent-screen').classList.add('on');
   $('pin-gate').style.display = parentUnlocked ? 'none' : 'block';
   $('parent-content').style.display = parentUnlocked ? 'block' : 'none';
+  const setup = $('pin-setup'), entry = $('pin-entry-help'), pinInput = $('pin-input');
+  const needsSetup = !isValidParentPin(state.parentPin);
+  if (setup) setup.style.display = needsSetup ? 'block' : 'none';
+  if (entry) entry.textContent = needsSetup ? 'Create a 4-digit Parent PIN to protect settings.' : 'Enter your Parent PIN to continue.';
+  if (pinInput) pinInput.style.display = needsSetup ? 'none' : 'block';
   $('pin-input').value = ''; $('pin-err').textContent = '';
   if (parentUnlocked) renderParent();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3701,6 +3711,7 @@ function closeParent() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
 }
 function checkPin() {
+  if (!isValidParentPin(state.parentPin)) { toast('Set up a Parent PIN first.'); return; }
   if ($('pin-input').value === state.parentPin) {
     parentUnlocked = true;
     $('pin-gate').style.display = 'none';
@@ -3797,6 +3808,20 @@ function doResetProgress() {
   Store.remove('smbt-state-v2');
   toast('🗑️ Local progress reset — reloading…');
   setTimeout(() => { location.href = location.pathname + '?reset=' + Date.now(); }, 500);
+}
+function setupParentPin() {
+  if (isValidParentPin(state.parentPin)) return;
+  parentUnlocked = false;
+  const a = $('pin-new').value.trim(), b = $('pin-confirm').value.trim();
+  if (!/^\d{4}$/.test(a) || !/^\d{4}$/.test(b)) { $('pin-err').textContent = 'PIN must be exactly 4 digits.'; return; }
+  if (a !== b) { $('pin-err').textContent = 'PIN entries do not match.'; return; }
+  const previous = state.parentPin;
+  state.parentPin = a;
+  const saved = Store.set('smbt-state-v2', state);
+  if (!saved || !saved.ok) { state.parentPin = previous; $('pin-err').textContent = 'PIN could not be saved. Try again.'; return; }
+  parentUnlocked = true;
+  $('pin-gate').style.display = 'none'; $('parent-content').style.display = 'block';
+  renderParent();
 }
 
 /* ============ STRATEGY LIBRARY SCREEN ============ */
@@ -4295,6 +4320,7 @@ function closeGrant() {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
 }
 function gCheckPin() {
+  if (!isValidParentPin(state.parentPin)) { $('g-pin-err').textContent = 'Set up a Parent PIN in Parent settings first.'; return; }
   if ($('g-pin-input').value === state.parentPin) {
     parentUnlocked = true;
     $('g-pin-gate').style.display = 'none';
