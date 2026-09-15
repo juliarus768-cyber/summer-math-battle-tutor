@@ -2400,13 +2400,13 @@ function generateBasicArithmetic() {
 }
 
 const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','ratios','algebra','geometry','probability','money','logic','wordproblems'];
-const KATYA_TOPICS = ['multiplication','division','longdivision','fractions','decimals','money','time','measurement','patterns','wordproblems','reading','grammar','french'];
+const KATYA_TOPICS = ['numbersense','multiplication','division','longdivision','fractions','decimals','patterns','data','probability','geometry','measurement','money','wordproblems'];
 const TOPIC_LABEL = {
   bedmas:'BEDMAS', fractions:'Fractions', decimals:'Decimals', percent:'Percentages', integers:'Integers',
   ratios:'Ratios', algebra:'Algebra', geometry:'Geometry', probability:'Probability', money:'Money & Finance',
   logic:'Logic', wordproblems:'Word Problems', multiplication:'Multiplication', division:'Division',
   longdivision:'Long Division', time:'Time', measurement:'Measurement', patterns:'Patterns', reading:'Reading',
-  grammar:'Grammar', french:'French'
+  grammar:'Grammar', french:'French', numbersense:'Number Sense', data:'Data'
 };
 
 const TOPIC_BANK = {
@@ -2487,20 +2487,28 @@ katya: {
   multiplication: [
     (d)=>{ const a=R(3,12), b=R(3,12); return { s:'⚡ Times-table lightning!', q:`${a} × ${b} = ?`, a:a*b, hint:`Break it up: ${a}×${b} is the same as ${a}×${Math.floor(b/2)} doubled${b%2? (' plus one more '+a) : ''}.` }; },
     (d)=>{ const a=R(11,29+d*10), b=R(3,9); return { s:'⚡ Two-digit times-table!', q:`${a} × ${b} = ?`, a:a*b, hint:`Try ${Math.floor(a/10)*10} × ${b} plus ${a%10} × ${b}.` }; },
-    (d)=>{ const a=R(12,49+d*10), b=R(11,19); return { s:'⚡ Multi-digit multiplication.', q:`${a} × ${b} = ?`, a:a*b, hint:`${a} × ${Math.floor(b/10)*10} plus ${a} × ${b%10}.` }; }
+    (d)=>{ const a=R(12,49+d*10), b=R(11,19); return { s:'⚡ Multi-digit multiplication.', q:`${a} × ${b} = ?`, a:a*b, hint:`${a} × ${Math.floor(b/10)*10} plus ${a} × ${b%10}.` }; },
+    ()=>{ const a=R(2,12), mult=pick([10,20,30,100]); return { s:'⚡ Friendly multiples.', q:`${a} × ${mult} = ?`, a:a*mult, hint:`Multiply by the non-zero digits, then attach the zero${mult>=100?'s':''}.`, coachKey:'multiplication' }; }
   ],
   division: [
     (d)=>{ const b=R(3,9), q=R(3,12); return { s:'⚡ Division facts.', q:`${b*q} ÷ ${b} = ?`, a:q, hint:`Ask: ${b} times what makes ${b*q}?` }; },
-    (d)=>{ const b=R(3,9), q=R(6,12+d*3); return { s:'🔍 Share the evidence photos fairly.', q:`${b*q} photos shared equally among ${b} detectives. Each gets?`, a:q, hint:'Division = sharing into equal groups. Think times tables backward.' }; }
+    (d)=>{ const b=R(3,9), q=R(6,12+d*3); return { s:'🔍 Share the evidence photos fairly.', q:`${b*q} photos shared equally among ${b} detectives. Each gets?`, a:q, hint:'Division = sharing into equal groups. Think times tables backward.' }; },
+    (d)=>{ const b=R(2,9), q=R(20,99), r=R(1,b-1), correct=`${q} r ${r}`; return { s:'🔍 Division with a remainder.', q:`${b*q+r} ÷ ${b} = ? Choose the quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'Find the largest whole quotient, then report the items left over.', coachKey:'division' }; }
   ],
   longdivision: [
     (d)=>{ const b=R(2,9), q=R(11,39+d*15); return { s:'🔍 Long division decode.', q:`${b*q} ÷ ${b} = ?`, a:q, hint:`Split ${b*q} into easy chunks that divide evenly by ${b}, then add the pieces.` }; },
-    (d)=>{ const b=R(3,9), q=R(20,79+d*20); return { s:'🔍 Big number long division.', q:`${b*q} ÷ ${b} = ?`, a:q, hint:`Try ${Math.floor(b*q/100)*100} ÷ ${b} first, then handle what's left.` }; }
+    (d)=>{ const b=R(3,9), q=R(20,79+d*20); return { s:'🔍 Big number long division.', q:`${b*q} ÷ ${b} = ?`, a:q, hint:`Try ${Math.floor(b*q/100)*100} ÷ ${b} first, then handle what's left.` }; },
+    (d)=>{ const b=R(2,9), q=R(30,99), r=R(1,b-1), n=b*q+r, correct=`${q} r ${r}`; return { s:'🔍 Long division with leftovers.', q:`${n} ÷ ${b} = ? Choose the quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q} r ${Math.max(0,r-1)}`,`${q+1} r ${r}`]), hint:'Divide, multiply to check, then subtract to find the remainder.', coachKey:'longdivision' }; }
   ],
   fractions: [
     (d)=>{ const den=pick([2,3,4,5,10]), num=R(1,den-1), whole=den*R(2,6+d); return { s:'🔍 Fraction of the clue stash.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
     (d)=>{ const den=pick([3,4,5,6,8]); const nums=Array.from({length:den-1},(_,i)=>i+1); const correct=pick(nums); const wrong1=pick(nums.filter(n=>n!==correct)) || correct; return { s:'🔍 Fraction clue match.', q:`Which fraction means ${correct} out of ${den} equal parts?`, a:`${correct}/${den}`, choices: shuffle([`${correct}/${den}`, `${wrong1}/${den}`, `${den}/${correct}`]), hint:'The top number (numerator) counts the parts you have; the bottom counts the total equal parts.' }; },
-    (d)=>{ const exactPairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[1,10],[3,10],[7,10],[1,20],[3,20]], roundedPairs=[[1,3],[2,3],[1,6],[5,6]]; const [n,dd]=pick([...exactPairs,...roundedPairs]); const value=n/dd, rounded=String(Math.round(value*100)/100), exact=exactPairs.some(([a,b])=>a===n&&b===dd), correct=rounded, w1=String(Math.round((value+0.1)*100)/100), w2=String(Math.round((value-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:exact?`Which decimal equals ${n}/${dd}?`:`What is ${n}/${dd} rounded to the nearest hundredth?`, a:correct, choices:missionChoices(correct,[w1,w2]), hint:exact?'Divide the top number by the bottom number to get the exact decimal.':'Divide the top number by the bottom number, then round to the nearest hundredth.' }; }
+    (d)=>{ const exactPairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[1,10],[3,10],[7,10],[1,20],[3,20]], roundedPairs=[[1,3],[2,3],[1,6],[5,6]]; const [n,dd]=pick([...exactPairs,...roundedPairs]); const value=n/dd, rounded=String(Math.round(value*100)/100), exact=exactPairs.some(([a,b])=>a===n&&b===dd), correct=rounded, w1=String(Math.round((value+0.1)*100)/100), w2=String(Math.round((value-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:exact?`Which decimal equals ${n}/${dd}?`:`What is ${n}/${dd} rounded to the nearest hundredth?`, a:correct, choices:missionChoices(correct,[w1,w2]), hint:exact?'Divide the top number by the bottom number to get the exact decimal.':'Divide the top number by the bottom number, then round to the nearest hundredth.' }; },
+    ()=>{ const n=R(1,4), d=pick([2,4,5,10]), k=R(2,4), correct=`${n*k}/${d*k}`; return { s:'🔍 Equivalent fraction clue.', q:`Which fraction is equivalent to ${n}/${d}?`, a:correct, choices:missionChoices(correct,[`${n+1}/${d}`,`${n}/${d+1}`]), hint:'Multiply the numerator and denominator by the same number.', coachKey:'fraction-equivalence' }; },
+    ()=>{ const d=pick([4,6,8,10]), a=R(1,d-2), b=R(1,d-a-1), correct=`${a+b}/${d}`; return { s:'🔍 Fraction addition clue.', q:`${a}/${d} + ${b}/${d} = ?`, a:correct, choices:missionChoices(correct,[`${a+b}/${d*2}`,`${a}/${d}`]), hint:'The denominators match, so add only the numerators.', coachKey:'fraction-addition' }; },
+    ()=>{ const d=pick([4,6,8,10]), a=R(2,d-1), b=R(1,a-1), correct=`${a-b}/${d}`; return { s:'🔍 Fraction subtraction clue.', q:`${a}/${d} − ${b}/${d} = ?`, a:correct, choices:missionChoices(correct,[`${a-b}/${d*2}`,`${a}/${d}`]), hint:'The denominators match, so subtract only the numerators.', coachKey:'fraction-subtraction' }; },
+    ()=>{ const pairs=[[1,2,3,4],[2,3,3,5],[3,4,2,3],[1,3,1,2]]; const [a,d,b,e]=pick(pairs); const av=a/d,bv=b/e,correct=av>bv?`${a}/${d}`:`${b}/${e}`; return { s:'🔍 Compare two fractions.', q:`Which fraction is greater: ${a}/${d} or ${b}/${e}?`, a:correct, choices:shuffle([`${a}/${d}`,`${b}/${e}`]), hint:'Compare using a common denominator or convert both to decimals.', coachKey:'fraction-comparison' }; },
+    ()=>{ const whole=R(1,3), d=pick([2,3,4]), n=R(1,d-1), improper=whole*d+n; return { s:'🔍 Mixed-number clue.', q:`Write ${whole} ${n}/${d} as an improper fraction.`, a:`${improper}/${d}`, choices:missionChoices(`${improper}/${d}`,[`${whole+n}/${d}`,`${whole*d}/${d}`]), hint:'Multiply the whole number by the denominator, then add the numerator.', coachKey:'fraction-mixed' }; }
   ],
   decimals: [
     (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'🔍 Decimal clue combine.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
@@ -2532,6 +2540,25 @@ katya: {
     (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,Math.min(40+d*5,a+b-5)); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
     (d)=>{ const price=R(4,9), qty=R(2,5+d); return { s:'🛍 Word problem.', q:`A toy costs $${price}. You buy ${qty}. What is the TOTAL cost?`, a: price*qty, hint:'Multiply the cost of one toy by how many you buy.' }; },
     (d)=>{ const f=pick(FRIENDS), t=R(3,7+d), c=R(4,9); return { s:`🔍 Flashlights on! You and ${f} search the rooms.`, q:`${t} rooms with ${c} clues in each. Total clues?`, a: t*c, hint:'Multiply the number of rooms by the clues in each room.' }; }
+  ],
+  numbersense: [
+    ()=>{ const n=R(10000,99999), digit=pick([1,10,100,1000,10000]), place=Math.floor(n/digit)%10; return { s:'🔢 Place-value checkpoint.', q:`In ${n.toLocaleString('en-US')}, what digit is in the place worth ${digit}?`, a:place, hint:'Read the digits from right to left: ones, tens, hundreds, thousands, ten-thousands.', coachKey:'numbersense' }; },
+    ()=>{ const a=R(10000,99999), b=R(10000,99999), correct=String(Math.max(a,b)); return { s:'🔢 Compare the code numbers.', q:`Which number is greater: ${a} or ${b}?`, a:correct, choices:shuffle([correct,String(Math.min(a,b)),'They are equal']), hint:'Compare digits from the leftmost place first.', coachKey:'numbersense' }; },
+    ()=>{ let n=R(1000,99999); if(n%10===5)n++; return { s:'🎯 Estimation checkpoint.', q:`Round ${n} to the nearest 100.`, a:Math.round(n/100)*100, hint:'Look at the tens digit to round to the nearest hundred.', coachKey:'estimation' }; },
+    ()=>{ const a=R(200,900), b=R(200,900); return { s:'🎯 Reasonableness check.', q:`Estimate ${a} + ${b} by rounding each number to the nearest 100.`, a:Math.round(a/100)*100+Math.round(b/100)*100, hint:'Round both addends first, then add the friendly numbers.', coachKey:'estimation' }; }
+  ],
+  data: [
+    ()=>{ const vals=[R(2,9),R(2,9),R(2,9),R(2,9)]; return { s:'📊 Read the class table.', q:`A table shows ${vals[0]} votes for cats, ${vals[1]} for dogs, ${vals[2]} for birds, and ${vals[3]} for fish. How many votes altogether?`, a:vals.reduce((x,y)=>x+y,0), hint:'Add all four categories.', coachKey:'data' }; },
+    ()=>{ const a=R(5,18); let b=R(5,18); if (a===b) b = a===18 ? 17 : a+1; const winner=a>b?'soccer':'hockey'; return { s:'📊 Compare the data.', q:`A chart shows ${a} students chose soccer and ${b} chose hockey. How many more chose ${winner}?`, a:Math.abs(a-b), hint:'Subtract the smaller count from the larger count.', coachKey:'data' }; }
+  ],
+  probability: [
+    ()=>{ const red=R(1,5), blue=R(1,5), total=red+blue, g=gcd(red,total), correct=`${red/g}/${total/g}`; return { s:'🎲 Marble probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of RED?`, a:correct, choices:missionChoices(correct,['1/2','1/3','2/3']), hint:'Probability = favorable outcomes divided by total outcomes.', coachKey:'probability' }; },
+    ()=>{ const green=R(1,4), yellow=R(1,4), total=green+yellow, g=gcd(green,total), correct=`${green/g}/${total/g}`; return { s:'🎲 Spinner probability.', q:`A spinner has ${green} green and ${yellow} yellow equal sections. What is the probability of GREEN?`, a:correct, choices:missionChoices(correct,['1/2','1/4','3/4']), hint:'Count green sections, then divide by all sections.', coachKey:'probability' }; }
+  ],
+  geometry: [
+    ()=>{ const l=R(3,12), w=R(2,9); return { s:'📐 Rectangle area.', q:`A rectangle is ${l} m long and ${w} m wide. What is its AREA in square metres?`, a:l*w, hint:'Area = length × width.', coachKey:'geometry' }; },
+    ()=>{ const a=R(30,80), b=R(30,120-a-10); return { s:'📐 Angle reasoning.', q:`A triangle has angles ${a}° and ${b}°. What is the third angle?`, a:180-a-b, hint:'The angles in a triangle add to 180°.', coachKey:'geometry' }; },
+    ()=>{ const side=R(3,12); return { s:'📐 Shape properties.', q:`A square has side length ${side} cm. What is its PERIMETER in centimetres?`, a:side*4, hint:'A square has four equal sides.', coachKey:'geometry' }; }
   ],
   reading: [
     ()=>({ s:'Maya planted tomato seeds in April. By July, the plants were taller than her little brother. She picked the first ripe tomato in August.', q:'In what month did Maya PLANT the seeds?', a:'April', choices: shuffle(['April','July','August']), hint:'Look back at the passage — the answer is stated directly in the text.' }),
@@ -2728,7 +2755,7 @@ const STRATEGY_BADGES = [
 function strategyFor(topic) { return STRATEGY_LIBRARY[topic] || null; }
 const COACHING_ALIASES = {
   'fraction-equivalence':'fractions', 'fraction-comparison':'fractions', 'fraction-addition':'fractions',
-  'fraction-of-number':'fractions', 'fraction-decimal':'fractions', addition:'mentalmath', subtraction:'mentalmath',
+  'fraction-of-number':'fractions', 'fraction-decimal':'fractions', 'fraction-subtraction':'fractions', 'fraction-mixed':'fractions', addition:'mentalmath', subtraction:'mentalmath',
   bedmas:'bedmas', multiplication:'multiplication', division:'division', percent:'percent'
 };
 function coachingKeyFor(q) { return q && (q.coachKey || q.coachTopic || q.operation) || null; }
@@ -2921,6 +2948,7 @@ function buildTopicSequence(who, count) {
   return seq;
 }
 function generateDailyMission(who) {
+  if (who === 'katya') return generateKatyaGrade5Mission();
   const basics = generateBasicArithmetic();
   const seq = buildTopicSequence(who, QCOUNT - DAILY_BASIC_COUNT);
   const recent = state.recentQ[who] || (state.recentQ[who] = []);
@@ -2933,6 +2961,25 @@ function generateDailyMission(who) {
   });
   if (recent.length > 60) recent.splice(0, recent.length - 60);
   return [...basics, ...questions];
+}
+const KATYA_GRADE5_PLAN = [
+  ['numbersense',4], ['multiplication',4], ['division',2], ['longdivision',2],
+  ['fractions',4], ['decimals',3], ['patterns',2], ['data',1], ['probability',1],
+  ['geometry',2], ['measurement',1], ['money',2], ['wordproblems',2]
+];
+function generateKatyaGrade5Mission() {
+  const questions = [];
+  for (const [topic,count] of KATYA_GRADE5_PLAN) {
+    const recent = state.recentQ.katya || (state.recentQ.katya = []);
+    for (let i=0;i<count;i++) {
+      const diff = topicDifficulty('katya', topic);
+      let item, tries=0;
+      do { item = genQuestion('katya', topic, diff); tries++; } while (recent.includes(item.q) && tries < 10);
+      recent.push(item.q); questions.push(item);
+    }
+  }
+  if (state.recentQ.katya.length > 60) state.recentQ.katya.splice(0, state.recentQ.katya.length - 60);
+  return shuffle(questions);
 }
 
 /* ============ HELPERS: dates, confetti, hints ============ */

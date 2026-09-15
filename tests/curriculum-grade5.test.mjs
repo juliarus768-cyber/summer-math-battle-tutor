@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+const src = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+if (!src.includes("const KATYA_TOPICS = ['numbersense'")) throw new Error('Katya math topic list missing');
+if (src.includes("const KATYA_TOPICS = ['multiplication','division','longdivision','fractions','decimals','money','time','measurement','patterns','wordproblems','reading','grammar','french']")) throw new Error('language topics still in math list');
+for (const key of ['numbersense','data','probability','geometry']) if (!src.includes(`${key}: [`)) throw new Error(`missing ${key} bank`);
+if (!src.includes('const KATYA_GRADE5_PLAN')) throw new Error('composition plan missing');
+if (!src.includes("['numbersense',4]") || !src.includes("['fractions',4]") || !src.includes("['wordproblems',2]")) throw new Error('composition counts missing');
+if (!src.includes('Choose the quotient and remainder')) throw new Error('remainder format not explicit');
+if (!src.includes('function generateKatyaGrade5Mission')) throw new Error('Katya mission generator missing');
+console.log('Grade 5 curriculum regression checks passed');
