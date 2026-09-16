@@ -2308,6 +2308,14 @@ alex: {
     () => { const n=R(5,15); return { s:'🧠 Power surge! Square the energy core.', q:`${n}² = ?`, a:n*n }; },
     () => { const st=RNZ(2,9), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st }; }
   ],
+  longdivision: [
+    ()=>{ const d=R(2,9), q=R(12,80), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Long division checkpoint.', q:`${n} ÷ ${d} = ? Choose quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'Divide, multiply to check, then subtract to find the remainder.', coachKey:'longdivision' }; },
+    ()=>{ const d=R(2,9), q=R(20,90), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Remainder in context.', q:`${n} stickers shared among ${d} teams: how many per team, with leftovers? Choose q r r.`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'The remainder is what is left after making complete equal groups.', coachKey:'longdivision' }; }
+  ],
+  data: [
+    ()=>{ const a=R(12,40), b=R(12,40), c=R(12,40); return { s:'📊 Read the table.', q:`A table records ${a} votes for music, ${b} for art, and ${c} for sports. How many votes were recorded?`, a:a+b+c, hint:'Add each category exactly once.', coachKey:'data' }; },
+    ()=>{ const a=R(10,40), b=R(10,40); return { s:'📊 Compare the data.', q:`A survey shows ${a} students chose bus and ${b} chose walking. How many more chose the larger group?`, a:Math.abs(a-b), hint:'Subtract the smaller count from the larger count.', coachKey:'data' }; }
+  ],
   money: [
     () => { const p=pick([10,15,20,25,30,40,50,75]), n=R(2,15)*20; return { s:pick(['💰 Mr-Beast-style challenge: split the prize pool!','💰 Money Lab: calculate your creator earnings!']), q:`${p}% of $${n} = ?`, a:p*n/100 }; },
     () => { const n=R(3,9)*20, p=pick([10,20,25,50]); return { s:'💰 Flash sale at the game store!', q:`A $${n} controller is ${p}% off. Sale price in dollars?`, a:n-p*n/100 }; },
@@ -2329,7 +2337,6 @@ alex: {
     () => { const a=R(11,49), b=R(11,49); return { s:'🛡 Hold the streak — quick strike!', q:`${a} + ${b} = ?`, a:a+b }; },
     () => { const d=pick([4,5,8,10]), m=d*R(3,12); return { s:'🛡 Divide the supplies evenly to survive.', q:`${m} energy cells shared by ${d} ninjas. Each gets?`, a:m/d }; }
   ]
-},
 katya: {
   speed: [
     () => { const a=R(120,489), b=R(110,489); return { s:pick(['⚡ Quick! Add the clue numbers before the lights flicker!','⚡ Speed round in the abandoned arcade!']), q:`${a} + ${b} = ?`, a:a+b }; },
@@ -2399,12 +2406,12 @@ function generateBasicArithmetic() {
   return [...addition, ...subtraction, ...multiplication, ...division];
 }
 
-const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','ratios','algebra','geometry','probability','money','logic','wordproblems'];
+const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','longdivision','ratios','algebra','geometry','probability','data','money','logic','wordproblems'];
 const KATYA_TOPICS = ['numbersense','multiplication','division','longdivision','fractions','decimals','patterns','data','probability','geometry','measurement','money','wordproblems'];
 const TOPIC_LABEL = {
   bedmas:'BEDMAS', fractions:'Fractions', decimals:'Decimals', percent:'Percentages', integers:'Integers',
   ratios:'Ratios', algebra:'Algebra', geometry:'Geometry', probability:'Probability', money:'Money & Finance',
-  logic:'Logic', wordproblems:'Word Problems', multiplication:'Multiplication', division:'Division',
+  logic:'Logic', wordproblems:'Word Problems', multiplication:'Multiplication', division:'Division', longdivision:'Long Division', data:'Data',
   longdivision:'Long Division', time:'Time', measurement:'Measurement', patterns:'Patterns', reading:'Reading',
   grammar:'Grammar', french:'French', numbersense:'Number Sense', data:'Data'
 };
@@ -2481,6 +2488,12 @@ alex: {
     (d)=>{ const price=R(15,40+d*10), qty=R(2,5), coupon=pick([5,10,15]); return { s:'🛒 Multi-step shopping run.', q:`${qty} items at $${price} each, then a $${coupon} coupon is applied. What is the FINAL total?`, a: price*qty-coupon, mode:'decimal', hint:'Multiply price by quantity FIRST, then subtract the coupon.' }; },
     (d)=>{ const speed=R(40,80+d*10), t1=R(2,4), t2=R(1,3); return { s:'🏎 Two-leg journey.', q:`A car drives at ${speed} km/h for ${t1} hours, then the same speed for ${t2} more hours. Total distance?`, a: speed*(t1+t2), hint:'Add the hours together, then multiply by the speed.' }; },
     (d)=>{ const d1=pick([4,5,8,10]), m=d1*R(3,12+d*3); return { s:'🛡 Divide the supplies evenly.', q:`${m} energy cells shared by ${d1} squads. Each squad gets?`, a: m/d1, hint:'Division = sharing into equal groups.' }; }
+  ],
+  longdivision: [
+    ()=>{ const d=R(2,9), q=R(12,80), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Long division checkpoint.', q:`${n} ÷ ${d} = ? Choose quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'Divide, multiply to check, then subtract to find the remainder.', coachKey:'longdivision' }; }
+  ],
+  data: [
+    ()=>{ const a=R(12,40), b=R(12,40), c=R(12,40); return { s:'📊 Read the table.', q:`A table records ${a} votes for music, ${b} for art, and ${c} for sports. How many votes were recorded?`, a:a+b+c, hint:'Add each category exactly once.', coachKey:'data' }; }
   ]
 },
 katya: {
@@ -2948,6 +2961,7 @@ function buildTopicSequence(who, count) {
   return seq;
 }
 function generateDailyMission(who) {
+  if (who === 'alex') return generateAlexGrade8Mission();
   if (who === 'katya') return generateKatyaGrade5Mission();
   const basics = generateBasicArithmetic();
   const seq = buildTopicSequence(who, QCOUNT - DAILY_BASIC_COUNT);
@@ -2961,6 +2975,21 @@ function generateDailyMission(who) {
   });
   if (recent.length > 60) recent.splice(0, recent.length - 60);
   return [...basics, ...questions];
+}
+const ALEX_GRADE8_PLAN = [
+  ['integers',2], ['longdivision',2], ['bedmas',3], ['fractions',4],
+  ['decimals',2], ['percent',1], ['ratios',3], ['algebra',4], ['geometry',3],
+  ['data',2], ['probability',1], ['money',2], ['wordproblems',1]
+];
+function generateAlexGrade8Mission() {
+  const out=[]; const recent=state.recentQ.alex || (state.recentQ.alex=[]);
+  for (const [topic,count] of ALEX_GRADE8_PLAN) for(let i=0;i<count;i++) {
+    const diff=topicDifficulty('alex',topic); let item,tries=0;
+    do { item=genQuestion('alex',topic,diff); tries++; } while(recent.includes(item.q)&&tries<10);
+    recent.push(item.q); out.push(item);
+  }
+  if(recent.length>60) recent.splice(0,recent.length-60);
+  return shuffle(out);
 }
 const KATYA_GRADE5_PLAN = [
   ['numbersense',4], ['multiplication',4], ['division',2], ['longdivision',2],
