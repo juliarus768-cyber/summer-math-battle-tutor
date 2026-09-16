@@ -148,7 +148,7 @@ body {
 .side-card.pink-glow { border-color: rgba(255,46,126,0.4); box-shadow: 0 0 20px rgba(255,46,126,0.12); }
 .side-card.blue-glow { border-color: rgba(25,201,255,0.35); box-shadow: 0 0 20px rgba(25,201,255,0.1); }
 .side-title { font-family: var(--orb); font-size: 13px; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px; }
-.qlink { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; transition: all .15s; }
+.qlink { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; transition: all .15s; background: transparent; border: 0; width: 100%; text-align: left; font-family: inherit; }
 .qlink:hover { background: rgba(120,160,255,0.08); color: var(--text); }
 .qlink svg { width: 18px; height: 18px; stroke: var(--blue); fill: none; stroke-width: 1.8; }
 .quote { font-size: 18px; font-weight: 700; line-height: 1.55; color: #FF8FB8; text-shadow: 0 0 14px rgba(255,46,126,0.5); font-style: italic; }
@@ -1045,6 +1045,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 </head>
 <body>
 <div class="stars" id="stars"></div>
+<div id="storage-warning" role="alert" aria-live="polite" style="display:none;margin:10px auto;max-width:900px;padding:10px 14px;border:1px solid rgba(255,201,60,.55);border-radius:12px;background:rgba(255,201,60,.1);color:#FFE9A8;font-weight:700;text-align:center"></div>
 
 <!-- ============ PROFILE PICKER (opens on load) ============ -->
 <div class="picker" id="picker">
@@ -1162,7 +1163,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED · ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub" id="landing-mission-status">30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub" id="landing-mission-status">30-question personalized math mission. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -1200,18 +1201,18 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="alex-streak">11</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#7FB6FF"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8Z" fill="#FFC93C" opacity=".9"/></svg>BATTLE<br>RANK</div><div class="k">DIVISION II</div></div>
     </div>
-    <button class="btn btn-blue" onclick="event.stopPropagation();setPlayer('alex');toast('⚡ Alex selected! Profile screen coming next build.')">VIEW PROFILE <span style="font-size:18px">›</span></button>
+    <button class="btn btn-blue" onclick="event.stopPropagation();setPlayer('alex');toast('⚡ Alex selected!')">VIEW PROFILE <span style="font-size:18px">›</span></button>
   </div>
 </div>
 
 <div class="side-card blue-glow">
   <div class="side-title" style="color:#9FD8FF">QUICK LINKS</div>
-  <div class="qlink" onclick="startMission('daily')"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Daily Mission</div>
-  <div class="qlink" onclick="goTab('Battle')"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM20 20 10 6 7 4 4 7l2 3 10 10Z"/></svg>Battle Mode</div>
-  <div class="qlink" onclick="goTab('Store')"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>Reward Store</div>
-  <div class="qlink" onclick="goTab('Grant Prize')"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11"/></svg>Grant Prize</div>
-  <div class="qlink" onclick="goTab('Parent')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg>Parent Dashboard</div>
-  <div class="qlink" onclick="openStrategyLib()"><svg viewBox="0 0 24 24"><path d="M12 3c-4 1-7 3-7 7 0 3.5 2.5 5.5 3.5 7 .5.8 1 1.5 1 2h5c0-.5.5-1.2 1-2 1-1.5 3.5-3.5 3.5-7 0-4-3-6-7-7Z"/><path d="M10 22h4"/></svg>Strategy Library</div>
+  <button type="button" class="qlink" onclick="startMission('daily')"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Daily Mission</button>
+  <button type="button" class="qlink" onclick="goTab('Battle')"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM20 20 10 6 7 4 4 7l2 3 10 10Z"/></svg>Battle Mode</button>
+  <button type="button" class="qlink" onclick="goTab('Store')"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>Reward Store</button>
+  <button type="button" class="qlink" onclick="goTab('Grant Prize')"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11"/></svg>Grant Prize</button>
+  <button type="button" class="qlink" onclick="goTab('Parent')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg>Parent Dashboard</button>
+  <button type="button" class="qlink" onclick="openStrategyLib()"><svg viewBox="0 0 24 24"><path d="M12 3c-4 1-7 3-7 7 0 3.5 2.5 5.5 3.5 7 .5.8 1 1.5 1 2h5c0-.5.5-1.2 1-2 1-1.5 3.5-3.5 3.5-7 0-4-3-6-7-7Z"/><path d="M10 22h4"/></svg>Strategy Library</button>
 </div>
 </aside>
 
@@ -1359,7 +1360,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="katya-streak">9</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#FF8FB8"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M12 2 20 6v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6Z" fill="rgba(255,46,126,.2)" stroke="#FF2E7E" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="none" stroke="#FF6FA5" stroke-width="1.8"/><path d="M13.2 13.2 16 16" stroke="#FF6FA5" stroke-width="1.8"/></svg>DETECTIVE<br>RANK</div><div class="k">CASE SOLVER</div></div>
     </div>
-    <button class="btn btn-pink" onclick="event.stopPropagation();setPlayer('katya');toast('🔍 Katya selected! Profile screen coming next build.')">VIEW PROFILE <span style="font-size:18px">›</span></button>
+    <button class="btn btn-pink" onclick="event.stopPropagation();setPlayer('katya');toast('🔍 Katya selected!')">VIEW PROFILE <span style="font-size:18px">›</span></button>
   </div>
 </div>
 
@@ -2181,10 +2182,10 @@ function paintDailyMissionStatus() {
   const saved = validPausedMission(state.activePlayer);
   const progress = $('daily-card-progress');
   const landingStatus = $('landing-mission-status');
-  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : '30 questions · 10 basic math';
+  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : '30-question personalized math mission';
   if (landingStatus) landingStatus.textContent = saved
     ? `Mission paused at question ${saved.i + 1} of ${saved.questions.length}. Tap to resume exactly where you stopped.`
-    : '30 mixed questions for today, including 10 basic arithmetic warm-ups. Retry gently, build accuracy, earn XP and coins.';
+    : (state.activePlayer === 'alex' ? '30-question Grade 8 math mission. Retry gently, build accuracy, earn XP and coins.' : '30-question Grade 5 math mission. Retry gently, build accuracy, earn XP and coins.');
 }
 
 function setPlayer(w) {
@@ -2215,7 +2216,7 @@ $('missions').innerHTML = MISSIONS.map(m => `
   <div class="mcard ${m.cls} daily-only" onclick="startMission('daily')">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog" id="daily-card-progress">30 questions &middot; 10 basic math</div>
+    <div class="mprog" id="daily-card-progress">30-question personalized math mission</div>
     <div class="mxp">+${m.xp} XP + accuracy coins</div>
   </div>`).join('');
 
@@ -2932,7 +2933,7 @@ function weakStrongSubjects(who) {
   return { weak, strong };
 }
 
-/* ---- Build a fresh mission: 10 basic warm-ups + 20 adaptive questions ---- */
+/* ---- Build a fresh mission: 30-question personalized mission ---- */
 function buildTopicSequence(who, count) {
   const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
   const weights = topics.map(t => topicWeight(who, t));
@@ -3277,7 +3278,7 @@ function updateAttemptDots() {
 const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 36;
 function queueReinforcement(topic) {
   const room = Math.min(MAX_REMEDIATION - (M.remediationQueued || 0), MAX_MISSION_LEN - M.questions.length);
-  if (room <= 0) return;
+  if (room <= 0) return 0;
   const count = Math.min(R(1, 3), room);
   const diff = topicDifficulty(M.player, topic);
   const existing = new Set(M.questions.map(q => q.q));
@@ -3293,6 +3294,7 @@ function queueReinforcement(topic) {
     M.questions.push(item); existing.add(item.q); added++;
   }
   M.remediationQueued = Math.min(MAX_REMEDIATION, (M.remediationQueued || 0) + added);
+  return added;
 }
 
 /* ============ ACTIVE MISSION FLOW ============ */
@@ -3444,9 +3446,11 @@ function submitQ() {
       recordAnswer(M.player, M.q.topic, false);
       showWalkthrough(M.q);
       recordLearningEvent(M.player, { topic:M.q.topic, correct:false, attempts:M.attempts, firstAttemptCorrect:false, hintUsed:M.bbLevel>0, walkthroughShown:true, reinforcement:!!M.q.reinforcement, outcome:'miss' });
-      queueReinforcement(M.q.topic);
+      const addedRemediation = queueReinforcement(M.q.topic);
       segs();
-      fb.textContent = 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
+      fb.textContent = addedRemediation > 0
+        ? 'I added a little extra practice for this skill so you can try it again later.'
+        : 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
       fb.className = 'feedback fb-bad';
       document.querySelectorAll('.choice-answer').forEach(b => b.disabled = true);
       M.i++; savePausedMission(); lockThen(nextQ, 6500);
@@ -3531,6 +3535,7 @@ function closeMission() {
   $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
   paint();
 }
+function goHome() { closeMission(); }
 
 window.addEventListener('beforeunload', savePausedMission);
 
@@ -5265,8 +5270,8 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   else if (t.dataset.screen === 'Money Lab') { openMoneyLab(); }
   else if (t.dataset.screen === 'Grant Prize') { openGrant(); }
   else if (t.dataset.screen === 'Missions') { openGuided(); }
-  else if (t.dataset.screen !== 'Home') toast('🚧 ' + t.dataset.screen + ' screen — next build step!');
-  else closeMission();
+  else if (t.dataset.screen !== 'Home') toast('That screen is not available yet.');
+  else goHome();
 }));
 function goTab(name) {
   if (name === 'Battle') { openBattle(); return; }
@@ -5276,7 +5281,8 @@ function goTab(name) {
   if (name === 'Grant Prize') { openGrant(); return; }
   if (name === 'Missions') { openGuided(); return; }
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === name));
-  toast('🚧 ' + name + ' screen — next build step!');
+  if (name === 'Home') { goHome(); return; }
+  toast('That screen is not available yet.');
 }
 
 /* ============ WEEKEND DOUBLE XP (real — actually applied to XP, not decorative) ============ */
@@ -5332,7 +5338,10 @@ function toast(msg) {
   toastT = setTimeout(() => t.classList.remove('show'), 2600);
 }
 if (window.__storageStatus || window.__storageWarningPending) setTimeout(() => {
-  toast(window.__storageStatus.reason === 'unavailable'
+  const warning = $('storage-warning');
+  if (warning) { warning.textContent = '⚠️ Progress may not save right now. A parent should review storage before continuing.'; warning.style.display = 'block'; }
+  const storageStatus = window.__storageStatus || {};
+  toast(storageStatus.reason === 'unavailable'
     ? '⚠️ Progress storage is unavailable; changes may not persist.'
     : '⚠️ Storage recovery mode: existing progress was preserved for parent review.');
 }, 0);
@@ -5403,4 +5412,3 @@ showPicker();
 </script>
 </body>
 </html>
-

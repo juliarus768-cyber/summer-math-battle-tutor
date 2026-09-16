@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+const src=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+if(!src.includes('function goHome() { closeMission(); }')) throw new Error('safe Home route missing');
+if(!src.includes("if (name === 'Home') { goHome(); return; }")) throw new Error('goTab Home route missing');
+if(src.includes('10 basic arithmetic warm-ups')||src.includes('30 questions · 10 basic math')) throw new Error('obsolete mission copy remains');
+if(!src.includes('storage-warning')||!src.includes("Progress may not save right now")) throw new Error('persistent storage warning missing');
+if(!src.includes('const storageStatus = window.__storageStatus || {};')) throw new Error('storage warning startup guard missing');
+const qlinks=(src.match(/<button type="button" class="qlink"/g)||[]).length;
+if(qlinks<6) throw new Error('core shortcuts are not native buttons');
+if(!src.includes('const addedRemediation = queueReinforcement')) throw new Error('remediation notice path missing');
+if(!src.includes('MAX_REMEDIATION = 6, MAX_MISSION_LEN = 36')) throw new Error('remediation caps changed');
+console.log('Phase 16 UX regression checks passed');
