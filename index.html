@@ -1881,7 +1881,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
 <div class="footer">
   <span>Summer Math Battle Tutor © 2026</span>
-  <span>v1.1.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
+  <span>v1.1.0 &nbsp; | &nbsp;Built for Champions ❤</span>
 </div>
 </div><!-- /wrap -->
 
@@ -2338,7 +2338,8 @@ alex: {
     () => { const a=R(11,49), b=R(11,49); return { s:'🛡 Hold the streak — quick strike!', q:`${a} + ${b} = ?`, a:a+b }; },
     () => { const d=pick([4,5,8,10]), m=d*R(3,12); return { s:'🛡 Divide the supplies evenly to survive.', q:`${m} energy cells shared by ${d} ninjas. Each gets?`, a:m/d }; }
   ]
-katya: {
+},
+  katya: {
   speed: [
     () => { const a=R(120,489), b=R(110,489); return { s:pick(['⚡ Quick! Add the clue numbers before the lights flicker!','⚡ Speed round in the abandoned arcade!']), q:`${a} + ${b} = ?`, a:a+b }; },
     () => { const a=R(400,950), b=R(120,389); return { s:'⚡ Subtract before the portal closes!', q:`${a} − ${b} = ?`, a:a-b }; },
