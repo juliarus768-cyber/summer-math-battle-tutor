@@ -1902,7 +1902,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
 <div class="footer">
   <span>Summer Math Battle Tutor © 2026</span>
-  <span>v1.2.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
+  <span>v1.2.0 &nbsp; | &nbsp;Built for Champions ❤</span>
 </div>
 </div><!-- /wrap -->
 
@@ -3075,13 +3075,27 @@ function fallbackWorkedExample(item) {
   };
   return examples[item.operation || questionOperation(item)] || null;
 }
+function normalizeChoices(item) {
+  if (!Array.isArray(item.choices)) return item;
+  const answer = String(item.a);
+  const seen = new Set();
+  const unique = [];
+  for (const choice of item.choices) {
+    const text = String(choice);
+    if (!seen.has(text)) { seen.add(text); unique.push(text); }
+  }
+  // Keep exactly one representation of the correct answer, even when a
+  // generator accidentally produces a duplicate or omits it.
+  item.choices = [answer, ...unique.filter(choice => choice !== answer)];
+  return item;
+}
 function addQuestionMetadata(item, who, topic, idx) {
   item.topic = topic;
   item.skill = item.skill || `${topic}.generator-${idx + 1}`;
   item.operation = item.operation || questionOperation(item);
   item.genIdx = idx;
   item.who = who;
-  return applyKeyboardMode(item);
+  return applyKeyboardMode(normalizeChoices(item));
 }
 function genQuestion(who, topic, diff) {
   const pool = TOPIC_BANK[who][topic];
@@ -3568,7 +3582,15 @@ function nextQ() {
   if (signBtn) { signBtn.style.display = (!M.q.choices && topicAllowsNegative(M.q.topic)) ? '' : 'none'; signBtn.classList.remove('active'); }
   if (M.q.choices) {
     choices.style.display = 'grid';
-    choices.innerHTML = M.q.choices.map(c => '<button class="choice-answer" onclick="chooseMissionAnswer(\'' + c + '\')">' + c + '</button>').join('');
+    choices.replaceChildren();
+    M.q.choices.forEach(choice => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'choice-answer';
+      button.textContent = String(choice);
+      button.addEventListener('click', () => chooseMissionAnswer(String(choice)));
+      choices.appendChild(button);
+    });
     inp.style.display = 'none';
   } else {
     choices.style.display = 'none'; choices.innerHTML = '';
@@ -3584,12 +3606,21 @@ function chooseMissionAnswer(v) {
   $('ms-answer').value = v;
   document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === v));
 }
+function parseStrictNumber(raw) {
+  const text = String(raw == null ? '' : raw).trim();
+  if (!text) return null;
+  const normalized = text.replace(/^\$\s*/, '').replace(',', '.');
+  if (!/^-?\d+(?:\.\d+)?$/.test(normalized)) return null;
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
 function answerOk(q, raw) {
   const val = String(raw || '').trim();
   if (!val) return false;
   if (q.choices) return val === String(q.a);
-  const n = parseFloat(val.replace(',', '.').replace(/^\$/, ''));
-  return !isNaN(n) && Math.abs(n - Number(q.a)) < 0.001;
+  const n = parseStrictNumber(val);
+  const expected = Number(q.a);
+  return n !== null && Number.isFinite(expected) && Math.abs(n - expected) < 0.001;
 }
 function submitQ() {
   const raw = $('ms-answer').value.trim();
@@ -4661,9 +4692,9 @@ function mlNextQ() {
   $('ml-submit').disabled = false;
 }
 function mlCheck() {
-  const v = parseFloat($('ml-answer').value.trim().replace(',', '.'));
+  const v = parseStrictNumber($('ml-answer').value);
   const fb = $('ml-fb');
-  if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
+  if (v === null) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
     const reward = 15;
     const mlXp = 5 * weekendXpMult();
@@ -5141,9 +5172,9 @@ function gmPickStrategy(btn, ok) {
 
 function gmCheckSolve() {
   const inp = $('gm-answer'); if (!inp) return;
-  const v = parseFloat(inp.value.trim().replace(',', '.'));
+  const v = parseStrictNumber(inp.value);
   const fb = $('gm-solve-fb');
-  if (isNaN(v)) { fb.textContent = 'Type your answer first!'; fb.className = 'gm-fb bad'; return; }
+  if (v === null) { fb.textContent = 'Type your answer first!'; fb.className = 'gm-fb bad'; return; }
   if (Math.abs(v - GM.prob.answer) < 0.001) {
     GM.solveOk = GM.attempts === 0 && !GM.usedHint;
     fb.textContent = '✔ Correct! Well solved.'; fb.className = 'gm-fb good';
@@ -5515,9 +5546,9 @@ function bNextQ() {
 }
 
 function bSubmit() {
-  const v = parseFloat($('b-answer').value.trim().replace(',', '.'));
+  const v = parseStrictNumber($('b-answer').value);
   const fb = $('b-fb');
-  if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
+  if (v === null) { fb.textContent = 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
   if (Math.abs(v - B.q.a) < 0.001) {
     B.score[B.turn]++;
     const sEl = $(B.turn === 'alex' ? 'b-score-a' : 'b-score-k');
