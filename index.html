@@ -149,6 +149,7 @@ body {
 .side-card.blue-glow { border-color: rgba(25,201,255,0.35); box-shadow: 0 0 20px rgba(25,201,255,0.1); }
 .side-title { font-family: var(--orb); font-size: 13px; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px; }
 .qlink { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; transition: all .15s; background: transparent; border: 0; width: 100%; text-align: left; font-family: inherit; }
+.math-trick { margin: 8px 0 10px; padding: 7px 10px; border-left: 3px solid #FFD166; border-radius: 8px; background: rgba(255,209,102,.08); color: #FFE7A3; font-size: 13px; font-weight: 700; line-height: 1.35; }
 .qlink:hover { background: rgba(120,160,255,0.08); color: var(--text); }
 .qlink svg { width: 18px; height: 18px; stroke: var(--blue); fill: none; stroke-width: 1.8; }
 .quote { font-size: 18px; font-weight: 700; line-height: 1.55; color: #FF8FB8; text-shadow: 0 0 14px rgba(255,46,126,0.5); font-style: italic; }
@@ -1403,6 +1404,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
         <div class="reinforce-badge" id="ms-reinforce-badge" style="display:none">💪 BONUS PRACTICE — YOU&rsquo;VE GOT THIS!</div>
         <div class="q-story" id="ms-story"></div>
         <div class="q-text" id="ms-q"></div>
+        <div class="math-trick" id="ms-trick" style="display:none" aria-live="polite"></div>
         <div class="attempt-dots" id="ms-attempt-dots" aria-label="Attempts used"><i></i><i></i><i></i></div>
         <div class="estimate-nudge">🎯 Try to estimate the answer first — it helps you catch mistakes!</div>
         <div class="bb-wrap">
@@ -3302,6 +3304,99 @@ function queueReinforcement(topic) {
 let M = null;
 let missionRunToken = 0;
 const QCOUNT = 30, DAILY_BASIC_COUNT = 10, XP_PER_Q = 8;
+function mathTrickFor(q) {
+  if (!q || q.choices || q.options || typeof q.q !== 'string') return null;
+  const text = q.q.trim();
+  const multiplicationTrick = factor => {
+    if (!Number.isFinite(factor) || factor <= 0) return null;
+    if (factor === 2) return 'Double the other factor.';
+    if (factor === 5) return 'Multiply by 10, then take half.';
+    if (factor === 9) return 'Multiply by 10, then subtract one group.';
+    if (factor === 25) return 'Multiply by 100, then divide by 4.';
+    if (factor === 10) return 'Multiplying by 10 shifts the digits one place left.';
+    if (factor === 100) return 'Multiplying by 100 shifts the digits two places left.';
+    if (factor === 1000) return 'Multiplying by 1000 shifts the digits three places left.';
+    return null;
+  };
+  let m = text.match(/^(-?\d+(?:\.\d+)?)\s*[×x]\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
+  if (m) {
+    const left = Number(m[1]), right = Number(m[2]);
+    const trick = multiplicationTrick(right) || multiplicationTrick(left);
+    if (trick) return trick;
+  }
+  m = text.match(/^(-?\d+(?:\.\d+)?)\s*÷\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
+  if (m) {
+    const divisor = Number(m[2]);
+    if (!Number.isFinite(divisor) || divisor <= 0) return null;
+    if (divisor === 2) return 'Divide by 2: find half.';
+    if (divisor === 10) return 'Dividing by 10 shifts the digits one place right.';
+    if (divisor === 100) return 'Dividing by 100 shifts the digits two places right.';
+    if (divisor === 1000) return 'Dividing by 1000 shifts the digits three places right.';
+  }
+  m = text.match(/^(\d+)%\s+of\s+\$?\d+(?:\.\d+)?\s*=\s*\?$/i);
+  if (m) {
+    const percent = Number(m[1]);
+    if (percent === 1) return 'For 1%, divide the number by 100.';
+    if (percent === 5) return 'For 5%, find 10% first, then take half.';
+    if (percent === 10) return 'For 10%, divide the number by 10.';
+    if (percent === 15) return 'For 15%, add 10% and 5% together.';
+    if (percent === 20) return 'For 20%, find 10% first, then double it.';
+    if (percent === 25) return '25% means one quarter — divide by 4.';
+    if (percent === 50) return '50% means half — divide by 2.';
+    if (percent === 75) return '75% = half plus one quarter.';
+  }
+  m = text.match(/^(\d+)\/(\d+)\s+of\s+\$?\d+(?:\.\d+)?\s*=\s*\?$/i);
+  if (m) {
+    const numerator = Number(m[1]), denominator = Number(m[2]);
+    if (Number.isFinite(numerator) && Number.isFinite(denominator) && numerator > 0 && denominator > 0 && numerator <= denominator) {
+      if (numerator === 1 && denominator === 2) return '1/2 means half — divide by 2.';
+      if (numerator === 1 && denominator === 4) return '1/4 means one quarter — divide by 4.';
+      return 'Divide by the denominator, then multiply by the numerator.';
+    }
+  }
+  m = text.match(/^A treat costs \$(\d+(?:\.\d+)?)\. How much change from \$20\?$/i);
+  if (m && Number.isFinite(Number(m[1])) && Number(m[1]) >= 0 && Number(m[1]) <= 20) return 'Count up from the price to $20.';
+  m = text.match(/^(\d+)\s*\+\s*(\d+)\s*=\s*\?$/);
+  if (m) {
+    const a = Number(m[1]), b = Number(m[2]);
+    if (a > 0 && b > 0 && (a % 10 >= 8 || b % 10 >= 8)) return 'Make a friendly ten or hundred, then compensate.';
+  }
+  m = text.match(/^A recipe uses (\d+(?:\.\d+)?) cups flour for (\d+) pancakes\. How many cups for (\d+) pancakes\?$/i);
+  if (m && Number.isFinite(Number(m[1])) && Number.isFinite(Number(m[2])) && Number.isFinite(Number(m[3])) && Number(m[1]) > 0 && Number(m[2]) > 0) {
+    return 'Scale both quantities by the same factor.';
+  }
+  m = text.match(/^Solve for x:\s*(-?\d+)\s*x(?:\s*[+−-]\s*\d+)?\s*=\s*-?\d+\s*$/i);
+  const algebraWithParentheses = text.match(/^Solve for x:\s*(-?\d+)\s*\(\s*x\s*[+−-]\s*\d+\s*\)\s*=\s*-?\d+\s*$/i);
+  if ((m && Number(m[1]) !== 0) || (algebraWithParentheses && Number(algebraWithParentheses[1]) !== 0)) {
+    return 'Keep both sides balanced while you undo operations to isolate x.';
+  }
+  if (/^A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m\. What is its AREA\??$/i.test(text)) {
+    return 'Area measures the space inside a shape.';
+  }
+  if (/^(?:A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m|A square has side length \d+(?:\.\d+)? cm)\. What is its PERIMETER(?: in centimetres)?\??$/i.test(text)) {
+    return 'Perimeter means the distance around the outside.';
+  }
+  m = text.match(/^A triangle has angles (\d+)° and (\d+)°\. What is the third angle\?$/i);
+  if (m && Number(m[1]) > 0 && Number(m[2]) > 0 && Number(m[1]) + Number(m[2]) < 180) {
+    return 'The angles in a triangle total 180°.';
+  }
+  if (/^A box is \d+(?:\.\d+)? m long, \d+(?:\.\d+)? m wide, \d+(?:\.\d+)? m tall\. What is its VOLUME\??$/i.test(text)) {
+    return 'Volume measures the space inside a 3-D shape.';
+  }
+  const expression = text.replace(/\s+/g, '');
+  const atom = '-?\\d+(?:\\.\\d+)?';
+  const validExpression = new RegExp(`^(?:${atom}(?:[+−×x÷]${atom})+|\\(${atom}[+−]${atom}\\)[×x÷]${atom})=\\?$`);
+  if (validExpression.test(expression)) {
+    const mulDivCount = (expression.match(/[×x÷]/g) || []).length;
+    const addSubCount = (expression.match(/[+−]/g) || []).length;
+    if (/[()]/.test(expression) || (mulDivCount > 0 && addSubCount > 0)) {
+      return 'Do brackets first, then × and ÷ left to right, then + and − left to right.';
+    }
+    if (mulDivCount >= 2) return 'Evaluate × and ÷ left to right.';
+    if (addSubCount >= 2) return 'Evaluate + and − left to right.';
+  }
+  return null;
+}
 function savePausedMission() {
   if (resetInProgress) return;
   if (!M || M.completed || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
@@ -3358,6 +3453,9 @@ function nextQ(restoring=false) {
   if (!restoring) M.walkthroughShown = false;
   $('ms-story').textContent = M.q.s;
   $('ms-q').textContent = M.q.q;
+  const trick = $('ms-trick');
+  const trickText = mathTrickFor(M.q);
+  if (trick) { trick.textContent = trickText ? '⚡ MATH TRICK  ' + trickText : ''; trick.style.display = trickText ? 'block' : 'none'; }
   const reinforceBadge = $('ms-reinforce-badge');
   if (reinforceBadge) reinforceBadge.style.display = M.q.reinforcement ? 'inline-flex' : 'none';
   updateAttemptDots();
