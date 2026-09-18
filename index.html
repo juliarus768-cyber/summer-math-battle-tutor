@@ -2807,7 +2807,31 @@ function paintLanding(p, isA) {
 
 function validPausedMission(who) {
   const saved = state.pausedDaily && state.pausedDaily[who];
-  return saved && saved.player === who && Array.isArray(saved.questions) && saved.questions.length >= 1 && saved.i >= 0 && saved.i < saved.questions.length ? saved : null;
+  if (!isPlainObject(saved) || saved.player !== who || saved.completed === true || !Array.isArray(saved.questions)) return null;
+  if (saved.questions.length < 1 || saved.questions.length > MAX_MISSION_LEN) return null;
+  if (!saved.questions.every(q => {
+    if (!isPlainObject(q)) return false;
+    const validAnswer = (typeof q.a === 'number' && Number.isFinite(q.a)) || (typeof q.a === 'string' && q.a.trim());
+    const choiceValues = Array.isArray(q.choices) ? q.choices.map(String) : null;
+    const validChoices = q.choices == null || (choiceValues && choiceValues.length >= 2 && new Set(choiceValues).size === choiceValues.length && choiceValues.filter(choice => choice === String(q.a)).length === 1 && q.choices.every(choice => typeof choice === 'string' || (typeof choice === 'number' && Number.isFinite(choice))));
+    return typeof q.q === 'string' && q.q.trim() && typeof q.s === 'string' && typeof q.topic === 'string' && q.topic && validAnswer && validChoices;
+  })) return null;
+  const pendingCompletion = saved.pendingCompletion === true && saved.i === saved.questions.length;
+  if (!Number.isInteger(saved.i) || saved.i < 0 || (saved.i >= saved.questions.length && !pendingCompletion)) return null;
+  const normalized = JSON.parse(JSON.stringify(saved));
+  const finiteNonNegative = (value, fallback) => Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
+  normalized.correct = Math.min(normalized.i, finiteNonNegative(normalized.correct, 0));
+  normalized.xpEarned = Math.min(saved.questions.length * (XP_PER_Q + 16), finiteNonNegative(normalized.xpEarned, 0));
+  normalized.combo = Math.min(saved.questions.length, finiteNonNegative(normalized.combo, 0));
+  normalized.best = Math.min(saved.questions.length, finiteNonNegative(normalized.best, 0));
+  normalized.attempts = Number.isInteger(normalized.attempts) ? Math.max(0, Math.min(2, normalized.attempts)) : 0;
+  normalized.bbLevel = Number.isInteger(normalized.bbLevel) ? Math.max(0, Math.min(BB_STEPS.ms.length, normalized.bbLevel)) : 0;
+  normalized.answer = typeof normalized.answer === 'string' ? normalized.answer : '';
+  normalized.completed = false;
+  normalized.transitioning = false;
+  normalized.pendingCompletion = pendingCompletion;
+  normalized.q = pendingCompletion ? null : normalized.questions[normalized.i];
+  return normalized;
 }
 
 function paintDailyMissionStatus() {
@@ -2823,6 +2847,7 @@ function paintDailyMissionStatus() {
 
 function setPlayer(w) {
   if (state.activePlayer === w) { paint(); return; }
+  pauseDailyMissionRun();
   state.activePlayer = w;
   paint();
   const h = $('hero-' + w);
@@ -3717,10 +3742,15 @@ function advanceBrainBoost(prefix) {
   const level = (ctx.bbLevel || 0) + 1;
   if (level > steps.length) return;
   ctx.bbLevel = level;
+  renderBrainBoostLevel(prefix, level, true);
+}
+function renderBrainBoostLevel(prefix, level, recordView) {
+  const ctx = prefix === 'ms' ? M : B;
+  const steps = BB_STEPS[prefix];
   const topic = bbTopicFor(prefix);
   const lib = strategyFor(topic);
   const who = prefix === 'ms' ? ctx.player : ctx.turn;
-  if (level === 1) markStrategyViewed(who, topic);
+  if (recordView && level === 1) markStrategyViewed(who, topic);
   const panel = $(prefix + '-bb-panel');
   const card = document.createElement('div');
   card.className = 'bb-card';
@@ -3753,6 +3783,15 @@ function advanceBrainBoost(prefix) {
     btn.disabled = true;
   } else {
     btn.innerHTML = steps[level] + '<span class="bb-progress">' + level + '/' + steps.length + '</span>';
+  }
+}
+function restoreBrainBoost(prefix, savedLevel) {
+  const ctx = prefix === 'ms' ? M : B;
+  const target = Number.isInteger(savedLevel) ? Math.max(0, Math.min(BB_STEPS[prefix].length, savedLevel)) : 0;
+  resetBrainBoost(prefix);
+  for (let level = 1; level <= target; level++) {
+    ctx.bbLevel = level;
+    renderBrainBoostLevel(prefix, level, false);
   }
 }
 
@@ -3837,26 +3876,52 @@ function queueReinforcement(topic) {
 
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
+let missionRunToken = 0;
 const QCOUNT = 20, DAILY_BASIC_COUNT = 8, XP_PER_Q = 8;
+function missionRunIsCurrent(token, mission) {
+  return token === missionRunToken && M === mission && !!M && !M.completed;
+}
+function scheduleMissionCallback(fn, delay) {
+  const token = missionRunToken, mission = M;
+  return setTimeout(() => {
+    if (missionRunIsCurrent(token, mission)) fn();
+  }, delay);
+}
 function savePausedMission() {
-  if (resetInProgress || !M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
+  if (resetInProgress || !M || M.completed || !M.player || !Array.isArray(M.questions) || M.i > M.questions.length || $('ms-result').style.display === 'block') return;
   const snapshot = JSON.parse(JSON.stringify(M));
   const isCurrentQuestion = M.q === M.questions[M.i];
   snapshot.answer = isCurrentQuestion && $('ms-answer') ? $('ms-answer').value : '';
-  if (!isCurrentQuestion) snapshot.attempts = 0;
+  if (!isCurrentQuestion) {
+    snapshot.attempts = 0;
+    snapshot.bbLevel = 0;
+  }
+  snapshot.completed = false;
+  snapshot.transitioning = false;
+  snapshot.pendingCompletion = snapshot.i === snapshot.questions.length;
+  snapshot.q = snapshot.pendingCompletion ? null : snapshot.questions[snapshot.i];
   snapshot.savedAt = Date.now();
   state.pausedDaily[M.player] = snapshot;
-  Store.set('smbt-state-v2', state);
+  return Store.set('smbt-state-v2', state);
+}
+function pauseDailyMissionRun() {
+  if (!M) return;
+  savePausedMission();
+  missionRunToken++;
+  M = null;
 }
 
 function startMission(id) {
   const def = MISSIONS[0];
+  if (M && !M.completed) savePausedMission();
+  missionRunToken++;
   const saved = validPausedMission(state.activePlayer);
   M = saved
     ? { ...JSON.parse(JSON.stringify(saved)), def }
-    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
-  const restoredAttempts = M.attempts || 0;
-  const restoredAnswer = M.answer || '';
+    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, bbLevel: 0, answer: '', xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
+  M.completed = false;
+  M.transitioning = false;
+  M.pendingCompletion = M.i === M.questions.length;
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   const sc = $('mission-screen');
   sc.classList.add('on');
@@ -3870,12 +3935,8 @@ function startMission(id) {
   if (padCard) padCard.classList.remove('mobile-open');
   if (padToggle) padToggle.textContent = '✏️ SCRATCHPAD';
   initPad();
-  nextQ();
-  if (saved) {
-    M.attempts = restoredAttempts;
-    updateAttemptDots();
-    $('ms-answer').value = restoredAnswer;
-    if (M.q.choices) document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === restoredAnswer));
+  nextQ(!!saved);
+  if (saved && !M.completed) {
     $('ms-fb').textContent = 'Mission resumed — keep going!';
     $('ms-fb').className = 'feedback fb-good';
     toast(`▶ Resumed question ${M.i + 1} of ${M.questions.length}`);
@@ -3887,9 +3948,15 @@ function segs() {
   $('ms-segs').innerHTML = Array.from({length:total},(_,j)=>`<i class="${j<M.i?'done':j===M.i?'cur':''}"></i>`).join('');
   $('ms-count').textContent = M.i < total ? `Question ${M.i+1} of ${total}` : 'Mission complete!';
 }
-function nextQ() {
+function nextQ(restoring) {
+  if (!M || M.completed) return;
   if (M.i >= M.questions.length) return showResult();
-  M.attempts = 0;
+  if (!restoring) {
+    M.attempts = 0;
+    M.bbLevel = 0;
+    M.answer = '';
+  }
+  M.transitioning = false;
   M.q = M.questions[M.i];
   if (window.MathThinkingSystem) {
     window.MathThinkingSystem.questionPresented({ child:M.player, grade:getCurrentGrade(M.player), question:M.q });
@@ -3903,7 +3970,7 @@ function nextQ() {
   if (wt) { wt.style.display = 'none'; wt.innerHTML = ''; }
   const choices = $('ms-choices');
   const inp = $('ms-answer');
-  inp.value = ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
+  inp.value = restoring ? (M.answer || '') : ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
   const signBtn = $('ms-sign-btn');
   if (signBtn) { signBtn.style.display = (!M.q.choices && topicAllowsNegative(M.q.topic)) ? '' : 'none'; signBtn.classList.remove('active'); }
   if (M.q.choices) {
@@ -3921,11 +3988,13 @@ function nextQ() {
   } else {
     choices.style.display = 'none'; choices.innerHTML = '';
     inp.style.display = 'block';
-    setTimeout(() => { inp.focus(); inp.scrollIntoView({behavior:'smooth', block:'center'}); }, 80);
+    scheduleMissionCallback(() => { inp.focus(); inp.scrollIntoView({behavior:'smooth', block:'center'}); }, 80);
   }
   $('ms-fb').textContent = ''; $('ms-fb').className = 'feedback';
   $('ms-submit').disabled = false;
-  resetBrainBoost('ms');
+  if (restoring) restoreBrainBoost('ms', M.bbLevel);
+  else resetBrainBoost('ms');
+  if (restoring && M.q.choices) document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === (M.answer || '')));
   segs();
 }
 function chooseMissionAnswer(v) {
@@ -3949,11 +4018,13 @@ function answerOk(q, raw) {
   return n !== null && Number.isFinite(expected) && Math.abs(n - expected) < 0.001;
 }
 function submitQ() {
+  if (!M || M.completed || M.transitioning) return;
   const raw = $('ms-answer').value.trim();
   const fb = $('ms-fb');
   if (!raw) { fb.textContent = M.q.choices ? 'Pick an answer first!' : 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
   const cb = $('ms-combo');
   if (answerOk(M.q, raw)) {
+    M.transitioning = true;
     M.combo++; M.best = Math.max(M.best, M.combo);
     let gain = Math.max(4, XP_PER_Q - Math.min(M.attempts, 2) * 2) + 3 * Math.min(M.combo - 1, 4);
     if (M.q.reinforcement) gain += 4; // comeback bonus for sticking with a re-practiced topic
@@ -3976,7 +4047,10 @@ function submitQ() {
       });
     }
     if (M.bbLevel > 0) markStrategyHelped(M.player, M.q.topic);
-    M.i++; lockThen(nextQ);
+    M.i++;
+    M.pendingCompletion = M.i === M.questions.length;
+    savePausedMission();
+    lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
     M.attempts++;
@@ -3989,6 +4063,7 @@ function submitQ() {
     updateAttemptDots();
     const lib = strategyFor(M.q.topic);
     if (M.attempts >= 3) {
+      M.transitioning = true;
       // Learned, not yet earned: no XP awarded for this question (and none
       // taken away either), a full worked walkthrough using this exact
       // question's numbers, a recorded miss for the adaptive engine, and
@@ -4004,25 +4079,38 @@ function submitQ() {
       $('ms-answer').disabled = true;
       $('ms-submit').disabled = true;
       M.i++;
+      M.pendingCompletion = M.i === M.questions.length;
+      savePausedMission();
       const continueButton = $('ms-walkthrough-next');
-      if (continueButton) continueButton.onclick = nextQ;
+      if (continueButton) {
+        const token = missionRunToken, mission = M;
+        continueButton.onclick = () => {
+          if (missionRunIsCurrent(token, mission)) nextQ();
+        };
+      }
     } else if (M.attempts === 2) {
       fb.textContent = 'Not quite yet — here’s a strategy and an example to help.';
       fb.className = 'feedback fb-bad';
       while (M.bbLevel < 3) advanceBrainBoost('ms');
+      savePausedMission();
       const active = $('ms-answer');
-      setTimeout(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
+      scheduleMissionCallback(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
     } else {
       fb.textContent = 'Not yet — here’s a clue to help. A common mistake here is ' + (lib ? lib.commonMistake : 'rushing without checking each step') + '.';
       fb.className = 'feedback fb-bad';
       if (!M.bbLevel) advanceBrainBoost('ms');
+      savePausedMission();
       const active = $('ms-answer');
-      setTimeout(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
+      scheduleMissionCallback(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
     }
   }
 }
-function lockThen(f, delay) { $('ms-answer').disabled = true; $('ms-submit').disabled = true; setTimeout(f, delay || 1300); }
+function lockThen(f, delay) { $('ms-answer').disabled = true; $('ms-submit').disabled = true; scheduleMissionCallback(f, delay || 1300); }
 function showResult() {
+  if (!M || M.completed) return;
+  M.completed = true;
+  M.pendingCompletion = false;
+  missionRunToken++;
   const total = M.questions.length;
   const accuracy = Math.round((M.correct / total) * 100);
   const bonus = Math.round(accuracy / 3);
@@ -4061,7 +4149,7 @@ function showResult() {
   segs();
 }
 function closeMission() {
-  savePausedMission();
+  pauseDailyMissionRun();
   $('mission-screen').classList.remove('on');
   $('battle-screen').classList.remove('on');
   $('store-screen').classList.remove('on');
@@ -4613,6 +4701,7 @@ function cancelResetProgress() {
 // against an accidental tap on a destructive, unrecoverable action.
 function doResetProgress() {
   resetInProgress = true;
+  missionRunToken++;
   const result = Store.resetPrimary(state);
   if (!result.ok) {
     resetInProgress = false;
@@ -6129,6 +6218,7 @@ function hidePicker() {
   unlockScroll();
 }
 function pickProfile(who) {
+  pauseDailyMissionRun();
   if (who === 'parent') {
     // Route to the existing PIN-gated parent dashboard.
     hidePicker();
@@ -6149,6 +6239,7 @@ function pickProfile(who) {
   playCue('request');
 }
 function switchProfile() {
+  pauseDailyMissionRun();
   parentUnlocked = false;
   // Close any open screen and return to picker.
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(id => { const el=$(id); if(el) el.classList.remove('on'); });
