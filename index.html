@@ -1916,23 +1916,253 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 const APP_VERSION = '1.2.0';
 const APP_BUILD = '__BUILD_ID__';
 
-/* ============ SAFE STORAGE (localStorage with in-memory fallback) ============ */
-const Store = (() => {
-  let mem = {}, ok = false;
-  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ok = true; } catch(e) {}
+/* ============ SAFE STORAGE (validated persistence with recovery) ============ */
+const PRIMARY_STATE_KEY = 'smbt-state-v2';
+const STATE_BACKUP_KEY = PRIMARY_STATE_KEY + '-backup';
+const STATE_CORRUPT_KEY = PRIMARY_STATE_KEY + '-corrupt';
+
+function createSafeStore(storage, statusHost, cloudProvider) {
+  const mem = {};
+  let persistent = false;
+  let lastGoodRaw = null;
+  let cloudSafe = false;
+  let primaryWriteBlocked = false;
+  let currentLoadStatus = 'unknown';
+
+  try {
+    storage.setItem('__smbt_storage_test__', '1');
+    storage.removeItem('__smbt_storage_test__');
+    persistent = true;
+  } catch (e) {}
+
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const readRaw = key => persistent ? storage.getItem(key) : (mem[key] ?? null);
+  const writeRaw = (key, value) => {
+    if (persistent) storage.setItem(key, value);
+    else mem[key] = value;
+  };
+  const removeRaw = key => {
+    if (persistent) storage.removeItem(key);
+    else delete mem[key];
+  };
+  const setStatus = (reason, recovery = true) => {
+    statusHost.__storageStatus = { recovery, reason };
+    statusHost.__storageWarningPending = true;
+    if (reason === 'recovered') statusHost.__storageRecoveryNotice = true;
+    if (statusHost.__storageUiReady && typeof statusHost.renderStorageWarning === 'function') statusHost.renderStorageWarning();
+    if (statusHost.__storageUiReady && typeof toast === 'function') toast(recovery
+      ? '⚠️ Progress storage needs parent review.'
+      : '⚠️ Progress backup could not be updated.');
+  };
+  const clearStatus = () => {
+    statusHost.__storageStatus = null;
+    statusHost.__storageWarningPending = false;
+    if (statusHost.__storageUiReady && typeof statusHost.renderStorageWarning === 'function') statusHost.renderStorageWarning();
+  };
+  const parseStateRaw = raw => {
+    if (raw == null) return { ok:false, reason:'missing' };
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch (e) { return { ok:false, reason:'corrupt-json' }; }
+    const normalized = normalizeLoadedState(parsed);
+    return normalized.safe
+      ? { ok:true, state:normalized.state, raw:JSON.stringify(normalized.state) }
+      : { ok:false, reason:'invalid-shape', state:normalized.state };
+  };
+  const preserveCorruptRaw = raw => {
+    if (!persistent || raw == null) return false;
+    try {
+      writeRaw(STATE_CORRUPT_KEY, raw);
+      return readRaw(STATE_CORRUPT_KEY) === raw;
+    } catch (e) { return false; }
+  };
+  const writeVerifiedRaw = (key, raw, requireValidState) => {
+    writeRaw(key, raw);
+    const check = readRaw(key);
+    if (check !== raw) return false;
+    if (requireValidState && !parseStateRaw(check).ok) return false;
+    if (!requireValidState) JSON.parse(check);
+    return true;
+  };
+  const queueCloud = () => {
+    const cloud = cloudProvider && cloudProvider();
+    if (cloudSafe && cloud && cloud.scheduleDebouncedPush) cloud.scheduleDebouncedPush();
+  };
+
   return {
-    get(k,d){ try { const v = ok ? localStorage.getItem(k) : mem[k]; return v != null ? JSON.parse(v) : d; } catch(e){ return d; } },
-    set(k,v){
-      try { if (ok) localStorage.setItem(k, JSON.stringify(v)); else mem[k] = JSON.stringify(v); } catch(e){}
-      // Every save of the main game state also queues a debounced cloud push, so
-      // no individual call site needs to know about sync. No-ops if cloud sync
-      // isn't configured/linked yet.
-      if (k === 'smbt-state-v2' && window.Cloud && window.Cloud.scheduleDebouncedPush) {
-        window.Cloud.scheduleDebouncedPush();
+    available: () => persistent,
+    cloudSafe: () => persistent && cloudSafe,
+    loadStatus: () => currentLoadStatus,
+    get(key, fallback) {
+      if (key !== PRIMARY_STATE_KEY) {
+        try {
+          const raw = readRaw(key);
+          return raw == null ? fallback : JSON.parse(raw);
+        } catch (e) { return fallback; }
       }
+      if (!persistent) {
+        currentLoadStatus = 'unavailable';
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        setStatus('unavailable');
+        return { value:clone(fallback), status:'unavailable', source:'memory' };
+      }
+
+      let raw;
+      try { raw = readRaw(key); }
+      catch (e) {
+        currentLoadStatus = 'read-failed';
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        setStatus('read-failed');
+        return { value:clone(fallback), status:'read-failed', source:'defaults' };
+      }
+      if (raw == null) {
+        currentLoadStatus = 'missing';
+        cloudSafe = false;
+        primaryWriteBlocked = false;
+        return { value:clone(fallback), status:'missing', source:'defaults' };
+      }
+
+      const primary = parseStateRaw(raw);
+      if (primary.ok) {
+        lastGoodRaw = primary.raw;
+        cloudSafe = true;
+        primaryWriteBlocked = false;
+        currentLoadStatus = 'ok';
+        try {
+          const backup = parseStateRaw(readRaw(STATE_BACKUP_KEY));
+          if (!backup.ok && !writeVerifiedRaw(STATE_BACKUP_KEY, lastGoodRaw, true)) setStatus('backup-write-failed', false);
+        } catch (e) { setStatus('backup-write-failed', false); }
+        return { value:primary.state, status:'ok', source:'primary' };
+      }
+
+      preserveCorruptRaw(raw);
+      let backup = null;
+      try { backup = parseStateRaw(readRaw(STATE_BACKUP_KEY)); } catch (e) {}
+      if (backup && backup.ok) {
+        lastGoodRaw = backup.raw;
+        try {
+          if (writeVerifiedRaw(key, backup.raw, true)) {
+            cloudSafe = true;
+            primaryWriteBlocked = false;
+            currentLoadStatus = 'recovered';
+            setStatus('recovered');
+            return { value:backup.state, status:'recovered', source:'backup' };
+          }
+        } catch (e) {}
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        currentLoadStatus = 'recovery-readonly';
+        setStatus('recovery-readonly');
+        return { value:backup.state, status:'recovery-readonly', source:'backup' };
+      }
+
+      cloudSafe = false;
+      primaryWriteBlocked = true;
+      currentLoadStatus = primary.reason;
+      setStatus(primary.reason);
+      return {
+        value:primary.state || clone(fallback),
+        status:primary.reason,
+        source:primary.state ? 'repaired-memory' : 'defaults'
+      };
+    },
+    set(key, value, options = {}) {
+      if (key !== PRIMARY_STATE_KEY) return this.writeAuxiliary(key, value);
+      if (!persistent) {
+        try { mem[key] = JSON.stringify(value); } catch (e) {}
+        cloudSafe = false;
+        setStatus('unavailable');
+        return { ok:false, reason:'unavailable' };
+      }
+      if (primaryWriteBlocked && !options.allowRecovery) {
+        setStatus('recovery-readonly');
+        return { ok:false, reason:'recovery-readonly' };
+      }
+
+      let normalized, serialized;
+      try {
+        normalized = normalizeLoadedState(value);
+        if (!normalized.safe) {
+          setStatus('validation');
+          return { ok:false, reason:'validation' };
+        }
+        serialized = JSON.stringify(normalized.state);
+      } catch (e) {
+        setStatus('serialize');
+        return { ok:false, reason:'serialize' };
+      }
+
+      const previousGoodRaw = lastGoodRaw;
+      let backupOk = true;
+      if (previousGoodRaw != null) {
+        try { backupOk = writeVerifiedRaw(STATE_BACKUP_KEY, previousGoodRaw, true); }
+        catch (e) { backupOk = false; }
+      }
+      try {
+        if (!writeVerifiedRaw(key, serialized, true)) throw new Error('readback');
+      } catch (e) {
+        cloudSafe = false;
+        setStatus(e && e.message === 'readback' ? 'readback' : 'write');
+        return { ok:false, reason:e && e.message === 'readback' ? 'readback' : 'write' };
+      }
+
+      lastGoodRaw = serialized;
+      if (previousGoodRaw == null) {
+        try { backupOk = writeVerifiedRaw(STATE_BACKUP_KEY, serialized, true); }
+        catch (e) { backupOk = false; }
+      }
+      cloudSafe = true;
+      primaryWriteBlocked = false;
+      currentLoadStatus = 'ok';
+      if (backupOk) clearStatus();
+      else setStatus('backup-write-failed', false);
+      if (options.queueCloud !== false) queueCloud();
+      return { ok:true, backupOk, value:normalized.state };
+    },
+    writeAuxiliary(key, value) {
+      if (!persistent) return { ok:false, reason:'unavailable' };
+      let serialized;
+      try { serialized = JSON.stringify(value); JSON.parse(serialized); }
+      catch (e) { return { ok:false, reason:'serialize' }; }
+      try {
+        return writeVerifiedRaw(key, serialized, false)
+          ? { ok:true }
+          : { ok:false, reason:'readback' };
+      } catch (e) { return { ok:false, reason:'write' }; }
+    },
+    backupCurrent(value) {
+      if (!persistent) return { ok:false, reason:'unavailable' };
+      let normalized, serialized;
+      try {
+        normalized = normalizeLoadedState(JSON.parse(JSON.stringify(value)));
+        if (!normalized.safe) return { ok:false, reason:'validation' };
+        serialized = JSON.stringify(normalized.state);
+        if (!writeVerifiedRaw(STATE_BACKUP_KEY, serialized, true)) return { ok:false, reason:'readback' };
+      } catch (e) { return { ok:false, reason:'write' }; }
+      lastGoodRaw = serialized;
+      return { ok:true };
+    },
+    resetPrimary(value) {
+      const normalized = normalizeLoadedState(value);
+      if (normalized.safe) {
+        const backedUp = this.backupCurrent(normalized.state);
+        if (!backedUp.ok) return backedUp;
+      }
+      try {
+        removeRaw(PRIMARY_STATE_KEY);
+        if (readRaw(PRIMARY_STATE_KEY) != null) return { ok:false, reason:'remove-readback' };
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        currentLoadStatus = 'reset';
+        return { ok:true };
+      } catch (e) { return { ok:false, reason:'remove' }; }
     }
   };
-})();
+}
+
+const Store = createSafeStore(localStorage, window, () => window.Cloud);
 
 /* ============ GAME STATE — family defaults for brand-new profiles ============ */
 const FRESH = {
@@ -1940,11 +2170,54 @@ const FRESH = {
   alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 80, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
   katya: { lvl: 1, xp: 0, xpMax: 100, coins: 110, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
 };
-const storedState = Store.get('smbt-state-v2', null);
-const state = storedState && typeof storedState === 'object' && !Array.isArray(storedState)
-  ? storedState
-  : JSON.parse(JSON.stringify(FRESH));
-if (!state.activePlayer) state.activePlayer = 'alex';
+function cloneFresh() { return JSON.parse(JSON.stringify(FRESH)); }
+function isPlainObject(value) { return !!value && typeof value === 'object' && !Array.isArray(value); }
+function normalizeLoadedState(raw) {
+  let safe = isPlainObject(raw);
+  const out = safe ? JSON.parse(JSON.stringify(raw)) : cloneFresh();
+  if (!safe) return { state:out, safe:false };
+
+  if (out.activePlayer == null) out.activePlayer = 'alex';
+  else if (!['alex','katya'].includes(out.activePlayer)) { out.activePlayer = 'alex'; safe = false; }
+
+  for (const who of ['alex','katya']) {
+    if (!isPlainObject(out[who])) {
+      out[who] = JSON.parse(JSON.stringify(FRESH[who]));
+      safe = false;
+      continue;
+    }
+    const defaults = FRESH[who];
+    for (const field of ['lvl','xp','xpMax','coins','streak','totalXP','keys','lastKeyMilestone','updatedAt']) {
+      const originalValue = raw[who][field];
+      if (originalValue == null) { out[who][field] = defaults[field]; continue; }
+      const value = typeof originalValue === 'string' && originalValue.trim() !== ''
+        ? Number(originalValue)
+        : originalValue;
+      const minimum = field === 'lvl' || field === 'xpMax' ? 1 : 0;
+      if (!Number.isFinite(value) || value < minimum) {
+        out[who][field] = defaults[field];
+        safe = false;
+      } else out[who][field] = value;
+    }
+  }
+
+  const arrayFields = ['requests','rewards','log'];
+  const objectFields = ['mastery','mathThinking','settings','activity','daily','recentQ','strategy','goals'];
+  for (const field of arrayFields) {
+    if (out[field] != null && !Array.isArray(out[field])) { out[field] = []; safe = false; }
+  }
+  for (const field of objectFields) {
+    if (out[field] != null && !isPlainObject(out[field])) { out[field] = {}; safe = false; }
+  }
+  if (out.pausedDaily == null) out.pausedDaily = { alex:null, katya:null };
+  else if (!isPlainObject(out.pausedDaily)) { out.pausedDaily = { alex:null, katya:null }; safe = false; }
+  if (out.pausedDaily.alex === undefined) out.pausedDaily.alex = null;
+  if (out.pausedDaily.katya === undefined) out.pausedDaily.katya = null;
+  return { state:out, safe };
+}
+const loadedState = Store.get(PRIMARY_STATE_KEY, cloneFresh());
+const state = loadedState.value;
+let resetInProgress = false;
 // Back-fill new fields for existing saves
 const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
@@ -2014,6 +2287,7 @@ const Cloud = (() => {
   let sdkLoadPromise = null;
   let initialPullPromise = null;
   let initialPullComplete = false;
+  let applyingCloudState = false;
 
   function configured() {
     return !!(FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_'));
@@ -2067,23 +2341,35 @@ const Cloud = (() => {
   }
 
   function snapshotForCloud() {
+    if (!Store.cloudSafe()) return null;
     const { activeProfile, ...rest } = state; // activeProfile is device-local UI state
     return JSON.parse(JSON.stringify(rest));
   }
 
+  function validatedCloudState(value) {
+    try {
+      const normalized = normalizeLoadedState(value);
+      return normalized.safe ? normalized.state : null;
+    } catch (e) { return null; }
+  }
+
   // Merge rule: for each child, whichever snapshot has the newer updatedAt is
-  // considered "more advanced" and wins WHOLESALE for that child's stats -- we
+  // considered "more advanced" and wins every conflicting field for that child's stats -- we
   // never cherry-pick individual fields (e.g. take xp from one side and xpMax
   // from the other), since that could produce an inconsistent state. updatedAt
   // is stamped whenever coins, keys, or XP change, so manual deductions and
   // reward spending win over older cloud snapshots even when totalXP is tied.
+  // Fields present on only one side are retained for forward compatibility.
   // Request history and
   // per-topic mastery are additive records, so those are combined instead of
   // picked from one side.
   function mergeState(local, cloud) {
     if (!cloud) return local;
     if (!local) return cloud;
-    const merged = JSON.parse(JSON.stringify(cloud));
+    const merged = {
+      ...JSON.parse(JSON.stringify(local)),
+      ...JSON.parse(JSON.stringify(cloud))
+    };
     ['alex','katya'].forEach(w => {
       const l = local[w], c = cloud[w];
       if (!l) return;
@@ -2093,10 +2379,9 @@ const Cloud = (() => {
       );
       // A freshly initialized profile must never replace a progressed profile,
       // even if a later initialization accidentally stamped its timestamp.
-      if (!c || (meaningful(l) && !meaningful(c)) ||
-          (meaningful(l) === meaningful(c) && Number(l.updatedAt||0) > Number(c.updatedAt||0))) {
-        merged[w] = l;
-      }
+      const localWins = !c || (meaningful(l) && !meaningful(c)) ||
+        (meaningful(l) === meaningful(c) && Number(l.updatedAt||0) > Number(c.updatedAt||0));
+      merged[w] = localWins ? { ...(c||{}), ...l } : { ...l, ...c };
     });
     const reqById = new Map();
     (cloud.requests||[]).forEach(r => reqById.set(r.id, r));
@@ -2170,10 +2455,16 @@ const Cloud = (() => {
   }
 
   function applyMergedState(newState) {
+    const normalized = normalizeLoadedState(newState);
+    if (!normalized.safe) return false;
+    const saved = Store.set(PRIMARY_STATE_KEY, normalized.state, { allowRecovery:true, queueCloud:false });
+    if (!saved.ok) return false;
     Object.keys(state).forEach(k => delete state[k]); // many closures hold a ref to `state`
-    Object.assign(state, newState);
-    Store.set('smbt-state-v2', state);
-    if (typeof paint === 'function') paint();
+    Object.assign(state, saved.value);
+    applyingCloudState = true;
+    try { if (typeof paint === 'function') paint(); }
+    finally { applyingCloudState = false; }
+    return true;
   }
 
   async function linkFamily(code) {
@@ -2184,13 +2475,19 @@ const Cloud = (() => {
       const ref = db.collection('families').doc(code);
       const snap = await ref.get();
       const docData = snap.exists ? snap.data() : null;
-      const cloudState = docData && docData.state;
+      const hasCloudState = !!docData && Object.prototype.hasOwnProperty.call(docData, 'state');
+      const rawCloudState = hasCloudState ? docData.state : null;
+      const cloudState = hasCloudState ? validatedCloudState(rawCloudState) : null;
+      if (hasCloudState && !cloudState) return { ok:false, reason:'invalid-cloud-state' };
       const localState = snapshotForCloud();
+      if (!cloudState && !localState) return { ok:false, reason:'unsafe-local-state' };
       const mergedState = !cloudState
         ? localState
-        : mergeState(localState, cloudState);
-      await ref.set({ state: mergedState, updatedAt: Date.now() }, { merge:true });
-      applyMergedState(mergedState);
+        : (localState ? mergeState(localState, cloudState) : cloudState);
+      if (!applyMergedState(mergedState)) return { ok:false, reason:'local-save-failed' };
+      if (!cloudState || localState) {
+        await ref.set({ state: mergedState, updatedAt: Date.now() }, { merge:true });
+      }
       familyCode = code;
       initialPullComplete = true;
       try { localStorage.setItem(FAMILY_CODE_KEY, code); } catch(e){}
@@ -2204,14 +2501,16 @@ const Cloud = (() => {
   }
 
   async function pushNow() {
-    if (!familyCode || !await ensureApp()) return false;
+    if (!familyCode || !Store.cloudSafe() || !await ensureApp()) return false;
     if (initialPullPromise && !initialPullComplete) await initialPullPromise;
     // Never let a default/offline boot push before the linked cloud record has
     // been read and merged at least once.
     if (!initialPullComplete) return false;
     try {
+      const cloudState = snapshotForCloud();
+      if (!cloudState) return false;
       await db.collection('families').doc(familyCode)
-        .set({ state: snapshotForCloud(), updatedAt: Date.now() }, { merge:true });
+        .set({ state: cloudState, updatedAt: Date.now() }, { merge:true });
       setLastSynced(Date.now());
       return true;
     } catch (e) { console.warn('cloud push failed', e); return false; }
@@ -2224,8 +2523,11 @@ const Cloud = (() => {
       const snap = await ref.get();
       if (!snap.exists) return false;
       const docData = snap.data();
-      const merged = mergeState(snapshotForCloud(), docData.state);
-      applyMergedState(merged);
+      const cloudState = validatedCloudState(docData.state);
+      if (!cloudState) return false;
+      const localState = snapshotForCloud();
+      const merged = localState ? mergeState(localState, cloudState) : cloudState;
+      if (!applyMergedState(merged)) return false;
       initialPullComplete = true;
       setLastSynced(Date.now());
       return true;
@@ -2235,12 +2537,15 @@ const Cloud = (() => {
   async function syncNow() {
     if (syncing || !familyCode) return false;
     syncing = true;
-    try { await pullAndMergeNow(); await pushNow(); return true; }
+    try {
+      if (!await pullAndMergeNow()) return false;
+      return await pushNow();
+    }
     finally { syncing = false; }
   }
 
   function scheduleDebouncedPush() {
-    if (!familyCode) return;
+    if (!familyCode || applyingCloudState || !Store.cloudSafe()) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => { pushNow(); }, 4000);
   }
@@ -2276,9 +2581,30 @@ const Cloud = (() => {
     window.addEventListener('online', () => syncNow());
   }
 
+  function unlinkForLocalReset() {
+    const previousCode = familyCode;
+    try {
+      localStorage.removeItem(FAMILY_CODE_KEY);
+      if (localStorage.getItem(FAMILY_CODE_KEY) != null) return false;
+    } catch(e) {
+      if (previousCode) {
+        try { localStorage.setItem(FAMILY_CODE_KEY, previousCode); } catch (_) {}
+      }
+      return false;
+    }
+    clearTimeout(debounceTimer);
+    clearInterval(autoSyncTimer);
+    debounceTimer = null;
+    autoSyncTimer = null;
+    familyCode = null;
+    initialPullComplete = false;
+    initialPullPromise = null;
+    return true;
+  }
+
   return {
     configured, linkFamily, syncNow, pushNow, pullAndMergeNow, genCode, boot,
-    scheduleDebouncedPush, renderSyncStatus, mergeState,
+    scheduleDebouncedPush, renderSyncStatus, mergeState, unlinkForLocalReset,
     getFamilyCode: () => familyCode,
     getLastSynced,
   };
@@ -3513,7 +3839,7 @@ function queueReinforcement(topic) {
 let M = null;
 const QCOUNT = 20, DAILY_BASIC_COUNT = 8, XP_PER_Q = 8;
 function savePausedMission() {
-  if (!M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
+  if (resetInProgress || !M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
   const snapshot = JSON.parse(JSON.stringify(M));
   const isCurrentQuestion = M.q === M.questions[M.i];
   snapshot.answer = isCurrentQuestion && $('ms-answer') ? $('ms-answer').value : '';
@@ -4092,9 +4418,13 @@ function validateImportedProgress(payload) {
       return { ok:false, error:key + ' must be an object.' };
     }
   }
+  const normalized = typeof normalizeLoadedState === 'function'
+    ? normalizeLoadedState(imported)
+    : { state:JSON.parse(JSON.stringify(imported)), safe:true };
+  if (!normalized.safe) return { ok:false, error:'The imported progress contains unsafe or malformed state.' };
   return {
     ok:true,
-    state:JSON.parse(JSON.stringify(imported)),
+    state:normalized.state,
     familySync:payload.familySync ? JSON.parse(JSON.stringify(payload.familySync)) : null
   };
 }
@@ -4151,7 +4481,12 @@ function cancelProgressImport() {
 }
 function confirmProgressImport() {
   if (!requireUnlockedParent() || !pendingProgressImport) return;
-  const imported = pendingProgressImport.state;
+  const checked = normalizeLoadedState(pendingProgressImport.state);
+  if (!checked.safe) {
+    toast('Import stopped: the reviewed data is no longer valid.');
+    return;
+  }
+  const imported = checked.state;
   const newer = ['alex','katya'].filter(who =>
     Number((state[who]||{}).updatedAt||0) > Number((imported[who]||{}).updatedAt||0)
   );
@@ -4162,9 +4497,8 @@ function confirmProgressImport() {
   const backedUpAt = new Date().toISOString();
   const backupEnvelope = buildProgressExportEnvelope(state, 'automatic backup before reviewed import');
   backupEnvelope.exportedAt = backedUpAt;
-  try {
-    localStorage.setItem('smbt-state-v2-backup-before-import-' + Date.now(), JSON.stringify(backupEnvelope));
-  } catch (e) {
+  const importBackup = Store.writeAuxiliary('smbt-state-v2-backup-before-import-' + Date.now(), backupEnvelope);
+  if (!importBackup.ok) {
     toast('Import stopped: the safety backup could not be saved.');
     return;
   }
@@ -4172,11 +4506,16 @@ function confirmProgressImport() {
     'summer-math-battle-before-import-' + backedUpAt.replace(/[:.]/g,'-') + '.json',
     backupEnvelope
   );
-  const next = JSON.parse(JSON.stringify(imported));
+  const saved = Store.set(PRIMARY_STATE_KEY, imported, { allowRecovery:true, queueCloud:false });
+  if (!saved.ok) {
+    toast('Import stopped: the new progress could not be saved safely.');
+    return;
+  }
+  const next = saved.value;
   Object.keys(state).forEach(key => delete state[key]);
   Object.assign(state, next);
-  Store.set('smbt-state-v2', state);
   pendingProgressImport = null;
+  if (Store.cloudSafe()) Cloud.scheduleDebouncedPush();
   toast('Progress imported after backup. Review both profiles before syncing.');
   paint();
   renderParent();
@@ -4273,7 +4612,21 @@ function cancelResetProgress() {
 // is inherently PIN-protected; the extra click-through warning guards
 // against an accidental tap on a destructive, unrecoverable action.
 function doResetProgress() {
-  try { localStorage.removeItem('smbt-state-v2'); } catch (e) {}
+  resetInProgress = true;
+  const result = Store.resetPrimary(state);
+  if (!result.ok) {
+    resetInProgress = false;
+    toast('⚠️ Reset stopped: progress could not be backed up and removed safely.');
+    return;
+  }
+  if (!Cloud.unlinkForLocalReset()) {
+    const restored = Store.set(PRIMARY_STATE_KEY, state, { allowRecovery:true, queueCloud:false });
+    resetInProgress = false;
+    toast(restored.ok
+      ? '⚠️ Reset stopped because Family Sync could not be unlinked safely.'
+      : '⚠️ Reset could not finish safely. Use the recovery backup before continuing.');
+    return;
+  }
   toast('🗑️ Local progress reset — reloading…');
   setTimeout(() => { location.href = location.pathname + '?reset=' + Date.now(); }, 500);
 }
@@ -5683,6 +6036,40 @@ function toast(msg) {
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.remove('show'), 2600);
 }
+function renderStorageWarning() {
+  const status = window.__storageStatus;
+  let warning = $('storage-warning');
+  if (!status) {
+    if (warning) warning.remove();
+    return;
+  }
+  if (!warning) {
+    warning = document.createElement('div');
+    warning.id = 'storage-warning';
+    warning.setAttribute('role', 'status');
+    warning.style.cssText = 'position:fixed;left:12px;right:12px;bottom:76px;z-index:9998;padding:10px 14px;border:1px solid rgba(255,180,0,.75);border-radius:12px;background:#2a1d05;color:#fff4bf;font-weight:700;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.3)';
+    document.body.appendChild(warning);
+  }
+  warning.textContent = status.reason === 'unavailable'
+    ? '⚠️ Progress storage is unavailable. Changes on this device may not persist.'
+    : status.recovery
+      ? '⚠️ Progress is in recovery mode. Existing data was preserved; ask a parent to review storage.'
+      : '⚠️ Progress saved, but the recovery backup could not be updated.';
+}
+window.renderStorageWarning = renderStorageWarning;
+window.__storageUiReady = true;
+if (window.__storageWarningPending || window.__storageStatus || window.__storageRecoveryNotice) setTimeout(() => {
+  renderStorageWarning();
+  const status = window.__storageStatus || {};
+  toast(window.__storageRecoveryNotice
+    ? '✅ Progress was recovered from the last known-good local backup.'
+    : status.reason === 'unavailable'
+    ? '⚠️ Progress storage is unavailable; changes may not persist.'
+    : status.recovery
+      ? '⚠️ Storage recovery mode: existing progress was preserved.'
+      : '⚠️ Progress backup could not be updated.');
+  window.__storageRecoveryNotice = false;
+}, 0);
 (function stars(){
   const c = $('stars');
   for (let i = 0; i < 60; i++) {
