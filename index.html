@@ -2213,6 +2213,12 @@ function normalizeLoadedState(raw) {
   else if (!isPlainObject(out.pausedDaily)) { out.pausedDaily = { alex:null, katya:null }; safe = false; }
   if (out.pausedDaily.alex === undefined) out.pausedDaily.alex = null;
   if (out.pausedDaily.katya === undefined) out.pausedDaily.katya = null;
+  for (const who of ['alex','katya']) {
+    if (out[who].lastDay != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(out[who].lastDay))) {
+      out[who].lastDay = '';
+      safe = false;
+    }
+  }
   return { state:out, safe };
 }
 const loadedState = Store.get(PRIMARY_STATE_KEY, cloneFresh());
@@ -2230,6 +2236,8 @@ const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
   if (state[w].keys == null) state[w].keys = FRESH[w].keys;
   if (state[w].updatedAt == null) state[w].updatedAt = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
+  if (state[w].lastDay == null) state[w].lastDay = '';
+  if (typeof state[w].lastDay !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(state[w].lastDay)) state[w].lastDay = '';
   if (state[w].birthday == null) state[w].birthday = BIRTHDAYS[w];
   if (state[w].gradeOverride === undefined) state[w].gradeOverride = null;
 });
@@ -2875,7 +2883,7 @@ $('missions').innerHTML = MISSIONS.map(m => `
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
     <div class="mprog" id="daily-card-progress">18–20 adaptive questions</div>
-    <div class="mxp">+${m.xp} XP + accuracy coins</div>
+    <div class="mxp">XP + coins based on mission accuracy</div>
   </div>`).join('');
 
 /* compact landing quick-mode tiles (emoji-led, tap-first) */
@@ -3385,6 +3393,25 @@ function strategyFor(topic) {
   }
   return STRATEGY_LIBRARY[topic] || null;
 }
+const COACHING_ALIASES = {
+  'fraction-equivalence':'fractions', 'fraction-comparison':'fractions',
+  'fraction-addition':'fractions', 'fraction-of-number':'fractions',
+  'fraction-decimal':'fractions', addition:'mentalmath', subtraction:'mentalmath',
+  bedmas:'bedmas', multiplication:'multiplication', division:'division', percent:'percent'
+};
+function coachingKeyFor(q) {
+  if (!q) return null;
+  if (q.coachKey) return q.coachKey;
+  if (q.topic === 'fractions') {
+    const text = String(q.q || '');
+    if (/which decimal equals|decimal/i.test(text)) return 'fraction-decimal';
+    if (/which is greater|compare/i.test(text)) return 'fraction-comparison';
+    if (/\bof\b/i.test(text)) return 'fraction-of-number';
+    if (/[+−]/.test(text)) return 'fraction-addition';
+  }
+  if (q.operation) return q.operation;
+  return q.topic || null;
+}
 
 // Defensive net: whatever a generator computes, the keyboard the child gets
 // must be able to type it. A whole-number answer gets the plain numeric pad;
@@ -3402,16 +3429,18 @@ function applyKeyboardMode(item) {
 }
 function questionOperation(item) {
   const text = String(item.q || '');
-  if (text.includes('÷') || /shared|per |speed|unit rate/i.test(text)) return 'division';
-  if (text.includes('×') || /\bof\b/i.test(text)) return 'multiplication';
-  if (text.includes('+')) return 'addition';
-  if (text.includes('−') || text.includes(' - ')) return 'subtraction';
+  if (/triangle has angles|third angle|triangle angles/i.test(text)) return 'triangle-angle';
   if (/perimeter/i.test(text)) return 'perimeter';
   if (/surface area/i.test(text)) return 'surface-area';
   if (/\barea\b/i.test(text)) return 'area';
   if (/volume/i.test(text)) return 'volume';
   if (/probability|chance/i.test(text)) return 'probability';
   if (/solve for x|equation/i.test(text)) return 'solve-equation';
+  if (/%/.test(text)) return 'percent';
+  if (text.includes('÷') || /shared|per |speed|unit rate/i.test(text)) return 'division';
+  if (text.includes('×') || /\bof\b/i.test(text)) return 'multiplication';
+  if (text.includes('+')) return 'addition';
+  if (text.includes('−') || text.includes(' - ')) return 'subtraction';
   return 'reasoning';
 }
 function fallbackWorkedExample(item) {
@@ -3466,7 +3495,13 @@ function genQuestion(who, topic, diff) {
 function similarQuestion(who, topic, genIdx, diff) {
   const pool = TOPIC_BANK[who] && TOPIC_BANK[who][topic];
   if (!pool || !pool[genIdx]) return null;
-  const item = pool[genIdx](diff);
+  const live = M && M.q && M.q.topic === topic ? M.q : null;
+  let item = null;
+  for (let tries = 0; tries < 6; tries++) {
+    const candidate = pool[genIdx](diff);
+    if (!live || (candidate.q !== live.q && String(candidate.a) !== String(live.a))) { item = candidate; break; }
+  }
+  if (!item) return null;
   return addQuestionMetadata(item, who, topic, genIdx);
 }
 
@@ -3625,10 +3660,21 @@ function generateDailyMission(who) {
 }
 
 /* ============ HELPERS: dates, confetti, hints ============ */
-const todayStr = () => new Date().toISOString().slice(0,10);
-const yestStr = () => new Date(Date.now() - 864e5).toISOString().slice(0,10);
+function localDateKey(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+const todayStr = () => localDateKey();
+const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return localDateKey(d); };
 if (!state.daily || !state.daily.alex || !state.daily.katya) {
   state.daily = { alex: { date: '', count: 0 }, katya: { date: '', count: 0 } };
+}
+for (const who of ['alex','katya']) {
+  if (!state.daily[who] || typeof state.daily[who] !== 'object' || Array.isArray(state.daily[who])) state.daily[who] = { date:'', count:0 };
+  if (typeof state.daily[who].date !== 'string' || (state.daily[who].date && !/^\d{4}-\d{2}-\d{2}$/.test(state.daily[who].date))) state.daily[who].date = '';
+  if (!Number.isFinite(state.daily[who].count) || state.daily[who].count < 0) state.daily[who].count = 0;
 }
 function dailyCountFor(who) {
   const d = state.daily[who];
@@ -3660,10 +3706,10 @@ const KEY_MILESTONES = [3, 7, 14, 30];
    streak alive, walking back from today and skipping Saturday/Sunday. So
    playing Friday keeps the streak alive all through the weekend into Monday. */
 function lastRequiredDay(todayDateStr) {
-  const d = new Date(todayDateStr + 'T00:00:00');
-  d.setDate(d.getDate() - 1);
+  const [y, m, day] = String(todayDateStr).split('-').map(Number);
+  const d = new Date(y, m - 1, day - 1);
   while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0,10);
+  return localDateKey(d);
 }
 
 function bumpStreak(p, name) {
@@ -3691,7 +3737,22 @@ function awardKeyMoment(name, streak) {
 }
 
 function hintFor() {
-  const q = M.q.q;
+  const question = M.q;
+  if (question.hint) return question.hint;
+  const key = coachingKeyFor(question);
+  if (key === 'triangle-angle') return 'Triangle angles add to 180°. Subtract the two known angles from 180°.';
+  if (key === 'addition') return 'Add the numbers carefully, keeping place values aligned.';
+  if (key === 'subtraction') return 'Subtract each place value carefully, regrouping when needed.';
+  if (key === 'multiplication') return 'Break the multiplication into place-value parts, then add the partial products.';
+  if (key === 'division') return 'Use multiplication facts in reverse: ask how many equal groups fit in the total.';
+  if (key === 'bedmas') return 'Brackets first; then evaluate × and ÷ left to right, followed by + and − left to right.';
+  if (key === 'percent') return 'Find the requested percent of the whole, then follow the wording: discount, sale price, or percent of a whole.';
+  if (key === 'fraction-equivalence') return 'Equivalent fractions name the same amount; multiply or divide the numerator and denominator by the same number.';
+  if (key === 'fraction-comparison') return 'Compare the fraction values using a common denominator or decimal conversion.';
+  if (key === 'fraction-addition') return 'Add or subtract the numerators when denominators match; keep the common denominator.';
+  if (key === 'fraction-of-number') return 'Divide the whole by the denominator, then multiply by the numerator.';
+  if (key === 'fraction-decimal') return 'Divide the numerator by the denominator to convert the fraction to a decimal.';
+  const q = question.q;
   if (q.includes('Solve for x')) return q.includes('\u2212') ? 'Add the number to BOTH sides first, then divide by the number in front of x.' : 'Subtract the number from BOTH sides first, then divide by the number in front of x.';
   if (q.includes('\u00B2')) return 'Squared means multiply the number by itself.';
   if (q.includes('Pattern:')) return 'Find the jump between numbers, then keep jumping to the term you need.';
@@ -3708,7 +3769,7 @@ function hintFor() {
   if (q.includes('\u00F7') || q.includes('shared') || q.includes('Each gets')) return 'Division = sharing into equal groups. Times tables in reverse!';
   if (q.includes('(') && q.includes('\u00D7')) return 'Brackets FIRST, then multiply!';
   if (q.includes('\u00D7') && q.includes('+')) return 'Multiply FIRST, then add. (BEDMAS!)';
-  if (q.includes('\u00D7')) return 'Break it up: 7\u00D78 is the same as 7\u00D74, doubled.';
+  if (q.includes('\u00D7')) return 'Break the multiplication into place-value parts, then add the partial products.';
   if (q.includes('\u2212') && M.player === 'katya') return 'Stack the numbers \u2014 borrow when the top digit is smaller.';
   if (q.includes('\u2212')) return 'Watch the signs! Subtracting a negative = ADDING.';
   return 'Take it step by step on the scratchpad \u2014 you got this!';
@@ -3841,7 +3902,12 @@ function explainStepByStep(q) {
     steps.push(`Find 10% first: ${N} ÷ 10 = ${N / 10}`);
     steps.push(`Scale that 10% block up or down to reach ${P}% of ${N}.`);
   }
-  if (!steps.length) steps.push(lib ? lib.strategy : 'Apply the method for this topic, step by step.');
+  if (!steps.length) {
+    steps.push('Known: identify the numbers, units, and facts given in the question.');
+    steps.push('Asked: identify exactly what the question wants you to find.');
+    steps.push(lib ? `Plan: ${lib.strategy}` : 'Plan: choose the operation that matches the relationship in the question.');
+    steps.push('Calculate carefully, then check whether the result and units make sense.');
+  }
   steps.push(`So the answer to your question is ${q.a}.`);
   return steps;
 }
@@ -3863,18 +3929,28 @@ function updateAttemptDots() {
 // earned" question always gets a second real chance before the mission
 // ends. Total mission length is capped so sessions stay in the
 // EDUCATION.md 15-20 minute band even after reinforcement is added.
-const MAX_MISSION_LEN = 26;
+const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 26;
 function queueReinforcement(topic) {
-  const room = MAX_MISSION_LEN - M.questions.length;
-  if (room <= 0) return;
+  const room = Math.min(MAX_REMEDIATION - (M.remediationQueued || 0), MAX_MISSION_LEN - M.questions.length);
+  if (room <= 0) return 0;
   const count = Math.min(R(1, 3), room);
   const diff = topicDifficulty(M.player, topic);
+  const existing = new Set(M.questions.map(q => q.q));
+  let added = 0;
   for (let i = 0; i < count; i++) {
-    let item = (M.q.genIdx != null) ? similarQuestion(M.player, topic, M.q.genIdx, diff) : null;
-    if (!item) item = genQuestion(M.player, topic, diff);
+    let item = null;
+    for (let tries = 0; tries < 6 && !item; tries++) {
+      const candidate = (M.q.genIdx != null) ? similarQuestion(M.player, topic, M.q.genIdx, diff) : genQuestion(M.player, topic, diff);
+      if (candidate && !existing.has(candidate.q) && String(candidate.a) !== String(M.q.a)) item = candidate;
+    }
+    if (!item) continue;
     item.reinforcement = true;
+    existing.add(item.q);
     M.questions.push(item);
+    added++;
   }
+  M.remediationQueued = Math.min(MAX_REMEDIATION, (M.remediationQueued || 0) + added);
+  return added;
 }
 
 /* ============ ACTIVE MISSION FLOW ============ */
@@ -3922,7 +3998,9 @@ function startMission(id) {
   const saved = validPausedMission(state.activePlayer);
   M = saved
     ? { ...JSON.parse(JSON.stringify(saved)), def }
-    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, bbLevel: 0, answer: '', xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
+    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, bbLevel: 0, answer: '', xpEarned: 0, combo: 0, best: 0, remediationQueued: 0, questions: generateDailyMission(state.activePlayer) };
+  const remediationCap = typeof MAX_REMEDIATION === 'number' ? MAX_REMEDIATION : 6;
+  M.remediationQueued = Math.min(remediationCap, Math.max(0, Number(M.remediationQueued) || 0));
   M.completed = false;
   M.transitioning = false;
   M.pendingCompletion = M.i === M.questions.length;
@@ -3932,7 +4010,7 @@ function startMission(id) {
   sc.classList.toggle('th-katya', M.player === 'katya');
   $('ms-title').textContent = `DAILY GRADE ${getCurrentGrade(M.player) + 1} PREP MISSION`;
   $('ms-player').textContent = (M.player === 'alex' ? 'ALEX ⚡ ' : 'KATYA 🔍 ') + GRADE[M.player];
-  $('ms-xp-pill').textContent = '? +' + def.xp + ' XP + accuracy coins';
+  $('ms-xp-pill').textContent = 'XP + coins based on mission accuracy';
   $('ms-result').style.display = 'none';
   $('ms-play').style.display = 'block';
   const padCard = $('pad-card'), padToggle = $('pad-toggle-btn');
@@ -4075,9 +4153,11 @@ function submitQ() {
       // second chance (EDUCATION.md wrong-answer rule).
       recordAnswer(M.player, M.q.topic, false);
       showWalkthrough(M.q);
-      queueReinforcement(M.q.topic);
+      const added = queueReinforcement(M.q.topic);
       segs();
-      fb.textContent = 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
+      fb.textContent = added > 0
+        ? 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.'
+        : 'That’s okay — let’s learn this one together. Read below, then keep building the skill.';
       fb.className = 'feedback fb-bad';
       document.querySelectorAll('.choice-answer').forEach(b => b.disabled = true);
       $('ms-answer').disabled = true;
@@ -4110,6 +4190,15 @@ function submitQ() {
   }
 }
 function lockThen(f, delay) { $('ms-answer').disabled = true; $('ms-submit').disabled = true; scheduleMissionCallback(f, delay || 1300); }
+function dailyCompletionRewards(accuracy) {
+  const n = Number(accuracy);
+  const a = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+  if (a === 0) return { completionXp:20, completionCoins:5 };
+  if (a < 40) return { completionXp:50, completionCoins:15 };
+  if (a < 70) return { completionXp:90, completionCoins:25 };
+  if (a < 90) return { completionXp:120, completionCoins:35 };
+  return { completionXp:140, completionCoins:45 };
+}
 function showResult() {
   if (!M || M.completed) return;
   M.completed = true;
@@ -4118,7 +4207,16 @@ function showResult() {
   const total = M.questions.length;
   const accuracy = Math.round((M.correct / total) * 100);
   const bonus = Math.round(accuracy / 3);
-  const baseXp = M.xpEarned + M.def.xp + bonus, coins = 35 + Math.round(accuracy / 5);
+  const completion = typeof dailyCompletionRewards === 'function'
+    ? dailyCompletionRewards(accuracy)
+    : (() => {
+      if (accuracy === 0) return { completionXp:20, completionCoins:5 };
+      if (accuracy < 40) return { completionXp:50, completionCoins:15 };
+      if (accuracy < 70) return { completionXp:90, completionCoins:25 };
+      if (accuracy < 90) return { completionXp:120, completionCoins:35 };
+      return { completionXp:140, completionCoins:45 };
+    })();
+  const baseXp = M.xpEarned + completion.completionXp + bonus, coins = completion.completionCoins;
   const sibling = M.player === 'alex' ? 'katya' : 'alex';
   const teamBonus = dailyCountFor(sibling) >= 1;
   const wMult = weekendXpMult();
@@ -6041,6 +6139,11 @@ function bNextQ() {
   do { B.q = pick(BANK[B.turn][topic])(); tries++; } while (B.q.q === B.lastQ[B.turn] && tries < 8);
   B.lastQ[B.turn] = B.q.q;
   B.q.category = topic;
+  B.q.coachKey = questionOperation(B.q);
+  if (topic === 'money' && !/%/.test(B.q.q)) {
+    B.q.coachKey = /change|spend|earn|coupon|final total/i.test(B.q.q) ? 'subtraction' : 'multiplication';
+  }
+  if (topic === 'logic' && /solve for x|equation/i.test(B.q.q)) B.q.coachKey = 'solve-equation';
   $('b-story').textContent = B.q.s;
   $('b-q').textContent = B.q.q;
   const signBtn = $('b-sign-btn');
