@@ -152,7 +152,7 @@ body {
 .side-card.pink-glow { border-color: rgba(255,46,126,0.4); box-shadow: 0 0 20px rgba(255,46,126,0.12); }
 .side-card.blue-glow { border-color: rgba(25,201,255,0.35); box-shadow: 0 0 20px rgba(25,201,255,0.1); }
 .side-title { font-family: var(--orb); font-size: 13px; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px; }
-.qlink { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; transition: all .15s; }
+.qlink { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; transition: all .15s; background: transparent; border: 0; width: 100%; text-align: left; font-family: inherit; }
 .qlink:hover { background: rgba(120,160,255,0.08); color: var(--text); }
 .qlink svg { width: 18px; height: 18px; stroke: var(--blue); fill: none; stroke-width: 1.8; }
 .quote { font-size: 18px; font-weight: 700; line-height: 1.55; color: #FF8FB8; text-shadow: 0 0 14px rgba(255,46,126,0.5); font-style: italic; }
@@ -1204,18 +1204,18 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="alex-streak">11</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#7FB6FF"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8Z" fill="#FFC93C" opacity=".9"/></svg>BATTLE<br>RANK</div><div class="k">DIVISION II</div></div>
     </div>
-    <button class="btn btn-blue" onclick="event.stopPropagation();setPlayer('alex');toast('⚡ Alex selected! Profile screen coming next build.')">VIEW PROFILE <span style="font-size:18px">›</span></button>
+    <button class="btn btn-blue" onclick="event.stopPropagation();setPlayer('alex');toast('⚡ Alex selected!')">VIEW PROFILE <span style="font-size:18px">›</span></button>
   </div>
 </div>
 
 <div class="side-card blue-glow">
   <div class="side-title" style="color:#9FD8FF">QUICK LINKS</div>
-  <div class="qlink" onclick="startMission('daily')"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Daily Mission</div>
-  <div class="qlink" onclick="goTab('Battle')"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM20 20 10 6 7 4 4 7l2 3 10 10Z"/></svg>Battle Mode</div>
-  <div class="qlink" onclick="goTab('Store')"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>Reward Store</div>
-  <div class="qlink" onclick="goTab('Grant Prize')"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11"/></svg>Grant Prize</div>
-  <div class="qlink" onclick="goTab('Parent')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg>Parent Dashboard</div>
-  <div class="qlink" onclick="openStrategyLib()"><svg viewBox="0 0 24 24"><path d="M12 3c-4 1-7 3-7 7 0 3.5 2.5 5.5 3.5 7 .5.8 1 1.5 1 2h5c0-.5.5-1.2 1-2 1-1.5 3.5-3.5 3.5-7 0-4-3-6-7-7Z"/><path d="M10 22h4"/></svg>Strategy Library</div>
+  <button type="button" class="qlink" onclick="startMission('daily')"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Daily Mission</button>
+  <button type="button" class="qlink" onclick="goTab('Battle')"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM20 20 10 6 7 4 4 7l2 3 10 10Z"/></svg>Battle Mode</button>
+  <button type="button" class="qlink" onclick="goTab('Store')"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>Reward Store</button>
+  <button type="button" class="qlink" onclick="goTab('Grant Prize')"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11"/></svg>Grant Prize</button>
+  <button type="button" class="qlink" onclick="goTab('Parent')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg>Parent Dashboard</button>
+  <button type="button" class="qlink" onclick="openStrategyLib()"><svg viewBox="0 0 24 24"><path d="M12 3c-4 1-7 3-7 7 0 3.5 2.5 5.5 3.5 7 .5.8 1 1.5 1 2h5c0-.5.5-1.2 1-2 1-1.5 3.5-3.5 5.5-7 0-4-3-6-7-7Z"/><path d="M10 22h4"/></svg>Strategy Library</button>
 </div>
 </aside>
 
@@ -1363,7 +1363,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="katya-streak">9</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#FF8FB8"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M12 2 20 6v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6Z" fill="rgba(255,46,126,.2)" stroke="#FF2E7E" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="none" stroke="#FF6FA5" stroke-width="1.8"/><path d="M13.2 13.2 16 16" stroke="#FF6FA5" stroke-width="1.8"/></svg>DETECTIVE<br>RANK</div><div class="k">CASE SOLVER</div></div>
     </div>
-    <button class="btn btn-pink" onclick="event.stopPropagation();setPlayer('katya');toast('🔍 Katya selected! Profile screen coming next build.')">VIEW PROFILE <span style="font-size:18px">›</span></button>
+    <button class="btn btn-pink" onclick="event.stopPropagation();setPlayer('katya');toast('🔍 Katya selected!')">VIEW PROFILE <span style="font-size:18px">›</span></button>
   </div>
 </div>
 
@@ -2846,8 +2846,11 @@ function paintDailyMissionStatus() {
 }
 
 function setPlayer(w) {
+  if (typeof lockParent === 'function') lockParent();
   if (state.activePlayer === w) { paint(); return; }
   pauseDailyMissionRun();
+  if (typeof clearNonDailyActivityState === 'function') clearNonDailyActivityState();
+  if (typeof hideAllActivityScreens === 'function') hideAllActivityScreens();
   state.activePlayer = w;
   paint();
   const h = $('hero-' + w);
@@ -3914,6 +3917,7 @@ function pauseDailyMissionRun() {
 function startMission(id) {
   const def = MISSIONS[0];
   if (M && !M.completed) savePausedMission();
+  if (typeof enterActivity === 'function') enterActivity('daily');
   missionRunToken++;
   const saved = validPausedMission(state.activePlayer);
   M = saved
@@ -4149,18 +4153,10 @@ function showResult() {
   segs();
 }
 function closeMission() {
+  if (typeof goHome === 'function') { goHome(); return; }
   pauseDailyMissionRun();
-  $('mission-screen').classList.remove('on');
-  $('battle-screen').classList.remove('on');
-  $('store-screen').classList.remove('on');
-  $('parent-screen').classList.remove('on');
-  $('moneylab-screen').classList.remove('on');
-  $('grant-screen').classList.remove('on');
-  $('guided-screen').classList.remove('on');
-  $('escape-screen').classList.remove('on');
-  $('strategy-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  paint();
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen']
+    .forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
 }
 
 window.addEventListener('beforeunload', savePausedMission);
@@ -4244,6 +4240,7 @@ function catalogFor(who) {
 }
 
 function openStore() {
+  enterActivity('store');
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Store'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -4254,9 +4251,7 @@ function openStore() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeStore() {
-  $('store-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 
 function hasPendingFor(who, id) {
@@ -4346,6 +4341,7 @@ function requestPrize(id) {
 // Parent decides. On APPROVE, re-check balance at this moment and deduct coins
 // (and keys, if premium). On DECLINE, nothing is deducted.
 function decideRequest(rid, ok) {
+  if (!requireParentAuth()) return;
   const r = state.requests.find(x => x.id === rid);
   if (!r || r.status !== 'pending') return;
   const p = state[r.who];
@@ -4387,6 +4383,12 @@ let parentUnlocked = false;
 let pendingProgressImport = null;
 const PIN_MAX_FAILURES = 5, PIN_LOCK_MS = 30000;
 let pinFailures = 0, pinLockedUntil = 0;
+function lockParent() { parentUnlocked = false; }
+function requireParentAuth() {
+  if (parentUnlocked) return true;
+  if (typeof toast === 'function') toast('🔒 Parent PIN required.');
+  return false;
+}
 function verifyParentPin(value) {
   const now = Date.now();
   if (now < pinLockedUntil) return { ok:false, wait:Math.ceil((pinLockedUntil-now)/1000) };
@@ -4396,6 +4398,7 @@ function verifyParentPin(value) {
   return { ok:false, wait:0 };
 }
 function openParent() {
+  enterActivity('parent', { keepParent: true });
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Parent'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -4410,9 +4413,8 @@ function openParent() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeParent() {
-  $('parent-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  lockParent();
+  goHome();
 }
 function checkPin() {
   const result = verifyParentPin($('pin-input').value);
@@ -4427,6 +4429,7 @@ function checkPin() {
   }
 }
 function changePin() {
+  if (!requireParentAuth()) return;
   const v = $('new-pin').value.trim();
   if (!/^\d{4}$/.test(v)) { toast('PIN must be 4 digits.'); return; }
   state.parentPin = v; Store.set('smbt-state-v2', state);
@@ -4435,9 +4438,7 @@ function changePin() {
   renderParent();
 }
 function requireUnlockedParent() {
-  if (parentUnlocked) return true;
-  toast('Unlock the Parent Dashboard first.');
-  return false;
+  return requireParentAuth();
 }
 function downloadJSONFile(name, value) {
   const blob = new Blob([JSON.stringify(value, null, 2)], { type:'application/json' });
@@ -4609,6 +4610,7 @@ function confirmProgressImport() {
   renderParent();
 }
 async function generateFamilyCodeUI() {
+  if (!requireParentAuth()) return;
   if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
   const code = Cloud.genCode();
   toast('⏳ Creating family record...');
@@ -4622,6 +4624,7 @@ async function generateFamilyCodeUI() {
   renderParent();
 }
 async function linkFamilyCodeUI() {
+  if (!requireParentAuth()) return;
   const code = ($('family-code-input').value || '').trim().toUpperCase();
   if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
   if (!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) { toast('Enter the complete 8-character Family Sync Code.'); return; }
@@ -4632,6 +4635,7 @@ async function linkFamilyCodeUI() {
   renderParent();
 }
 function dismissPinNotice() {
+  if (!requireParentAuth()) return;
   state.pinNoticeDismissed = true;
   Store.set('smbt-state-v2', state);
   const el = $('pin-default-notice');
@@ -4641,6 +4645,7 @@ function dismissPinNotice() {
 // year, so auto-advance keeps working correctly in every later September
 // instead of freezing the grade forever at the manually-set number.
 function setGradeOverride(who) {
+  if (!requireParentAuth()) return;
   const inp = $('grade-input-' + who);
   const v = parseInt(inp.value, 10);
   if (!Number.isFinite(v) || v < 1 || v > 12) { toast('Enter a grade from 1-12.'); return; }
@@ -4652,6 +4657,7 @@ function setGradeOverride(who) {
   renderParent();
 }
 function toggleMute() {
+  if (!requireParentAuth()) return;
   state.settings.muted = !state.settings.muted;
   Store.set('smbt-state-v2', state);
   syncMuteBtn();
@@ -4700,6 +4706,7 @@ function cancelResetProgress() {
 // is inherently PIN-protected; the extra click-through warning guards
 // against an accidental tap on a destructive, unrecoverable action.
 function doResetProgress() {
+  if (!requireParentAuth()) return;
   resetInProgress = true;
   missionRunToken++;
   const result = Store.resetPrimary(state);
@@ -4759,6 +4766,7 @@ function renderStrategyLibrary() {
   $('strategy-cards').innerHTML = cardsHtml || '<div class="mgr-note">Play a Daily Mission and tap Brain Boost to start discovering strategies!</div>';
 }
 function openStrategyLib() {
+  enterActivity('strategy');
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen'].forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
@@ -4767,9 +4775,7 @@ function openStrategyLib() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeStrategyLib() {
-  $('strategy-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 
 function renderParent() {
@@ -4885,6 +4891,7 @@ function renderRewardsManager() {
   }).join('');
 }
 function editReward(i, field, val) {
+  if (!requireParentAuth()) return;
   const n = parseInt(val, 10);
   if (isNaN(n) || n < 0) { renderParent(); return; }
   state.rewards[i][field] = n;
@@ -4893,6 +4900,7 @@ function editReward(i, field, val) {
   toast('💾 Reward updated.');
 }
 function toggleReward(i) {
+  if (!requireParentAuth()) return;
   state.rewards[i].enabled = !state.rewards[i].enabled;
   Store.set('smbt-state-v2', state);
   renderParent();
@@ -4930,6 +4938,7 @@ function adjStat(who, field, label, val) {
   </div>`;
 }
 function adjust(who, field, delta) {
+  if (!requireParentAuth()) return;
   const step = (field === 'coins' || field === 'totalXP') ? 10 : 1;
   const p = state[who];
   p[field] = Math.max(0, (p[field] || 0) + delta * step);
@@ -4938,6 +4947,7 @@ function adjust(who, field, delta) {
   renderParent();
 }
 function markMissionDone(who) {
+  if (!requireParentAuth()) return;
   const p = state[who];
   state.activity[who].missions += 1;
   p.coins += 20;
@@ -5025,9 +5035,38 @@ $('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPi
 /* ============ MONEY LAB ============ */
 let mlGoalId = null;
 let mlStats = { solved: 0, earned: 0 };
-let mlQ = null, mlAttempts = 0;
+let mlQ = null, mlAttempts = 0, mlOwner = null;
+let activityEpoch = 0;
+function hideAllActivityScreens(keepParent=false) {
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen']
+    .forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
+  activityEpoch++;
+  if (!keepParent) lockParent();
+}
+function clearNonDailyActivityState() {
+  mlQ = null; mlOwner = null; mlAttempts = 0; mlGoalId = null;
+  mlStats = { solved: 0, earned: 0 };
+  GM = null;
+  ER = null;
+  B = null;
+}
+function enterActivity(kind, options = {}) {
+  if (kind !== 'daily' && M) pauseDailyMissionRun();
+  clearNonDailyActivityState();
+  hideAllActivityScreens(options.keepParent === true);
+}
+function goHome() {
+  if (M) pauseDailyMissionRun();
+  clearNonDailyActivityState();
+  hideAllActivityScreens();
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  $('hq-grid').style.display = 'grid';
+  const landing = $('landing'); if (landing) landing.style.display = 'block';
+  paint();
+}
 
 function openMoneyLab() {
+  enterActivity('money');
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Money Lab'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -5041,15 +5080,13 @@ function openMoneyLab() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeMoneyLab() {
-  $('moneylab-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 function mlTab(which) {
   document.querySelectorAll('.ml-tab').forEach(t => t.classList.toggle('on', t.dataset.mlt === which));
   $('ml-goal').classList.toggle('on', which === 'goal');
   $('ml-chal').classList.toggle('on', which === 'chal');
-  if (which === 'chal' && !mlQ) mlNextQ();
+  if (which === 'chal' && !mlQ) { mlOwner = state.activePlayer; mlNextQ(); }
 }
 
 /* --- Savings Goal (goals = real Store prizes) --- */
@@ -5098,8 +5135,7 @@ function renderGoalTrack() {
 
 /* --- Money Challenge: budgeting / change / discount, $ answers, pays coins --- */
 const money2 = n => Math.round(n * 100) / 100;
-function mlGen() {
-  const who = state.activePlayer;
+function mlGen(who = mlOwner || state.activePlayer) {
   const F = PERSONALIZATION.katya.friends;
   const pickF = () => F[R(0, 2)];
   const ALEX = [
@@ -5121,6 +5157,7 @@ function mlGen() {
   return pick(who === 'alex' ? ALEX : KATYA)();
 }
 function mlNextQ() {
+  if (!mlOwner) return;
   mlAttempts = 0;
   let tries = 0, q;
   do { q = mlGen(); tries++; } while (mlQ && q.q === mlQ.q && tries < 8);
@@ -5134,17 +5171,19 @@ function mlNextQ() {
   $('ml-submit').disabled = false;
 }
 function mlCheck() {
+  if (!mlQ || mlQ.completed || !mlOwner || !$('moneylab-screen').classList.contains('on')) return;
   const v = parseStrictNumber($('ml-answer').value);
   const fb = $('ml-fb');
   if (v === null) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
+    mlQ.completed = true;
     const reward = 15;
     const mlXp = 5 * weekendXpMult();
-    state[state.activePlayer].coins += reward;
-    gainXP(state.activePlayer, mlXp);
+    state[mlOwner].coins += reward;
+    gainXP(mlOwner, mlXp);
     mlStats.solved++; mlStats.earned += reward;
-    state.activity[state.activePlayer].money++;
-    touchPlayer(state.activePlayer);
+    state.activity[mlOwner].money++;
+    touchPlayer(state[mlOwner]);
     $('ml-solved').textContent = mlStats.solved;
     $('ml-earned').textContent = mlStats.earned;
     fb.textContent = pick(['✔ Correct! +15 coins 💰', '✔ Smart money move! +15 coins', '✔ Cha-ching! +15 coins']);
@@ -5153,14 +5192,22 @@ function mlCheck() {
     paint();
     renderGoalTrack();
     $('ml-answer').disabled = true; $('ml-submit').disabled = true;
-    setTimeout(mlNextQ, 1300);
+    const token = activityEpoch, owner = mlOwner, run = mlQ;
+    setTimeout(() => {
+      if (token !== activityEpoch || owner !== mlOwner || run !== mlQ || !$('moneylab-screen').classList.contains('on')) return;
+      mlNextQ();
+    }, 1300);
   } else {
     mlAttempts++;
     if (mlAttempts >= 2) {
       fb.textContent = '✖ The answer was ' + mlQ.unit + mlQ.a + '. New question coming up!';
       fb.style.color = 'var(--pink)';
       $('ml-answer').disabled = true; $('ml-submit').disabled = true;
-      setTimeout(mlNextQ, 1500);
+      const token = activityEpoch, owner = mlOwner, run = mlQ;
+      setTimeout(() => {
+        if (token !== activityEpoch || owner !== mlOwner || run !== mlQ || !$('moneylab-screen').classList.contains('on')) return;
+        mlNextQ();
+      }, 1500);
     } else {
       fb.textContent = '✖ Not quite — read it again carefully and retry!';
       fb.style.color = 'var(--pink)';
@@ -5181,6 +5228,7 @@ const GRANTS = [
 let gWho = 'alex', gPick = null;
 
 function openGrant() {
+  enterActivity('grant', { keepParent: parentUnlocked });
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Grant Prize'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','strategy-screen'].forEach(s => $(s).classList.remove('on'));
@@ -5193,9 +5241,8 @@ function openGrant() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeGrant() {
-  $('grant-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  lockParent();
+  goHome();
 }
 function gCheckPin() {
   const result = verifyParentPin($('g-pin-input').value);
@@ -5236,6 +5283,7 @@ function gPickReward(id) {
   c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
 }
 function grantPrize() {
+  if (!requireParentAuth()) return;
   if (!gPick) return;
   const p = state[gWho];
   const name = gWho === 'alex' ? 'Alex' : 'Katya';
@@ -5469,10 +5517,11 @@ function openGuided() {
   startGuided(state.activePlayer);
 }
 function startGuided(who) {
+  enterActivity('guided');
   gmActiveSet = (who === 'alex' || who === 'katya') ? who : state.activePlayer;
   const bank = GUIDED[gmActiveSet];
   const prob = pick(bank)();
-  GM = { who: gmActiveSet, prob, step: 0, attempts: 0, usedHint: false, strategyOk: false, explainOk: false, checks: 0 };
+  GM = { who: gmActiveSet, prob, step: 0, attempts: 0, usedHint: false, strategyOk: false, explainOk: false, checks: 0, completed: false, runEpoch: activityEpoch };
 
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Missions'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
@@ -5491,9 +5540,11 @@ function startGuided(who) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeGuided() {
-  $('guided-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
+}
+
+function guidedIsCurrent() {
+  return !!(GM && GM.runEpoch === activityEpoch && $('guided-screen').classList.contains('on'));
 }
 
 function renderRail() {
@@ -5507,7 +5558,7 @@ function gmHintBtn() {
   return `<button class="gm-hint-btn" onclick="gmShowHint()">🧠 NEED A BRAIN BOOST?</button>
           <div class="gm-hintbox" id="gm-hintbox"><span>🧠</span><span>${GM.prob.hint}</span></div>`;
 }
-function gmShowHint() { GM.usedHint = true; $('gm-hintbox').classList.add('show'); }
+function gmShowHint() { if (!guidedIsCurrent()) return; GM.usedHint = true; $('gm-hintbox').classList.add('show'); }
 
 function renderStage() {
   renderRail();
@@ -5556,7 +5607,8 @@ function renderStage() {
         ${gmHintBtn()}
         <button class="gm-action" id="gm-solve-btn" style="margin-top:14px" onclick="gmCheckSolve()">CHECK MY ANSWER</button>
       </div>`;
-    setTimeout(() => { const a = $('gm-answer'); if (a) { a.focus(); a.addEventListener('keydown', e => { if (e.key === 'Enter') gmCheckSolve(); }); } }, 50);
+    const token = activityEpoch, run = GM;
+    setTimeout(() => { if (token !== activityEpoch || run !== GM || !$('guided-screen').classList.contains('on')) return; const a = $('gm-answer'); if (a) { a.focus(); a.addEventListener('keydown', e => { if (e.key === 'Enter') gmCheckSolve(); }); } }, 50);
   } else if (GM.step === 3) {
     // EXPLAIN — pick the reasoning that matches
     const opts = shuffle(p.explain.map(e => ({...e})));
@@ -5592,9 +5644,10 @@ function renderStage() {
   }
 }
 
-function gmNext() { GM.step++; GM.attempts = 0; renderStage(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function gmNext() { if (!guidedIsCurrent()) return; GM.step++; GM.attempts = 0; renderStage(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 function gmPickStrategy(btn, ok) {
+  if (!guidedIsCurrent()) return;
   if (btn.disabled) return;
   const fb = $('gm-strat-fb');
   if (ok) {
@@ -5613,6 +5666,7 @@ function gmPickStrategy(btn, ok) {
 }
 
 function gmCheckSolve() {
+  if (!guidedIsCurrent()) return;
   const inp = $('gm-answer'); if (!inp) return;
   const v = parseStrictNumber(inp.value);
   const fb = $('gm-solve-fb');
@@ -5640,6 +5694,7 @@ function gmCheckSolve() {
 }
 
 function gmPickExplain(btn, ok) {
+  if (!guidedIsCurrent()) return;
   if (btn.disabled) return;
   const fb = $('gm-explain-fb');
   if (ok) {
@@ -5658,6 +5713,7 @@ function gmPickExplain(btn, ok) {
 }
 
 function gmToggleCheck(i) {
+  if (!guidedIsCurrent()) return;
   const item = $('gm-chk-' + i), tick = $('gm-tick-' + i);
   const on = item.classList.toggle('on');
   tick.textContent = on ? '✓' : '';
@@ -5668,6 +5724,8 @@ function gmToggleCheck(i) {
 }
 
 function gmFinish() {
+  if (!guidedIsCurrent() || GM.completed) return;
+  GM.completed = true;
   const who = GM.who, p = state[who];
   // reward scales with how cleanly they reasoned (no hints, first-try)
   let xp = 60;
@@ -5754,9 +5812,10 @@ function genEscape(who) {
 function openEscape() { startEscape(state.activePlayer); }
 
 function startEscape(who) {
+  enterActivity('escape');
   erWho = (who === 'alex' || who === 'katya') ? who : state.activePlayer;
   ER = genEscape(erWho);
-  ER.attempts = 0; ER.usedHint = false; ER.cleanMoves = 0; ER.totalMoves = ER.moves.length;
+  ER.attempts = 0; ER.usedHint = false; ER.cleanMoves = 0; ER.totalMoves = ER.moves.length; ER.completed = false; ER.runEpoch = activityEpoch;
 
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Missions'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
@@ -5772,9 +5831,11 @@ function startEscape(who) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeEscape() {
-  $('escape-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
+}
+
+function escapeIsCurrent() {
+  return !!(ER && ER.runEpoch === activityEpoch && $('escape-screen').classList.contains('on'));
 }
 
 function renderLocks() {
@@ -5788,10 +5849,12 @@ function renderLocks() {
 }
 
 function renderEqState() {
+  if (!escapeIsCurrent()) return;
   $('er-eq').textContent = fmtEq(ER.curM, ER.curSign, ER.curC, ER.curRhs);
 }
 
 function renderMove() {
+  if (!escapeIsCurrent()) return;
   if (ER.stepIndex >= ER.moves.length) return erSolved();
   const move = ER.moves[ER.stepIndex];
   ER.attempts = 0; ER.usedHint = false;
@@ -5824,6 +5887,7 @@ function erHintFor(move) {
 }
 
 function erPick(btn, ok) {
+  if (!escapeIsCurrent() || ER.completed) return;
   if (btn.disabled) return;
   const fb = $('er-fb');
   if (ok) {
@@ -5842,7 +5906,8 @@ function erPick(btn, ok) {
     fb.textContent = '✔ Gate unlocked!'; fb.className = 'er-fb good';
     $('er-eq').classList.remove('flash'); void $('er-eq').offsetWidth; $('er-eq').classList.add('flash');
     burst(16);
-    setTimeout(() => { renderEqState(); renderMove(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, 900);
+    const token = activityEpoch, run = ER;
+    setTimeout(() => { if (token !== activityEpoch || run !== ER || !$('escape-screen').classList.contains('on')) return; renderEqState(); renderMove(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, 900);
   } else {
     ER.attempts++;
     btn.classList.add('wrong'); btn.disabled = true;
@@ -5858,11 +5923,14 @@ function applyMove(move) {
 }
 
 function erShowHint() {
+  if (!escapeIsCurrent()) return;
   ER.usedHint = true;
   $('er-hintbox').classList.add('show');
 }
 
 function erSolved() {
+  if (!escapeIsCurrent() || ER.completed) return;
+  ER.completed = true;
   // final lock opens
   const fl = $('er-lock-final'); if (fl) { fl.textContent = '🎉'; fl.classList.add('open'); }
   const who = erWho, p = state[who];
@@ -5918,6 +5986,7 @@ function pickBMode(id) {
 }
 
 function openBattle() {
+  enterActivity('battle');
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Battle'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -5935,13 +6004,12 @@ function openBattle() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeBattle() {
-  $('battle-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 
 function startBattle() {
-  B = { target: bMode.target, score: { alex: 0, katya: 0 }, turn: 'alex', round: 1, attempts: 0, lastQ: { alex:'', katya:'' }, q: null };
+  activityEpoch++;
+  B = { target: bMode.target, score: { alex: 0, katya: 0 }, turn: 'alex', round: 1, attempts: 0, lastQ: { alex:'', katya:'' }, q: null, completed: false, runEpoch: activityEpoch };
   $('b-setup').style.display = 'none';
   $('b-result').style.display = 'none';
   $('b-live').style.display = 'block';
@@ -5966,6 +6034,7 @@ function paintBoard() {
 }
 
 function bNextQ() {
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
   B.attempts = 0;
   const topic = pick(['speed','logic','money','mystery','boss','streak']);
   let tries = 0;
@@ -5988,6 +6057,7 @@ function bNextQ() {
 }
 
 function bSubmit() {
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
   const v = parseStrictNumber($('b-answer').value);
   const fb = $('b-fb');
   if (v === null) { fb.textContent = 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
@@ -6015,14 +6085,21 @@ function bSubmit() {
     }
   }
 }
-function bLock(f) { $('b-answer').disabled = true; $('b-submit').disabled = true; setTimeout(f, 1200); }
+function bLock(f) {
+  const token = activityEpoch, run = B;
+  $('b-answer').disabled = true; $('b-submit').disabled = true;
+  setTimeout(() => { if (token !== activityEpoch || run !== B || !B || B.completed || !$('battle-screen').classList.contains('on')) return; f(); }, 1200);
+}
 function swapTurn() {
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
   if (B.turn === 'katya') B.round++;
   B.turn = B.turn === 'alex' ? 'katya' : 'alex';
   bNextQ();
 }
 
 function endBattle() {
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
+  B.completed = true;
   $('b-live').style.display = 'none';
   $('b-result').style.display = 'block';
   const aWin = B.score.alex > B.score.katya;
@@ -6059,10 +6136,11 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   else if (t.dataset.screen === 'Money Lab') { openMoneyLab(); }
   else if (t.dataset.screen === 'Grant Prize') { openGrant(); }
   else if (t.dataset.screen === 'Missions') { openGuided(); }
-  else if (t.dataset.screen !== 'Home') toast('🚧 ' + t.dataset.screen + ' screen — next build step!');
-  else closeMission();
+  else if (t.dataset.screen !== 'Home') toast('That screen is not available yet.');
+  else goHome();
 }));
 function goTab(name) {
+  if (name === 'Home') { goHome(); return; }
   if (name === 'Battle') { openBattle(); return; }
   if (name === 'Store') { openStore(); return; }
   if (name === 'Parent') { openParent(); return; }
@@ -6070,7 +6148,7 @@ function goTab(name) {
   if (name === 'Grant Prize') { openGrant(); return; }
   if (name === 'Missions') { openGuided(); return; }
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === name));
-  toast('🚧 ' + name + ' screen — next build step!');
+  toast('That screen is not available yet.');
 }
 
 /* ============ WEEKEND DOUBLE XP (real — actually applied to XP, not decorative) ============ */
@@ -6231,18 +6309,15 @@ function pickProfile(who) {
   paint();
   hidePicker();
   // Land the child on their own HQ.
-  if (typeof goHome === 'function') goHome();
-  else {
-    ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(id => { const el=$(id); if(el) el.classList.remove('on'); });
-    $('hq-grid').style.display = 'grid'; var _l=$('landing'); if(_l)_l.style.display='block';
-  }
+  goHome();
   playCue('request');
 }
 function switchProfile() {
   pauseDailyMissionRun();
-  parentUnlocked = false;
+  clearNonDailyActivityState();
+  hideAllActivityScreens();
+  lockParent();
   // Close any open screen and return to picker.
-  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(id => { const el=$(id); if(el) el.classList.remove('on'); });
   const hq = $('hq-grid'); if (hq) hq.style.display = 'grid';
   showPicker();
 }
