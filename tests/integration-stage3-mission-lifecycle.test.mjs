@@ -109,7 +109,7 @@ function createHarness(questionFactory = () => [question('2 + 2 = ?', 4, ['3', '
       ms:['🧠 BRAIN BOOST','⚡ WINNING STRATEGY','🔍 SIMILAR EXAMPLE','💡 REMEMBER THIS','⚠️ COMMON MISTAKE','🎯 BONUS CHALLENGE'],
       b:['🧠 BRAIN BOOST','⚡ WINNING STRATEGY','⚠️ COMMON MISTAKE']
     },
-    MAX_MISSION_LEN:26,
+    MAX_MISSION_LEN:36,
     B:{},
     BATTLE_TOPIC_MAP:{},
     document:{

@@ -87,8 +87,8 @@ assert.match(functionBody('similarQuestion'), /candidate\.q !== live\.q/);
 assert.match(functionBody('similarQuestion'), /String\(candidate\.a\) !== String\(live\.a\)/);
 
 // Remediation is bounded, same-topic, distinct, and appended only after the
-// existing base mission. Current main intentionally retains its 18/20 base.
-assert.match(source, /const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 26/);
+// existing 30-question base mission and six-question remediation allowance.
+assert.match(source, /const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 36/);
 assert.match(functionBody('queueReinforcement'), /return 0/);
 assert.match(functionBody('queueReinforcement'), /new Set\(M\.questions\.map\(q => q\.q\)\)/);
 assert.match(functionBody('queueReinforcement'), /candidate && !existing\.has\(candidate\.q\)/);
@@ -100,31 +100,31 @@ const queueContext = vm.createContext({
   R: () => 2,
   topicDifficulty: () => 1,
   genQuestion: () => ({ q:'unused', a:0, topic:'fractions' }),
-  M: { player:'alex', remediationQueued:0, questions:Array.from({length:20}, (_, i) => ({ q:`base-${i}`, a:i, topic:'fractions' })), q:{ genIdx:0, a:2, topic:'fractions' } }
+  M: { player:'alex', remediationQueued:0, questions:Array.from({length:30}, (_, i) => ({ q:`base-${i}`, a:i, topic:'fractions' })), q:{ genIdx:0, a:2, topic:'fractions' } }
 });
 vm.runInContext(`
-  const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 26;
+  const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 36;
   let next = 0;
   function similarQuestion() { next++; return { q:'rem-' + next, a:100 + next, topic:'fractions' }; }
   ${functionBody('queueReinforcement')}
   globalThis.runQueue = queueReinforcement;
 `, queueContext);
 assert.equal(queueContext.runQueue('fractions'), 2);
-assert.equal(queueContext.M.questions.length, 22);
+assert.equal(queueContext.M.questions.length, 32);
 assert.equal(queueContext.M.remediationQueued, 2);
-assert.ok(queueContext.M.questions.slice(20).every(q => q.reinforcement && q.topic === 'fractions'));
+assert.ok(queueContext.M.questions.slice(30).every(q => q.reinforcement && q.topic === 'fractions'));
 queueContext.M.remediationQueued = 6;
 assert.equal(queueContext.runQueue('fractions'), 0);
-const questions = Array.from({length:20}, (_, i) => ({ q:`base-${i}`, topic:'fractions', a:i }));
+const questions = Array.from({length:30}, (_, i) => ({ q:`base-${i}`, topic:'fractions', a:i }));
 const appended = [{q:'rem-1',topic:'fractions',a:101},{q:'rem-2',topic:'fractions',a:102},{q:'rem-1',topic:'fractions',a:101}];
 let queued = 0;
 for (const candidate of appended) {
-  if (queued >= 6 || questions.length >= 26 || questions.some(q => q.q === candidate.q) || candidate.a === questions[0].a) continue;
+  if (queued >= 6 || questions.length >= 36 || questions.some(q => q.q === candidate.q) || candidate.a === questions[0].a) continue;
   questions.push({...candidate, reinforcement:true}); queued++;
 }
-assert.equal(questions.length, 22);
+assert.equal(questions.length, 32);
 assert.equal(queued, 2);
-assert.ok(questions.slice(20).every(q => q.reinforcement && q.topic === 'fractions'));
+assert.ok(questions.slice(30).every(q => q.reinforcement && q.topic === 'fractions'));
 assert.equal(questions.filter(q => q.reinforcement).length, 2);
 
 // Completion tiers are bounded, deterministic, and keep question XP/accuracy

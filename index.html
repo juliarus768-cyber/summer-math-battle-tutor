@@ -1166,7 +1166,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED · ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub" id="landing-mission-status">18–20 adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub" id="landing-mission-status">30 adaptive questions across your grade-level math families. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -2847,10 +2847,10 @@ function paintDailyMissionStatus() {
   const saved = validPausedMission(who);
   const progress = $('daily-card-progress');
   const landingStatus = $('landing-mission-status');
-  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : (who === 'alex' ? '18 adaptive questions' : '20 adaptive questions');
+  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : '30 base questions';
   if (landingStatus) landingStatus.textContent = saved
     ? `Mission paused at question ${saved.i + 1} of ${saved.questions.length}. Tap to resume exactly where you stopped.`
-    : `${who === 'alex' ? 18 : 20} adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.`;
+    : '30 adaptive questions across your grade-level math families. Retry gently, build accuracy, earn XP and coins.';
 }
 
 function setPlayer(w) {
@@ -2882,7 +2882,7 @@ $('missions').innerHTML = MISSIONS.map(m => `
   <div class="mcard ${m.cls} daily-only" role="button" tabindex="0" aria-label="Start or resume Daily Math Mission" onclick="startMission('daily')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startMission('daily')}">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog" id="daily-card-progress">18–20 adaptive questions</div>
+    <div class="mprog" id="daily-card-progress">30 base questions</div>
     <div class="mxp">XP + coins based on mission accuracy</div>
   </div>`).join('');
 
@@ -2975,6 +2975,14 @@ alex: {
     () => { const n=R(5,15); return { s:'🧠 Power surge! Square the energy core.', q:`${n}² = ?`, a:n*n }; },
     () => { const st=RNZ(2,9), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st }; }
   ],
+  longdivision: [
+    () => { const d=R(2,9), q=R(12,80), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Long division checkpoint.', q:`${n} ÷ ${d} = ? Choose quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'Divide, multiply to check, then subtract to find the remainder.', coachKey:'longdivision' }; },
+    () => { const d=R(2,9), q=R(20,90), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Remainder in context.', q:`${n} stickers shared among ${d} teams: how many per team, with leftovers? Choose q r r.`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'The remainder is what is left after making complete equal groups.', coachKey:'longdivision' }; }
+  ],
+  data: [
+    () => { const a=R(12,40), b=R(12,40), c=R(12,40); return { s:'📊 Read the table.', q:`A table records ${a} votes for music, ${b} for art, and ${c} for sports. How many votes were recorded?`, a:a+b+c, hint:'Add each category exactly once.', coachKey:'data', data:{ music:a, art:b, sports:c } }; },
+    () => { const a=R(10,40), b=R(10,40); const larger=Math.max(a,b); return { s:'📊 Compare the data.', q:`A survey shows ${a} students chose bus and ${b} chose walking. How many more chose the larger group?`, a:Math.abs(a-b), hint:'Subtract the smaller count from the larger count.', coachKey:'data', data:{ bus:a, walking:b, larger } }; }
+  ],
   money: [
     () => { const p=pick([10,15,20,25,30,40,50,75]), n=R(2,15)*20; return { s:pick(['💰 Mr-Beast-style challenge: split the prize pool!','💰 Money Lab: calculate your creator earnings!']), q:`${p}% of $${n} = ?`, a:p*n/100 }; },
     () => { const n=R(3,9)*20, p=pick([10,20,25,50]); return { s:'💰 Flash sale at the game store!', q:`A $${n} controller is ${p}% off. Sale price in dollars?`, a:n-p*n/100 }; },
@@ -3036,6 +3044,15 @@ katya: {
    text is remembered so the SAME question rarely repeats back to back. */
 function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a || 1; }
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=R(0,i); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function missionChoices(correct, distractors) {
+  const answer = String(correct);
+  const choices = [answer];
+  for (const distractor of (distractors || [])) {
+    const text = String(distractor);
+    if (text !== answer && !choices.includes(text)) choices.push(text);
+  }
+  return shuffle(choices);
+}
 
 function generateBasicArithmetic() {
   const addition = Array.from({length:2}, () => {
@@ -3057,14 +3074,14 @@ function generateBasicArithmetic() {
   return [...addition, ...subtraction, ...multiplication, ...division];
 }
 
-const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','ratios','algebra','geometry','probability','money','logic','wordproblems'];
-const KATYA_TOPICS = ['multiplication','division','longdivision','fractions','decimals','money','time','measurement','patterns','wordproblems','reading','grammar','french'];
+const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','longdivision','ratios','algebra','geometry','probability','data','money','logic','wordproblems'];
+const KATYA_TOPICS = ['numbersense','multiplication','division','longdivision','fractions','decimals','patterns','data','probability','geometry','measurement','money','wordproblems'];
 const TOPIC_LABEL = {
   bedmas:'BEDMAS', fractions:'Fractions', decimals:'Decimals', percent:'Percentages', integers:'Integers',
   ratios:'Ratios', algebra:'Algebra', geometry:'Geometry', probability:'Probability', money:'Money & Finance',
   logic:'Logic', wordproblems:'Word Problems', multiplication:'Multiplication', division:'Division',
   longdivision:'Long Division', time:'Time', measurement:'Measurement', patterns:'Patterns', reading:'Reading',
-  grammar:'Grammar', french:'French'
+  grammar:'Grammar', french:'French', numbersense:'Number Sense', data:'Data'
 };
 
 const TOPIC_BANK = {
@@ -3079,7 +3096,11 @@ alex: {
   fractions: [
     (d)=>{ const den=pick([3,4,5,6,8,10,12]), num=R(1,den-1), whole=den*R(2,4+d); return { s:'🕵 Decode the fraction of loot.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
     (d)=>{ const den=pick([4,6,8,10,12]); const n1=R(1,den-2), n2=RNZ(1,den-1-n1); const sumN=n1+n2; const g=gcd(sumN,den); const rn=sumN/g, rd=den/g; const wrong1=`${sumN}/${den*2}`, wrong2=`${n1}/${den}`; return { s:'🕵 Same-denominator fraction clue.', q:`${n1}/${den} + ${n2}/${den} = ?`, a:`${rn}/${rd}`, choices: shuffle([`${rn}/${rd}`, wrong1, wrong2]), hint:'Same denominator: just add the top numbers (numerators) and keep the denominator.' }; },
-    (d)=>{ const pairs=[[1,2,3,4],[2,3,3,4],[1,3,2,5],[3,5,2,3],[1,4,1,3],[5,6,3,4]]; const [n1,d1,n2,d2]=pick(pairs); const v1=n1/d1, v2=n2/d2; const bigger = v1>v2 ? `${n1}/${d1}` : `${n2}/${d2}`; return { s:'🕵 Which clue fraction is bigger?', q:`Which is greater: ${n1}/${d1} or ${n2}/${d2}?`, a:bigger, choices: shuffle([`${n1}/${d1}`,`${n2}/${d2}`,'They are equal']), hint:'Turn both into decimals (divide top by bottom) to compare easily.' }; }
+    (d)=>{ const pairs=[[1,2,3,4],[2,3,3,4],[1,3,2,5],[3,5,2,3],[1,4,1,3],[5,6,3,4]]; const [n1,d1,n2,d2]=pick(pairs); const v1=n1/d1, v2=n2/d2; const bigger = v1>v2 ? `${n1}/${d1}` : `${n2}/${d2}`; return { s:'🕵 Which clue fraction is bigger?', q:`Which is greater: ${n1}/${d1} or ${n2}/${d2}?`, a:bigger, choices: shuffle([`${n1}/${d1}`,`${n2}/${d2}`,'They are equal']), hint:'Turn both into decimals (divide top by bottom) to compare easily.' }; },
+    ()=>{ const [n1,d1,n2,d2]=pick([[1,2,1,3],[2,3,1,4],[3,4,1,6],[2,5,3,10]]); const num=n1*d2+n2*d1, den=d1*d2, g=gcd(num,den), correct=`${num/g}/${den/g}`; return { s:'🧠 Add unlike fractions.', q:`${n1}/${d1} + ${n2}/${d2} = ?`, a:correct, choices:missionChoices(correct,[`${n1+n2}/${den}`,`${num+1}/${den}`]), hint:'Find a common denominator, add the numerators, then simplify.', coachKey:'fraction-addition' }; },
+    ()=>{ const [n1,d1,n2,d2]=pick([[3,4,1,6],[4,5,1,10],[5,6,1,3],[7,8,1,4]]); const num=n1*d2-n2*d1, den=d1*d2, g=gcd(num,den), correct=`${num/g}/${den/g}`; return { s:'🧠 Subtract unlike fractions.', q:`${n1}/${d1} − ${n2}/${d2} = ?`, a:correct, choices:missionChoices(correct,[`${n1-n2}/${den}`,`${num+1}/${den}`]), hint:'Find a common denominator, subtract the numerators, then simplify.', coachKey:'fraction-subtraction' }; },
+    ()=>{ const whole=R(1,3), den=pick([2,3,4,5]), num=R(1,den-1), improper=whole*den+num; return { s:'🧠 Mixed-number conversion.', q:`Write ${whole} ${num}/${den} as an improper fraction.`, a:`${improper}/${den}`, choices:missionChoices(`${improper}/${den}`,[`${whole+num}/${den}`,`${whole*den}/${den}`]), hint:'Multiply the whole number by the denominator, then add the numerator.', coachKey:'fraction-mixed' }; },
+    ()=>{ const [num,den]=pick([[1,2],[1,4],[3,4],[1,5],[2,5],[3,5]]), correct=num/den*100; return { s:'💯 Fraction-percent connection.', q:`Convert ${num}/${den} to a percent.`, a:correct, choices:missionChoices(correct,[correct+10,correct-10]), hint:'Convert the fraction to a decimal, then multiply by 100.', coachKey:'fraction-percent' }; }
   ],
   decimals: [
     (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'💰 Decimal supply count.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
@@ -3119,9 +3140,9 @@ alex: {
     (d)=>{ const r=pick([2,3,4,5,6,7]); return { s:'🔵 Circular energy shield.', q:`A circle has radius ${r} cm. What is its CIRCUMFERENCE? Use π ≈ 3.14, round to 1 decimal.`, a: Math.round(2*3.14*r*10)/10, mode:'decimal', hint:'Circumference = 2 × π × radius.' }; }
   ],
   probability: [
-    (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total); return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:`${red/g}/${total/g}`, choices: shuffle([`${red/g}/${total/g}`, `${blue/g}/${total/g}`, `${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
+    (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total), correct=`${red/g}/${total/g}`; return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:correct, choices: missionChoices(correct,[`${blue/g}/${total/g}`,`${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
     (d)=>{ return { s:'🎲 Dice roll probability.', q:'Rolling a standard 6-sided die, what is the probability of rolling an EVEN number?', a:'1/2', choices: shuffle(['1/2','1/3','2/3']), hint:'List the even faces on a die (2, 4, 6), count them, then write that count over the total number of faces — and simplify.' }; },
-    (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total); return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:`${green/g}/${total/g}`, choices: shuffle([`${green/g}/${total/g}`, `${yellow/g}/${total/g}`, `${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
+    (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total), correct=`${green/g}/${total/g}`; return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:correct, choices: missionChoices(correct,[`${yellow/g}/${total/g}`,`${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
   ],
   money: [
     (d)=>{ const r=R(3,9+d*2), w=R(6,15+d*3); return { s:'💰 Grinding coins in the arena.', q:`You earn ${r} coins per win. Coins after ${w} wins?`, a:r*w, hint:'Multiply coins-per-win by the number of wins.' }; },
@@ -3139,6 +3160,12 @@ alex: {
     (d)=>{ const price=R(15,40+d*10), qty=R(2,5), coupon=pick([5,10,15]); return { s:'🛒 Multi-step shopping run.', q:`${qty} items at $${price} each, then a $${coupon} coupon is applied. What is the FINAL total?`, a: price*qty-coupon, mode:'decimal', hint:'Multiply price by quantity FIRST, then subtract the coupon.' }; },
     (d)=>{ const speed=R(40,80+d*10), t1=R(2,4), t2=R(1,3); return { s:'🏎 Two-leg journey.', q:`A car drives at ${speed} km/h for ${t1} hours, then the same speed for ${t2} more hours. Total distance?`, a: speed*(t1+t2), hint:'Add the hours together, then multiply by the speed.' }; },
     (d)=>{ const d1=pick([4,5,8,10]), m=d1*R(3,12+d*3); return { s:'🛡 Divide the supplies evenly.', q:`${m} energy cells shared by ${d1} squads. Each squad gets?`, a: m/d1, hint:'Division = sharing into equal groups.' }; }
+  ],
+  longdivision: [
+    () => { const d=R(2,9), q=R(12,80), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Long division checkpoint.', q:`${n} ÷ ${d} = ? Choose quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'Divide, multiply to check, then subtract to find the remainder.', coachKey:'longdivision' }; }
+  ],
+  data: [
+    () => { const a=R(12,40), b=R(12,40), c=R(12,40); return { s:'📊 Read the table.', q:`A table records ${a} votes for music, ${b} for art, and ${c} for sports. How many votes were recorded?`, a:a+b+c, hint:'Add each category exactly once.', coachKey:'data' }; }
   ]
 },
 katya: {
@@ -3158,7 +3185,12 @@ katya: {
   fractions: [
     (d)=>{ const den=pick([2,3,4,5,10]), num=R(1,den-1), whole=den*R(2,6+d); return { s:'🔍 Fraction of the clue stash.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
     (d)=>{ const den=pick([3,4,5,6,8]); const nums=Array.from({length:den-1},(_,i)=>i+1); const correct=pick(nums); const wrong1=pick(nums.filter(n=>n!==correct)) || correct; return { s:'🔍 Fraction clue match.', q:`Which fraction means ${correct} out of ${den} equal parts?`, a:`${correct}/${den}`, choices: shuffle([`${correct}/${den}`, `${wrong1}/${den}`, `${den}/${correct}`]), hint:'The top number (numerator) counts the parts you have; the bottom counts the total equal parts.' }; },
-    (d)=>{ const pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5]]; const [n,dd]=pick(pairs); const correct = String(Math.round((n/dd)*100)/100); const w1 = String(Math.round((n/dd+0.1)*100)/100), w2 = String(Math.round((n/dd-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:`Which decimal equals ${n}/${dd}?`, a: correct, choices: shuffle([correct, w1, w2]), hint:'Divide the top number by the bottom number to get the decimal.' }; }
+    (d)=>{ const exactPairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[1,10],[3,10],[7,10],[1,20],[3,20]], roundedPairs=[[1,3],[2,3],[1,6],[5,6]]; const [n,dd]=pick([...exactPairs,...roundedPairs]); const value=n/dd, rounded=String(Math.round(value*100)/100), exact=exactPairs.some(([a,b])=>a===n&&b===dd), correct=rounded, w1=String(Math.round((value+0.1)*100)/100), w2=String(Math.round((value-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:exact?`Which decimal equals ${n}/${dd}?`:`What is ${n}/${dd} rounded to the nearest hundredth?`, a:correct, choices:missionChoices(correct,[w1,w2]), hint:exact?'Divide the top number by the bottom number to get the exact decimal.':'Divide the top number by the bottom number, then round to the nearest hundredth.' }; },
+    ()=>{ const n=R(1,4), dd=pick([2,4,5,10]), k=R(2,4), correct=`${n*k}/${dd*k}`; return { s:'🔍 Equivalent fraction clue.', q:`Which fraction is equivalent to ${n}/${dd}?`, a:correct, choices:missionChoices(correct,[`${n+1}/${dd}`,`${n}/${dd+1}`]), hint:'Multiply the numerator and denominator by the same number.', coachKey:'fraction-equivalence' }; },
+    ()=>{ const dd=pick([4,6,8,10]), a=R(1,dd-2), b=R(1,dd-a-1), correct=`${a+b}/${dd}`; return { s:'🔍 Fraction addition clue.', q:`${a}/${dd} + ${b}/${dd} = ?`, a:correct, choices:missionChoices(correct,[`${a+b}/${dd*2}`,`${a}/${dd}`]), hint:'The denominators match, so add only the numerators.', coachKey:'fraction-addition' }; },
+    ()=>{ const dd=pick([4,6,8,10]), a=R(2,dd-1), b=R(1,a-1), correct=`${a-b}/${dd}`; return { s:'🔍 Fraction subtraction clue.', q:`${a}/${dd} − ${b}/${dd} = ?`, a:correct, choices:missionChoices(correct,[`${a-b}/${dd*2}`,`${a}/${dd}`]), hint:'The denominators match, so subtract only the numerators.', coachKey:'fraction-subtraction' }; },
+    ()=>{ const pairs=[[1,2,3,4],[2,3,3,5],[3,4,2,3],[1,3,1,2]]; const [a,dd,b,ee]=pick(pairs); const av=a/dd,bv=b/ee,correct=av>bv?`${a}/${dd}`:`${b}/${ee}`; return { s:'🔍 Compare two fractions.', q:`Which fraction is greater: ${a}/${dd} or ${b}/${ee}?`, a:correct, choices:missionChoices(correct,[av>bv?`${b}/${ee}`:`${a}/${dd}`]), hint:'Compare using a common denominator or convert both to decimals.', coachKey:'fraction-comparison' }; },
+    ()=>{ const whole=R(1,3), dd=pick([2,3,4]), n=R(1,dd-1), improper=whole*dd+n; return { s:'🔍 Mixed-number clue.', q:`Write ${whole} ${n}/${dd} as an improper fraction.`, a:`${improper}/${dd}`, choices:missionChoices(`${improper}/${dd}`,[`${whole+n}/${dd}`,`${whole*dd}/${dd}`]), hint:'Multiply the whole number by the denominator, then add the numerator.', coachKey:'fraction-mixed' }; }
   ],
   decimals: [
     (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'🔍 Decimal clue combine.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
@@ -3190,6 +3222,25 @@ katya: {
     (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,Math.min(40+d*5,a+b-5)); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
     (d)=>{ const price=R(4,9), qty=R(2,5+d); return { s:'🛍 Word problem.', q:`A toy costs $${price}. You buy ${qty}. What is the TOTAL cost?`, a: price*qty, hint:'Multiply the cost of one toy by how many you buy.' }; },
     (d)=>{ const f=pick(FRIENDS), t=R(3,7+d), c=R(4,9); return { s:`🔍 Flashlights on! You and ${f} search the rooms.`, q:`${t} rooms with ${c} clues in each. Total clues?`, a: t*c, hint:'Multiply the number of rooms by the clues in each room.' }; }
+  ],
+  numbersense: [
+    () => { const n=R(10000,99999), place=pick([1,10,100,1000,10000]), digit=Math.floor(n/place)%10; return { s:'🔢 Place-value checkpoint.', q:`In ${n.toLocaleString('en-US')}, what digit is in the place worth ${place}?`, a:digit, hint:'Read the digits from right to left: ones, tens, hundreds, thousands, ten-thousands.', coachKey:'numbersense' }; },
+    () => { const a=R(10000,99999), b=R(10000,99999), correct=String(Math.max(a,b)); return { s:'🔢 Compare the code numbers.', q:`Which number is greater: ${a} or ${b}?`, a:correct, choices:missionChoices(correct,[String(Math.min(a,b)),'They are equal']), hint:'Compare digits from the leftmost place first.', coachKey:'numbersense' }; },
+    () => { let n=R(1000,99999); if(n%10===5)n++; return { s:'🎯 Estimation checkpoint.', q:`Round ${n} to the nearest 100.`, a:Math.round(n/100)*100, hint:'Look at the tens digit to round to the nearest hundred.', coachKey:'estimation' }; },
+    () => { const a=R(200,900), b=R(200,900); return { s:'🎯 Reasonableness check.', q:`Estimate ${a} + ${b} by rounding each number to the nearest 100.`, a:Math.round(a/100)*100+Math.round(b/100)*100, hint:'Round both addends first, then add the friendly numbers.', coachKey:'estimation' }; }
+  ],
+  data: [
+    () => { const vals=[R(2,9),R(2,9),R(2,9),R(2,9)]; return { s:'📊 Read the class table.', q:`A table shows ${vals[0]} votes for cats, ${vals[1]} for dogs, ${vals[2]} for birds, and ${vals[3]} for fish. How many votes altogether?`, a:vals.reduce((x,y)=>x+y,0), hint:'Add all four categories.', coachKey:'data', data:{ cats:vals[0], dogs:vals[1], birds:vals[2], fish:vals[3] } }; },
+    () => { const a=R(5,18); let b=R(5,18); if(a===b) b=a===18?17:a+1; return { s:'📊 Compare the data.', q:`A chart shows ${a} students chose soccer and ${b} chose hockey. How many more chose the larger group?`, a:Math.abs(a-b), hint:'Subtract the smaller count from the larger count.', coachKey:'data', data:{ soccer:a, hockey:b } }; }
+  ],
+  probability: [
+    () => { const red=R(1,5), blue=R(1,5), total=red+blue, g=gcd(red,total), correct=`${red/g}/${total/g}`; return { s:'🎲 Marble probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of RED?`, a:correct, choices:missionChoices(correct,[`${blue/g}/${total/g}`,'1/3','2/3']), hint:'Probability = favorable outcomes divided by total outcomes.', coachKey:'probability' }; },
+    () => { const green=R(1,4), yellow=R(1,4), total=green+yellow, g=gcd(green,total), correct=`${green/g}/${total/g}`; return { s:'🎲 Spinner probability.', q:`A spinner has ${green} green and ${yellow} yellow equal sections. What is the probability of GREEN?`, a:correct, choices:missionChoices(correct,[`${yellow/g}/${total/g}`,'1/4','3/4']), hint:'Count green sections, then divide by all sections.', coachKey:'probability' }; }
+  ],
+  geometry: [
+    () => { const l=R(3,12), w=R(2,9); return { s:'📐 Rectangle area.', q:`A rectangle is ${l} m long and ${w} m wide. What is its AREA in square metres?`, a:l*w, hint:'Area = length × width.', coachKey:'geometry', geometry:{ shape:'rectangle', length:l, width:w, unit:'m²' } }; },
+    () => { const a=R(30,80), b=R(30,120-a-10); return { s:'📐 Angle reasoning.', q:`A triangle has angles ${a}° and ${b}°. What is the third angle?`, a:180-a-b, hint:'The angles in a triangle add to 180°.', coachKey:'geometry', geometry:{ shape:'triangle-angle', given:[a,b], unit:'degrees' } }; },
+    () => { const side=R(3,12); return { s:'📐 Shape properties.', q:`A square has side length ${side} cm. What is its PERIMETER in centimetres?`, a:side*4, hint:'A square has four equal sides.', coachKey:'geometry', geometry:{ shape:'square', side, unit:'cm' } }; }
   ],
   reading: [
     ()=>({ s:'Maya planted tomato seeds in April. By July, the plants were taller than her little brother. She picked the first ripe tomato in August.', q:'In what month did Maya PLANT the seeds?', a:'April', choices: shuffle(['April','July','August']), hint:'Look back at the passage — the answer is stated directly in the text.' }),
@@ -3322,6 +3373,16 @@ const STRATEGY_LIBRARY = {
     example:'Try: 96 ÷ 4 — split 96 into 80 + 16. 80÷4=20, 16÷4=4. Add: 20+4=24.',
     memoryHook:'Split it into friendly chunks, divide each chunk, then add the pieces back together.',
     commonMistake:'forgetting to add all the leftover pieces back together at the end' },
+  numbersense: { name:'Number Sense & Estimation', icon:'🔢',
+    strategy:'Read large numbers by place value from left to right. To compare, check the leftmost place where the digits differ. For rounding, look one place to the right of the target place: 5 or more rounds up; 4 or less stays down.',
+    example:'Try: 47,382 rounded to the nearest hundred is 47,400 because the tens digit is 8.',
+    memoryHook:'Place value is a map: each step left is ten times greater. Round by checking the next digit.',
+    commonMistake:'rounding from the wrong digit or comparing only the last digits of large numbers' },
+  data: { name:'Data & Tables', icon:'📊',
+    strategy:'Read each category carefully, then choose the operation the question asks for: add for a total, subtract smaller from larger for a difference, and compare labels before calculating.',
+    example:'Try: 12 students chose art and 9 chose music. The difference is 12 − 9 = 3 students.',
+    memoryHook:'Read the labels, write the numbers, then answer exactly what the question asks.',
+    commonMistake:'adding categories twice or subtracting in the wrong order when finding how many more' },
   time: { name:'Time', icon:'⏰',
     strategy:'Remember: 60 seconds = 1 minute, 60 minutes = 1 hour, 24 hours = 1 day. For elapsed time, count forward from the start time to the end time in convenient jumps.',
     example:'Try: minutes in 2 hours 15 minutes? 2 × 60 = 120, plus 15 = 135 minutes.',
@@ -3395,9 +3456,10 @@ function strategyFor(topic) {
 }
 const COACHING_ALIASES = {
   'fraction-equivalence':'fractions', 'fraction-comparison':'fractions',
-  'fraction-addition':'fractions', 'fraction-of-number':'fractions',
+  'fraction-addition':'fractions', 'fraction-subtraction':'fractions', 'fraction-mixed':'fractions', 'fraction-of-number':'fractions', 'fraction-percent':'percent',
   'fraction-decimal':'fractions', addition:'mentalmath', subtraction:'mentalmath',
-  bedmas:'bedmas', multiplication:'multiplication', division:'division', percent:'percent'
+  bedmas:'bedmas', multiplication:'multiplication', division:'division', percent:'percent',
+  numbersense:'numbersense', data:'data', estimation:'estimation', geometry:'geometry', longdivision:'longdivision'
 };
 function coachingKeyFor(q) {
   if (!q) return null;
@@ -3618,7 +3680,28 @@ function weakStrongSubjects(who) {
 /* ---- Build a fresh mission with child-appropriate session length ---- */
 function buildTopicSequence(who, count) {
   const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
+  if (count <= 0) return [];
   const weights = topics.map(t => topicWeight(who, t));
+  // A short base mission cannot give every family a slot. Select distinct
+  // families for this run so the length stays exact, while still giving
+  // struggling or due-review topics their existing higher weight. Later
+  // missions rotate omitted families back in instead of adding a question.
+  if (count < topics.length) {
+    const pool = topics.map((topic, i) => ({ topic, weight: Math.max(1, weights[i]) }));
+    const selected = [];
+    while (selected.length < count && pool.length) {
+      const total = pool.reduce((sum, item) => sum + item.weight, 0);
+      let cursor = R(1, total);
+      let chosen = 0;
+      for (let i = 0; i < pool.length; i++) {
+        cursor -= pool[i].weight;
+        if (cursor <= 0) { chosen = i; break; }
+      }
+      selected.push(pool[chosen].topic);
+      pool.splice(chosen, 1);
+    }
+    return shuffle(selected);
+  }
   const totalW = weights.reduce((a,b)=>a+b,0);
   const slots = topics.map((t,i) => Math.max(1, Math.round(weights[i] / totalW * count)));
   let diff = count - slots.reduce((a,b)=>a+b,0);
@@ -3643,10 +3726,38 @@ function buildTopicSequence(who, count) {
   }
   return seq;
 }
+const KATYA_GRADE5_PLAN = [
+  ['numbersense', 4], ['multiplication', 4], ['division', 2], ['longdivision', 2],
+  ['fractions', 4], ['decimals', 3], ['patterns', 2], ['data', 1], ['probability', 1],
+  ['geometry', 2], ['measurement', 1], ['money', 2], ['wordproblems', 2]
+];
+const ALEX_GRADE8_PLAN = [
+  ['integers', 4], ['bedmas', 3], ['fractions', 4], ['decimals', 2], ['percent', 1],
+  ['ratios', 3], ['algebra', 4], ['geometry', 3], ['data', 2], ['probability', 1],
+  ['money', 2], ['wordproblems', 1]
+];
+function generatePlannedMission(who, plan) {
+  const recent = state.recentQ[who] || (state.recentQ[who] = []);
+  const questions = [];
+  for (const [topic, count] of plan) {
+    for (let i = 0; i < count; i++) {
+      const diff = topicDifficulty(who, topic);
+      let item, tries = 0;
+      do { item = genQuestion(who, topic, diff); tries++; } while (recent.includes(item.q) && tries < 10);
+      recent.push(item.q);
+      questions.push(item);
+    }
+  }
+  if (recent.length > 60) recent.splice(0, recent.length - 60);
+  return shuffle(questions);
+}
 function generateDailyMission(who) {
-  const targetCount = who === 'alex' ? 18 : 20;
-  const basics = generateBasicArithmetic().slice(0, who === 'alex' ? 6 : 8);
-  const seq = buildTopicSequence(who, targetCount - basics.length);
+  if (who === 'alex') return generatePlannedMission(who, ALEX_GRADE8_PLAN);
+  if (who === 'katya') return generatePlannedMission(who, KATYA_GRADE5_PLAN);
+  const basics = generateBasicArithmetic().slice(0, 8).map((item, idx) => ({
+    ...item, who, skill: item.skill || `mentalmath.warmup-${idx + 1}`
+  }));
+  const seq = buildTopicSequence(who, 30 - basics.length);
   const recent = state.recentQ[who] || (state.recentQ[who] = []);
   const questions = seq.map(topic => {
     const diff = topicDifficulty(who, topic);
@@ -3928,8 +4039,8 @@ function updateAttemptDots() {
 // that topic) to appear later in this mission, so a "learned, not yet
 // earned" question always gets a second real chance before the mission
 // ends. Total mission length is capped so sessions stay in the
-// EDUCATION.md 15-20 minute band even after reinforcement is added.
-const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 26;
+// the reviewed 30-question base plus at most six reinforcement questions.
+const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 36;
 function queueReinforcement(topic) {
   const room = Math.min(MAX_REMEDIATION - (M.remediationQueued || 0), MAX_MISSION_LEN - M.questions.length);
   if (room <= 0) return 0;
