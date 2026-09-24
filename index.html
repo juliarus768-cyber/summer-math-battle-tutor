@@ -2234,7 +2234,6 @@ const loadedState = Store.get(PRIMARY_STATE_KEY, cloneFresh());
 const state = loadedState.value;
 let resetInProgress = false;
 // Back-fill new fields for existing saves
-const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
   if (!state[w] || typeof state[w] !== 'object' || Array.isArray(state[w])) {
     state[w] = JSON.parse(JSON.stringify(FRESH[w]));
@@ -2247,7 +2246,6 @@ const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
   if (state[w].lastDay == null) state[w].lastDay = '';
   if (typeof state[w].lastDay !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(state[w].lastDay)) state[w].lastDay = '';
-  if (state[w].birthday == null) state[w].birthday = BIRTHDAYS[w];
   if (state[w].gradeOverride === undefined) state[w].gradeOverride = null;
 });
 if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
@@ -2712,15 +2710,6 @@ function getCurrentGrade(who, date) {
 }
 function gradeLabel(who) { const g = getCurrentGrade(who); return `GRADE ${g}→${g + 1}`; }
 function gradePlain(who) { const g = getCurrentGrade(who); return `Grade ${g}→${g + 1}`; }
-function ageFromBirthday(iso, date) {
-  if (!iso) return null;
-  const b = new Date(iso + 'T00:00:00');
-  const now = date || new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  const hadBirthday = (now.getMonth() > b.getMonth()) || (now.getMonth() === b.getMonth() && now.getDate() >= b.getDate());
-  if (!hadBirthday) age--;
-  return age;
-}
 // Kept for any older call sites expecting a plain lookup; now backed by the
 // live computed grade so it can never drift out of sync with the display.
 const GRADE = { get alex() { return gradeLabel('alex'); }, get katya() { return gradeLabel('katya'); } };
@@ -2930,43 +2919,10 @@ const R = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const RNZ = (a,b) => { let v=0; while(v===0) v=R(a,b); return v; };
 const pick = ar => ar[R(0,ar.length-1)];
 
-/* ============ PERSONALIZATION (CHARACTERS.md) ============
-   Real names, interests, and family roles as structured data instead of
-   scattered string literals, per DEVELOPMENT_RULES.md ("never hardcode
-   new personal/family details as string literals -- route them through
-   profile data") and CHARACTERS.md -> Privacy rules (personal details
-   must be data, not hardcoded strings, so they can become parent-
-   editable fields if the app is ever opened to other families). This
-   does not change any visible story output on its own -- generators
-   that already read FRIENDS below get their values from here now
-   instead of a separate literal array. */
-const PERSONALIZATION = {
-  family: {
-    mom: 'Yulia', dad: 'Vadim',
-    grandmaOlga: 'Grandma Olga', grandmaMargarita: 'Grandma Margarita',
-    grandpaSerezha: 'Grandpa Serezha', tolik: 'Tolik the Elf'
-  },
-  alex: {
-    displayName: 'Alex', nickname: 'Sasha',
-    theme: 'battle-champion-strategy',
-    interests: ['gaming (PS5, Fortnite, Valorant, Horizon)', 'chess', 'fencing', 'Duolingo streaks', 'mystery/UFO investigations', 'food (Subway, Popeyes)', 'travel'],
-    friends: [],
-    family: ['Yulia', 'Vadim', 'Grandma Olga', 'Grandma Margarita', 'Grandpa Serezha', 'Tolik the Elf'],
-    rewardVocab: ['gaming time', 'Popeyes', 'Subway', 'a new game', 'a chess upgrade']
-  },
-  katya: {
-    displayName: 'Katya', nickname: 'Katya',
-    theme: 'mystery-detective',
-    interests: ['mysteries', 'Roblox', 'Dress to Impress', 'Toca Boca', 'Sephora', 'bubble tea', 'sushi (avocado rolls)', 'peanut-butter chocolate', 'dancing', 'road trips'],
-    friends: ['Aryna'],
-    family: ['Yulia', 'Vadim', 'Grandma Olga', 'Grandma Margarita', 'Grandpa Serezha', 'Tolik the Elf'],
-    rewardVocab: ['bubble tea', 'a Sephora item', 'sushi night', 'a Roblox item']
-  }
-};
-// Katya's story companions (word problems, Money Lab). Kept as its own
-// binding since it's used dozens of times below -- always the same array
-// PERSONALIZATION.katya.friends points to, so editing one edits both.
-const FRIENDS = PERSONALIZATION.katya.friends;
+/* Story companions remain generic so the public client bundle does not ship
+   private family or friend metadata. Alex and Katya remain the intentional
+   child-facing profile names. */
+const FRIENDS = ['a friend', 'a teammate', 'a classmate'];
 const sgn = n => n < 0 ? `(${n})` : `${n}`;
 
 const BANK = {
@@ -5556,7 +5512,7 @@ function renderGoalTrack() {
 /* --- Money Challenge: budgeting / change / discount, $ answers, pays coins --- */
 const money2 = n => Math.round(n * 100) / 100;
 function mlGen(who = mlOwner || state.activePlayer) {
-  const F = PERSONALIZATION.katya.friends;
+  const F = FRIENDS;
   const pickF = () => F[R(0, 2)];
   const ALEX = [
     () => { const items = R(2, 4), price = pick([4, 5, 6, 7, 8]); return { s: '🛒 Stocking up on bubble tea for the squad.', q: `${items} bubble teas at $${price} each. Total cost?`, a: items * price, unit: '$' }; },

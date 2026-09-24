@@ -58,8 +58,10 @@ load — that's expected; use `npm run preview` or Vercel for an accurate previe
 - The app opens on a **profile picker**: **Alex**, **Katya**, or **Parent**.
 - Tapping **Alex** or **Katya** drops that child into their own dashboard, scoped
   to their own coins, XP, streaks, Adventure Keys, missions, and reward requests.
-- Tapping **Parent** goes to a **PIN screen** (default PIN `1234`), then the parent
-  admin dashboard. Kids cannot reach the parent dashboard without the PIN.
+- Tapping **Parent** opens a PIN screen. A fresh install requires an adult to
+  create a 4-digit Parent PIN before opening the admin dashboard. Historical
+  installs with a saved PIN of `1234` remain compatible, but should change it.
+  This PIN is household access protection, not strong authentication.
 - The active profile is saved in `localStorage`. The **Switch** button in the top
   bar returns to the picker at any time.
 

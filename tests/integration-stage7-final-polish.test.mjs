@@ -125,6 +125,28 @@ assert.match(nextQBody, /trick\.textContent = trickText/);
 assert.match(nextQBody, /resetBrainBoost\('ms'\)/);
 assert.doesNotMatch(nextQBody, /markStrategyViewed|markStrategyHelped|recordLearningEvent|Store\.set/);
 
+// Grade progression uses non-sensitive school-year anchors. Exact birth dates
+// and unused family-profile metadata must not ship in the public client.
+assert.match(source, /const GRADE_REFERENCE = \{ schoolYearStart: 2025, alex: 7, katya: 4 \}/);
+assert.doesNotMatch(source, /\b(?:19|20)\d{2}-\d{2}-\d{2}\b/, 'public client source must not contain exact birth dates');
+assert.doesNotMatch(source, /BIRTHDAYS|ageFromBirthday|\.birthday\b/);
+assert.doesNotMatch(source, /const PERSONALIZATION\s*=/);
+assert.match(source, /const FRIENDS = \['a friend', 'a teammate', 'a classmate'\]/);
+const gradeHarness = vm.createContext({ Date, state:{ alex:{ gradeOverride:null }, katya:{ gradeOverride:null } } });
+vm.runInContext(`
+  const GRADE_ADVANCE_MONTH = 9;
+  const GRADE_REFERENCE = { schoolYearStart: 2025, alex: 7, katya: 4 };
+  ${functionBody('schoolYearStartFor')}
+  ${functionBody('getCurrentGrade')}
+  globalThis.gradeAt = (who, year, month, day) => getCurrentGrade(who, new Date(year, month, day));
+`, gradeHarness);
+assert.equal(vm.runInContext("gradeAt('alex', 2026, 7, 31)", gradeHarness), 7);
+assert.equal(vm.runInContext("gradeAt('katya', 2026, 7, 31)", gradeHarness), 4);
+assert.equal(vm.runInContext("gradeAt('alex', 2026, 8, 1)", gradeHarness), 8);
+assert.equal(vm.runInContext("gradeAt('katya', 2026, 8, 1)", gradeHarness), 5);
+assert.equal(vm.runInContext("gradeAt('alex', 2027, 8, 1)", gradeHarness), 9);
+assert.equal(vm.runInContext("gradeAt('katya', 2027, 8, 1)", gradeHarness), 6);
+
 // Parent PIN setup is first-run only, does not disclose a universal PIN, and
 // the existing authorization/persistence protections remain in place.
 assert.match(source, /function isValidParentPin\(pin\) \{ return typeof pin === 'string' && \/\^\\d\{4\}\$\//);

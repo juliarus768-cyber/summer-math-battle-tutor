@@ -32,7 +32,7 @@ const state = {
 const context = vm.createContext({
   Math: math, console, state,
   window: { MathThinkingSystem: null },
-  FRIENDS: ['Aryna'],
+  FRIENDS: ['a friend', 'a teammate', 'a classmate'],
   globalThis: {}
 });
 const generatorsStart = source.indexOf('const R = ');

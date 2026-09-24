@@ -36,7 +36,7 @@ assert.equal(helperCtx.answerOk({ a: 11 }, '11'), true);
 assert.equal(helperCtx.answerOk({ a: 11 }, '11.01'), false);
 assert.equal(helperCtx.answerOk({ a: "don't", choices: ["don't", 'do not'] }, "don't"), true);
 
-const sourceStart = html.indexOf('const PERSONALIZATION = {');
+const sourceStart = html.indexOf("const FRIENDS = ['a friend', 'a teammate', 'a classmate'];");
 const sourceEnd = html.indexOf('/* ============ BRAIN BOOST STRATEGY LIBRARY', sourceStart);
 assert.ok(sourceStart >= 0 && sourceEnd > sourceStart, 'current-main generator section should be extractable');
 const generatorSource = html.slice(sourceStart, sourceEnd);
