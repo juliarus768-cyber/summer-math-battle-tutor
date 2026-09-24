@@ -2223,7 +2223,7 @@ function normalizeLoadedState(raw) {
   if (out.pausedDaily.alex === undefined) out.pausedDaily.alex = null;
   if (out.pausedDaily.katya === undefined) out.pausedDaily.katya = null;
   for (const who of ['alex','katya']) {
-    if (out[who].lastDay != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(out[who].lastDay))) {
+    if (out[who].lastDay != null && out[who].lastDay !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(String(out[who].lastDay))) {
       out[who].lastDay = '';
       safe = false;
     }

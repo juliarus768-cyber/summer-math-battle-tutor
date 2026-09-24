@@ -102,6 +102,61 @@ function makeStore(storage, cloudCalls = []) {
   return { store:createSafeStore(storage, host, () => cloud), host, cloudCalls };
 }
 
+// Fresh-install backfill uses an empty lastDay sentinel until the first
+// completed day. It is valid state and must be writable through Store.
+{
+  const fresh = JSON.parse(JSON.stringify(context.api.FRESH));
+  fresh.alex.lastDay = '';
+  fresh.katya.lastDay = '';
+  const normalized = normalizeLoadedState(fresh);
+  assert.equal(normalized.safe, true, 'empty lastDay sentinels are valid');
+  const storage = new MockStorage();
+  const { store, host } = makeStore(storage);
+  const result = store.set(PRIMARY, fresh);
+  assert.equal(result.ok, true, 'fresh state can be written');
+  assert.ok(storage.getItem(PRIMARY), 'first write creates primary state');
+  assert.ok(storage.getItem(BACKUP), 'first write creates a valid backup');
+  assert.equal(host.__storageStatus, null, 'first valid write does not enter validation recovery');
+
+  const reloaded = makeStore(storage).store.get(PRIMARY, context.api.FRESH);
+  assert.equal(reloaded.status, 'ok', 'the first save reloads as valid state');
+  assert.equal(reloaded.value.alex.lastDay, '');
+  assert.equal(reloaded.value.katya.lastDay, '');
+}
+
+// Fresh-install Parent PIN setup uses the same verified Store path and does
+// not become a validation failure merely because streak dates are empty.
+{
+  const fresh = JSON.parse(JSON.stringify(context.api.FRESH));
+  fresh.alex.lastDay = '';
+  fresh.katya.lastDay = '';
+  fresh.parentPin = '2468';
+  const storage = new MockStorage();
+  const { store } = makeStore(storage);
+  assert.equal(store.set(PRIMARY, fresh).ok, true, 'fresh Parent PIN state persists');
+  assert.equal(JSON.parse(storage.getItem(PRIMARY)).parentPin, '2468');
+}
+
+// Empty and valid local-date keys are accepted; malformed nonempty values
+// remain unsafe and are repaired. The existing format-only behavior for
+// calendar-impossible but correctly shaped keys is intentionally unchanged.
+{
+  const valid = fixture();
+  valid.alex.lastDay = '2026-09-24';
+  valid.katya.lastDay = '';
+  assert.equal(normalizeLoadedState(valid).safe, true);
+  for (const malformed of ['abc', '09/24/2026']) {
+    const value = fixture();
+    value.alex.lastDay = malformed;
+    const normalized = normalizeLoadedState(value);
+    assert.equal(normalized.safe, false, `${malformed} must remain unsafe`);
+    assert.equal(normalized.state.alex.lastDay, '');
+  }
+  const shapedButImpossible = fixture();
+  shapedButImpossible.alex.lastDay = '2026-99-99';
+  assert.equal(normalizeLoadedState(shapedButImpossible).safe, true);
+}
+
 // Production defaults are unchanged by persistence hardening.
 assert.deepEqual(JSON.parse(JSON.stringify(context.api.FRESH)), {
   activePlayer:'alex',
