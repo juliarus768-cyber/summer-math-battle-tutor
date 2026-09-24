@@ -43,7 +43,7 @@ assert.match(functionBody('goHome'), /pauseDailyMissionRun\(\)/);
 assert.match(functionBody('goHome'), /hideAllActivityScreens\(\)/);
 assert.match(functionBody('goTab'), /name === 'Home'.*goHome\(\)/s);
 assert.match(functionBody('pickProfile'), /goHome\(\)/);
-assert.equal((source.match(/<button type="button" class="qlink"/g) || []).length, 6, 'Home quick links should be native buttons');
+assert.equal((source.match(/<button type="button" class="qlink"/g) || []).length, 8, 'Home quick links should be native buttons');
 assert.doesNotMatch(source, /Profile screen coming next build|next build step/);
 
 // Exercise the core single-screen and epoch contract independently of DOM
