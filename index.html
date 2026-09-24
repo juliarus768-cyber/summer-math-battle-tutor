@@ -4231,6 +4231,9 @@ function answerOk(q, raw) {
 function mathTrickFor(q) {
   if (!q || q.choices || q.options || typeof q.q !== 'string') return null;
   const text = q.q.trim();
+  const topicAllowed = (...topics) => !q.topic || topics.includes(q.topic);
+  const decimalText = value => /\./.test(value);
+  const wholeAsDecimal = value => Number(value).toFixed(1);
   const multiplicationTrick = factor => {
     if (!Number.isFinite(factor) || factor <= 0) return null;
     if (factor === 2) return 'Double the other factor.';
@@ -4245,20 +4248,35 @@ function mathTrickFor(q) {
   let m = text.match(/^(-?\d+(?:\.\d+)?)\s*[×x]\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
   if (m) {
     const left = Number(m[1]), right = Number(m[2]);
+    if (!topicAllowed('multiplication', 'decimals', 'integers', 'mentalmath')) return null;
+    if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
+    if (left < 0 || right < 0) return 'Check the signs first: same signs make a positive product; different signs make a negative product.';
+    if (decimalText(m[1]) || decimalText(m[2])) {
+      const decimalTrick = multiplicationTrick(right) || multiplicationTrick(left);
+      return decimalTrick || 'Multiply the digits, then count the decimal places back into the product.';
+    }
     const trick = multiplicationTrick(right) || multiplicationTrick(left);
     if (trick) return trick;
+    return 'Break a factor into tens and ones, multiply each part, then add the partial products.';
   }
   m = text.match(/^(-?\d+(?:\.\d+)?)\s*÷\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
   if (m) {
+    if (!topicAllowed('division', 'longdivision', 'decimals', 'integers', 'mentalmath')) return null;
+    const dividend = Number(m[1]);
     const divisor = Number(m[2]);
-    if (!Number.isFinite(divisor) || divisor <= 0) return null;
+    if (!Number.isFinite(dividend) || !Number.isFinite(divisor) || divisor === 0) return null;
+    if (dividend < 0 || divisor < 0) return 'Check the signs first: same signs make a positive quotient; different signs make a negative quotient.';
     if (divisor === 2) return 'Divide by 2: find half.';
     if (divisor === 10) return 'Dividing by 10 shifts the digits one place right.';
     if (divisor === 100) return 'Dividing by 100 shifts the digits two places right.';
     if (divisor === 1000) return 'Dividing by 1000 shifts the digits three places right.';
+    if (decimalText(m[1]) || decimalText(m[2])) return 'Divide carefully, then place the decimal point in the quotient.';
+    if (dividend >= 100 && Number.isInteger(divisor)) return 'Use the long-division loop: divide, multiply, subtract, bring down, then repeat.';
+    return 'Ask what number times the divisor makes the dividend, then check by multiplying.';
   }
   m = text.match(/^(\d+)%\s+of\s+\$?\d+(?:\.\d+)?\s*=\s*\?$/i);
   if (m) {
+    if (!topicAllowed('percent', 'money', 'decimals')) return null;
     const percent = Number(m[1]);
     if (percent === 1) return 'For 1%, divide the number by 100.';
     if (percent === 5) return 'For 5%, find 10% first, then take half.';
@@ -4268,9 +4286,11 @@ function mathTrickFor(q) {
     if (percent === 25) return '25% means one quarter — divide by 4.';
     if (percent === 50) return '50% means half — divide by 2.';
     if (percent === 75) return '75% = half plus one quarter.';
+    if (percent >= 0 && percent <= 100) return 'Think of the percent as a part out of 100, then multiply by the whole.';
   }
   m = text.match(/^(\d+)\/(\d+)\s+of\s+\$?\d+(?:\.\d+)?\s*=\s*\?$/i);
   if (m) {
+    if (!topicAllowed('fractions', 'money', 'decimals')) return null;
     const numerator = Number(m[1]), denominator = Number(m[2]);
     if (Number.isFinite(numerator) && Number.isFinite(denominator) && numerator > 0 && denominator > 0 && numerator <= denominator) {
       if (numerator === 1 && denominator === 2) return '1/2 means half — divide by 2.';
@@ -4279,25 +4299,91 @@ function mathTrickFor(q) {
     }
   }
   m = text.match(/^A treat costs \$(\d+(?:\.\d+)?)\. How much change from \$20\?$/i);
-  if (m && Number.isFinite(Number(m[1])) && Number(m[1]) >= 0 && Number(m[1]) <= 20) return 'Count up from the price to $20.';
-  m = text.match(/^(\d+)\s*\+\s*(\d+)\s*=\s*\?$/);
+  if (m && topicAllowed('money') && Number.isFinite(Number(m[1])) && Number(m[1]) >= 0 && Number(m[1]) <= 20) return 'Count up from the price to $20.';
+  m = text.match(/^(-?\d+(?:\.\d+)?)\s*([+−-])\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
   if (m) {
-    const a = Number(m[1]), b = Number(m[2]);
-    if (a > 0 && b > 0 && (a % 10 >= 8 || b % 10 >= 8)) return 'Make a friendly ten or hundred, then compensate.';
+    if (!topicAllowed('decimals', 'integers', 'numbersense', 'mentalmath')) return null;
+    const left = Number(m[1]), right = Number(m[3]);
+    if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
+    if (left < 0 || right < 0) return 'Use a number line: addition moves right or left according to each sign, and subtracting a negative moves right.';
+    if (decimalText(m[1]) || decimalText(m[3])) {
+      const operation = m[2] === '+' ? 'adding' : 'subtracting';
+      if (!decimalText(m[1]) || !decimalText(m[3])) {
+        const whole = !decimalText(m[1]) ? wholeAsDecimal(m[1]) : wholeAsDecimal(m[3]);
+        return `Think of the whole number as ${whole}. Line up the decimal points before ${operation}.`;
+      }
+      return `Line up the decimal points so each place stays in its column before ${operation}.`;
+    }
+    if (m[2] === '+' && left > 0 && right > 0 && (left % 10 >= 8 || right % 10 >= 8)) return 'Make a friendly ten or hundred, then compensate.';
+    return 'Use place value and check the sign of the result.';
   }
+  m = text.match(/^Convert (\d+)\/(\d+) to (?:a )?decimal\.?$/i);
+  if (m && topicAllowed('fractions', 'decimals')) {
+    const numerator = Number(m[1]), denominator = Number(m[2]);
+    if (denominator <= 0 || numerator < 0 || numerator > denominator) return null;
+    let reduced = denominator, remainder = numerator;
+    while (remainder && reduced) { const next = reduced % remainder; reduced = remainder; remainder = next; }
+    let factor = reduced;
+    while (factor % 2 === 0) factor /= 2;
+    while (factor % 5 === 0) factor /= 5;
+    if (factor === 1) return 'Divide the numerator by the denominator to get the exact decimal.';
+  }
+  m = text.match(/^(\d+)\/(\d+)\s*([+−-])\s*(\d+)\/(\d+)\s*=\s*\?$/);
+  if (m && topicAllowed('fractions')) {
+    const d1 = Number(m[2]), d2 = Number(m[5]);
+    if (d1 > 0 && d2 > 0) return d1 === d2 ? 'The denominators match, so combine the numerators and keep the denominator.' : 'Find a common denominator before combining the numerators.';
+  }
+  m = text.match(/^(\d+)\/(\d+)\s*([×x÷])\s*(\d+)\/(\d+)\s*=\s*\?$/);
+  if (m && topicAllowed('fractions')) {
+    const d1 = Number(m[2]), d2 = Number(m[5]);
+    if (d1 > 0 && d2 > 0) return m[3] === '÷' ? 'Keep the first fraction, flip the second, then multiply and simplify.' : 'Multiply numerators together and denominators together, then simplify.';
+  }
+  m = text.match(/^Which fraction is greater: (\d+)\/(\d+) or (\d+)\/(\d+)\?$/i);
+  if (m && topicAllowed('fractions')) return 'Use a common denominator or compare the two fractions as decimals.';
+  m = text.match(/^Write (\d+) (\d+)\/(\d+) as an improper fraction\.?$/i);
+  if (m && topicAllowed('fractions')) return 'Multiply the whole number by the denominator, then add the numerator.';
+  m = text.match(/^Convert (\d+)\/(\d+) to a percent\.?$/i);
+  if (m && topicAllowed('fractions', 'percent')) return 'Convert the fraction to a decimal, then multiply by 100.';
   m = text.match(/^A recipe uses (\d+(?:\.\d+)?) cups flour for (\d+) pancakes\. How many cups for (\d+) pancakes\?$/i);
-  if (m && Number(m[1]) > 0 && Number(m[2]) > 0 && Number(m[3]) > 0) return 'Scale both quantities by the same factor.';
+  if (m && topicAllowed('ratios') && Number(m[1]) > 0 && Number(m[2]) > 0 && Number(m[3]) > 0) return 'Scale both quantities by the same factor.';
+  m = text.match(/^A car travels (\d+(?:\.\d+)?) km in (\d+(?:\.\d+)?) hours\. Speed in km\/h\?$/i);
+  if (m && topicAllowed('ratios')) return 'Find the amount for one hour by dividing distance by time.';
+  m = text.match(/^(\d+) items at \$(\d+(?:\.\d+)?) each\. Total cost\?$/i);
+  if (m && topicAllowed('money', 'wordproblems')) return 'Find the cost of one item, then multiply by the number of items.';
+  m = text.match(/^You save \$(\d+(?:\.\d+)?) a week\. How many weeks to reach \$(\d+(?:\.\d+)?)\?$/i);
+  if (m && topicAllowed('money')) return 'Divide the goal amount by the weekly saving.';
+  m = text.match(/^A \$(\d+(?:\.\d+)?) item is (\d+(?:\.\d+)?)% off\. What is the SALE price\?$/i);
+  if (m && topicAllowed('percent')) return 'Find the discount amount first, then subtract it from the original price.';
+  m = text.match(/^A \$(\d+(?:\.\d+)?) item plus (\d+(?:\.\d+)?)% tax\. TOTAL cost\?$/i);
+  if (m && topicAllowed('percent')) return 'Find the tax amount first, then add it to the original price.';
+  m = text.match(/^(\d+(?:\.\d+)?) out of (\d+(?:\.\d+)?) — what PERCENT is that\? \(round to 1 decimal\)$/i);
+  if (m && topicAllowed('percent')) return 'Divide the part by the whole, multiply by 100, then round as requested.';
+  m = text.match(/^A \$(\d+(?:\.\d+)?) item needs a (\d+(?:\.\d+)?)% deposit\. How much is the deposit\?$/i);
+  if (m && topicAllowed('money', 'percent')) return 'Find the stated percent of the total price.';
   m = text.match(/^Solve for x:\s*(-?\d+)\s*x(?:\s*[+−-]\s*\d+)?\s*=\s*-?\d+\s*$/i);
   const algebraWithParentheses = text.match(/^Solve for x:\s*(-?\d+)\s*\(\s*x\s*[+−-]\s*\d+\s*\)\s*=\s*-?\d+\s*$/i);
-  if ((m && Number(m[1]) !== 0) || (algebraWithParentheses && Number(algebraWithParentheses[1]) !== 0)) return 'Keep both sides balanced while you undo operations to isolate x.';
-  if (/^A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m\. What is its AREA\??$/i.test(text)) return 'Area measures the space inside a shape.';
-  if (/^(?:A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m|A square has side length \d+(?:\.\d+)? cm)\. What is its PERIMETER(?: in centimetres)?\??$/i.test(text)) return 'Perimeter means the distance around the outside.';
+  if (topicAllowed('algebra') && ((m && Number(m[1]) !== 0) || (algebraWithParentheses && Number(algebraWithParentheses[1]) !== 0))) return 'Keep both sides balanced while you undo operations to isolate x.';
+  if (topicAllowed('geometry', 'measurement') && /^A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m\. What is its AREA(?: in square metres)?\??$/i.test(text)) return 'Area measures the space inside a shape.';
+  if (topicAllowed('geometry', 'measurement') && /^(?:A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m|A square has side length \d+(?:\.\d+)? cm)\. What is its PERIMETER(?: in centimetres)?\??$/i.test(text)) return 'Perimeter means the distance around the outside.';
+  if (topicAllowed('geometry') && /^A triangle has base \d+(?:\.\d+)? cm and height \d+(?:\.\d+)? cm\. What is its AREA\??$/i.test(text)) return 'A triangle covers half of a base-by-height rectangle.';
   m = text.match(/^A triangle has angles (\d+)° and (\d+)°\. What is the third angle\?$/i);
-  if (m && Number(m[1]) > 0 && Number(m[2]) > 0 && Number(m[1]) + Number(m[2]) < 180) return 'The angles in a triangle total 180°.';
-  if (/^A box is \d+(?:\.\d+)? m long, \d+(?:\.\d+)? m wide, \d+(?:\.\d+)? m tall\. What is its VOLUME\??$/i.test(text)) return 'Volume measures the space inside a 3-D shape.';
+  if (m && topicAllowed('geometry') && Number(m[1]) > 0 && Number(m[2]) > 0 && Number(m[1]) + Number(m[2]) < 180) return 'The angles in a triangle total 180°.';
+  if (topicAllowed('geometry') && /^A box is \d+(?:\.\d+)? m long, \d+(?:\.\d+)? m wide, \d+(?:\.\d+)? m tall\. What is its VOLUME\??$/i.test(text)) return 'Volume measures the space inside a 3-D shape.';
+  if (topicAllowed('geometry') && /^A circle has radius \d+(?:\.\d+)? cm\. What is its CIRCUMFERENCE\? Use π ≈ 3\.14, round to 1 decimal\.$/i.test(text)) return 'Circumference measures the distance around a circle.';
+  if (topicAllowed('measurement') && /^\d+(?:\.\d+)? meters = how many centimeters\?$/i.test(text)) return 'Moving from meters to centimeters means multiplying by 100.';
+  if (topicAllowed('measurement') && /^\d+(?:\.\d+)? liters = how many milliliters\?$/i.test(text)) return 'Moving from liters to milliliters means multiplying by 1000.';
+  if (topicAllowed('measurement') && /^\d+(?:\.\d+)? kilograms = how many grams\?$/i.test(text)) return 'Moving from kilograms to grams means multiplying by 1000.';
+  if (topicAllowed('data') && /^A table records .+ votes for .+ and .+ for .+\. How many votes were recorded\?$/i.test(text)) return 'Add each labelled category exactly once.';
+  if (topicAllowed('data') && /^A chart shows .+ students chose .+ and .+ chose .+\. How many more chose the larger group\?$/i.test(text)) return 'Subtract the smaller count from the larger count.';
+  if (topicAllowed('data') && /\b(?:mean|average)\b/i.test(text) && /\?\s*$/.test(text)) return 'Add the values, then divide by how many values there are.';
+  if (topicAllowed('probability') && /^A (?:bag|spinner) has .+\. What is the probability of .+\?$/i.test(text)) return 'Probability is favorable outcomes divided by total outcomes.';
+  if (topicAllowed('patterns', 'logic', 'numbersense', 'estimation') && /^Pattern: .+\.\.\. What (?:is|number is) (?:term|number|the next term) \d+\??$/i.test(text)) return 'Find the rule between terms, then count the jumps to the requested term.';
+  if (topicAllowed('patterns', 'numbersense', 'estimation') && /^Round [\d,]+ to the nearest (?:10|100)\.?$/i.test(text)) return 'Check the digit immediately to the right of the place you are rounding.';
+  if (topicAllowed('patterns') && /^\d+ \+ \? = \d+\.\s*What is the missing number\?$/i.test(text)) return 'Work backward with the opposite operation to find the missing number.';
+  if (topicAllowed('bedmas') && /^\d+²\s*=\s*\?$/i.test(text)) return 'An exponent tells how many times the base is multiplied by itself.';
   const expression = text.replace(/\s+/g, ''), atom = '-?\\d+(?:\\.\\d+)?';
   const validExpression = new RegExp(`^(?:${atom}(?:[+−×x÷]${atom})+|\\(${atom}[+−]${atom}\\)[×x÷]${atom})=\\?$`);
-  if (validExpression.test(expression)) {
+  if (topicAllowed('bedmas') && validExpression.test(expression)) {
     const mulDivCount = (expression.match(/[×x÷]/g) || []).length;
     const addSubCount = (expression.match(/[+−]/g) || []).length;
     if (/[()]/.test(expression) || (mulDivCount > 0 && addSubCount > 0)) return 'Do brackets first, then × and ÷ left to right, then + and − left to right.';

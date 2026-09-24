@@ -51,6 +51,51 @@ assert.match(trick({ q: 'A box is 2 m long, 3 m wide, 4 m tall. What is its VOLU
 assert.match(trick({ q: '3 × 4 + 5 ÷ 2 = ?' }), /left to right/);
 assert.match(trick({ q: '18 + 29 = ?' }), /friendly/);
 
+// RC Hotfix 2: broader, still question-local reminders. The reminders name
+// the method only; they must not calculate or reveal the live answer.
+const decimalMixed = trick({ q: '5.9 + 5 = ?', topic: 'decimals' });
+assert.match(decimalMixed, /5\.0/);
+assert.match(decimalMixed, /decimal points/);
+assert.doesNotMatch(decimalMixed, /10\.9/);
+assert.match(trick({ q: '7 − 2.4 = ?', topic: 'decimals' }), /7\.0/);
+assert.match(trick({ q: '3.6 + 1.27 = ?', topic: 'decimals' }), /Line up the decimal points/);
+assert.match(trick({ q: '4.8 × 3 = ?', topic: 'decimals' }), /decimal places/);
+assert.match(trick({ q: '4.8 ÷ 4 = ?', topic: 'decimals' }), /decimal point/);
+assert.match(trick({ q: '23 × 6 = ?', topic: 'multiplication' }), /tens and ones/);
+assert.match(trick({ q: '864 ÷ 8 = ?', topic: 'longdivision' }), /long-division loop/);
+assert.match(trick({ q: '56 ÷ 8 = ?', topic: 'division' }), /times the divisor/);
+assert.match(trick({ q: '-3 × 4 = ?', topic: 'integers' }), /signs/);
+assert.match(trick({ q: 'Convert 1/4 to a decimal.', topic: 'fractions' }), /exact decimal/);
+assert.equal(trick({ q: 'Convert 1/0 to a decimal.', topic: 'fractions' }), null, 'invalid fraction denominators remain reactive-only');
+assert.match(trick({ q: '1/3 + 1/4 = ?', topic: 'fractions' }), /common denominator/);
+assert.match(trick({ q: '3/4 × 2/5 = ?', topic: 'fractions' }), /Multiply numerators/);
+assert.match(trick({ q: 'Convert 3/4 to a percent.', topic: 'fractions' }), /multiply by 100/);
+assert.match(trick({ q: 'A $60 item is 20% off. What is the SALE price?', topic: 'percent' }), /discount amount/);
+assert.match(trick({ q: 'A $60 item plus 13% tax. TOTAL cost?', topic: 'percent' }), /tax amount/);
+assert.match(trick({ q: 'A car travels 180 km in 3 hours. Speed in km/h?', topic: 'ratios' }), /one hour/);
+assert.match(trick({ q: 'A triangle has base 8 cm and height 5 cm. What is its AREA?', topic: 'geometry' }), /half/);
+assert.match(trick({ q: 'A circle has radius 4 cm. What is its CIRCUMFERENCE? Use π ≈ 3.14, round to 1 decimal.', topic: 'geometry' }), /distance around/);
+assert.match(trick({ q: '3 meters = how many centimeters?', topic: 'measurement' }), /multiplying by 100/);
+assert.match(trick({ q: 'A chart shows 12 students chose soccer and 8 chose hockey. How many more chose the larger group?', topic: 'data' }), /Subtract the smaller/);
+assert.match(trick({ q: 'A bag has 3 red and 2 blue marbles. What is the probability of drawing RED?', topic: 'probability' }), /favorable outcomes/);
+assert.match(trick({ q: 'Pattern: 2, 5, 8, 11, ... What is number 5?', topic: 'patterns' }), /rule between terms/);
+assert.match(trick({ q: 'Round 1,245 to the nearest 100.', topic: 'numbersense' }), /digit immediately/);
+assert.match(trick({ q: '9 + ? = 16. What is the missing number?', topic: 'patterns' }), /opposite operation/);
+assert.match(trick({ q: '7² = ?', topic: 'bedmas' }), /exponent/);
+assert.equal(trick({ q: 'How many hits to defeat it? (round up)', topic: 'wordproblems' }), null);
+assert.equal(trick({ q: '7² = ?', topic: 'geometry' }), null, 'topic metadata prevents a Grade 8-only trick crossing into another family');
+for (const [q, answer] of [
+  ['5.9 + 5 = ?', '10.9'],
+  ['23 × 6 = ?', '138'],
+  ['864 ÷ 8 = ?', '108'],
+  ['A triangle has base 8 cm and height 5 cm. What is its AREA?', '20'],
+  ['A car travels 180 km in 3 hours. Speed in km/h?', '60']
+]) {
+  const message = trick({ q });
+  assert.equal(typeof message, 'string');
+  assert.equal(message.includes(answer), false, `proactive trick must not reveal the live answer for ${q}`);
+}
+
 // Narrow matching and answer-safety checks.
 for (const q of [
   { q: '2 × 7 = ?', choices: ['14', '16'] },
