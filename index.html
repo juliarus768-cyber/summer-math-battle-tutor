@@ -4989,6 +4989,14 @@ function summarizeImportDifferences(current, imported) {
   rows.push('Reward requests: ' + (imported.requests||[]).length);
   return rows;
 }
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
 async function prepareProgressImport(event) {
   if (!requireUnlockedParent()) return;
   const file = event.target.files && event.target.files[0];
@@ -5004,10 +5012,10 @@ async function prepareProgressImport(event) {
     preview.style.display = 'block';
     preview.innerHTML =
       '<div style="font-weight:700;margin-bottom:8px">Review before importing</div>' +
-      '<div class="mgr-note" style="margin-bottom:8px">Source: ' + esc(file.name) + '</div>' +
+      '<div class="mgr-note" style="margin-bottom:8px">Source: ' + escapeHtml(file.name) + '</div>' +
       '<div class="mgr-note" style="margin-bottom:8px">Family Sync metadata: ' +
-        esc(checked.familySync && checked.familySync.code ? checked.familySync.code + ' (not linked automatically)' : 'not linked') + '</div>' +
-      '<ul style="margin:0 0 12px 20px">' + rows.map(row => '<li>' + esc(row) + '</li>').join('') + '</ul>' +
+        escapeHtml(checked.familySync && checked.familySync.code ? checked.familySync.code + ' (not linked automatically)' : 'not linked') + '</div>' +
+      '<ul style="margin:0 0 12px 20px">' + rows.map(row => '<li>' + escapeHtml(row) + '</li>').join('') + '</ul>' +
       '<div style="color:var(--orange);font-weight:700;margin-bottom:10px">A complete local backup will be downloaded before import. Nothing changes until you press the confirmation button.</div>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
         '<button class="rq-ok" onclick="confirmProgressImport()">IMPORT AFTER REVIEW</button>' +
