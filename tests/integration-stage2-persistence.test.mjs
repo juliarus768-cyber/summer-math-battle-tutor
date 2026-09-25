@@ -420,7 +420,10 @@ assert.match(extractFunction('savePausedMission'), /resetInProgress/);
 assert.match(extractFunction('unlinkForLocalReset'), /localStorage\.getItem\(FAMILY_CODE_KEY\)/);
 
 // Cloud merge preserves child ownership, current merge policy, Math Thinking, requests, and remote unknown fields.
-vm.runInContext(`${extractFunction('mergeState')}\nglobalThis.mergeState=mergeState;`, context);
+vm.runInContext(
+  `${extractFunction('isFreshLikeProfile')}\n${extractFunction('hasChildProgress')}\n${extractFunction('mergeState')}\nglobalThis.mergeState=mergeState;`,
+  context
+);
 {
   const local = fixture();
   local.localOnly = { preserved:true };

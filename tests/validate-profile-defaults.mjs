@@ -29,11 +29,12 @@ assert.doesNotMatch(
   'an unconditional historical balance floor must not overwrite stored progress'
 );
 assert.match(source, /initialPullComplete/, 'cloud pushes must wait for the initial pull');
-assert.match(
-  source,
-  /meaningful\(l\) && !meaningful\(c\)/,
-  'a default local child must not replace meaningful cloud progress'
-);
+assert.match(source, /function isFreshLikeProfile\(/, 'merge freshness must use substantive per-child defaults');
+assert.match(source, /localProgressed && !cloudProgressed/, 'a fresh local child must not replace progressed cloud progress');
+assert.match(source, /localProgressed === cloudProgressed && Number\(l\.updatedAt\|\|0\) > Number\(c\.updatedAt\|\|0\)/,
+  'updatedAt is only a conflict tie-breaker after both child states have the same progress status');
+assert.doesNotMatch(source, /Number\(p\.updatedAt\|\|0\)\s*>\s*0/,
+  'updatedAt alone must not count as learning progress');
 assert.doesNotMatch(source, /PROFILE_RECOVERY_FLOOR/, 'family-specific recovery values must never ship globally');
 assert.match(source, /\^\[A-HJ-NP-Z2-9\]\{8\}\$/, 'Family Sync Codes must be exactly eight valid characters');
 assert.match(source, /function exportProgressJSON\(/, 'Parent Dashboard must support full JSON export');

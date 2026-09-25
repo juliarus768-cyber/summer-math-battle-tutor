@@ -2368,35 +2368,94 @@ const Cloud = (() => {
     } catch (e) { return null; }
   }
 
-  // Merge rule: for each child, whichever snapshot has the newer updatedAt is
-  // considered "more advanced" and wins every conflicting field for that child's stats -- we
-  // never cherry-pick individual fields (e.g. take xp from one side and xpMax
-  // from the other), since that could produce an inconsistent state. updatedAt
-  // is stamped whenever coins, keys, or XP change, so manual deductions and
-  // reward spending win over older cloud snapshots even when totalXP is tied.
-  // Fields present on only one side are retained for forward compatibility.
-  // Request history and
-  // per-topic mastery are additive records, so those are combined instead of
-  // picked from one side.
+  // A timestamp alone is not proof of learning progress: a newly initialized
+  // device can have a newer updatedAt than the family's existing save.
+  // Compare only known substantive profile fields with the actual per-child
+  // defaults; legacy/unknown metadata (for example an old birthday) is ignored.
+  function isFreshLikeProfile(who, profile) {
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return true;
+    const defaults = FRESH[who];
+    for (const field of ['lvl','xp','xpMax','totalXP','coins','streak','keys','lastKeyMilestone']) {
+      const value = profile[field] == null ? defaults[field] : Number(profile[field]);
+      if (!Number.isFinite(value) || value !== defaults[field]) return false;
+    }
+    if (profile.lastDay != null && profile.lastDay !== '') return false;
+    if (profile.gradeOverride != null) return false;
+    return true;
+  }
+
+  function hasChildProgress(who, snapshot) {
+    if (isFreshLikeProfile(who, snapshot[who]) === false) return true;
+    const nonEmpty = value => Array.isArray(value) ? value.length > 0 :
+      !!value && typeof value === 'object' && Object.keys(value).length > 0;
+    const positiveMap = value => !!value && typeof value === 'object' &&
+      Object.values(value).some(n => Number.isFinite(Number(n)) && Number(n) > 0);
+    const activity = snapshot.activity && snapshot.activity[who];
+    if (activity && positiveMap(activity)) return true;
+    const daily = snapshot.daily && snapshot.daily[who];
+    if (daily && (Number(daily.count || 0) > 0 || (daily.date && daily.date !== ''))) return true;
+    if (snapshot.pausedDaily && snapshot.pausedDaily[who]) return true;
+    const moneyLab = snapshot.moneyLabDaily && snapshot.moneyLabDaily[who];
+    if (moneyLab && (Number(moneyLab.rewarded || 0) > 0 || (moneyLab.date && moneyLab.date !== ''))) return true;
+    if (snapshot.goals && snapshot.goals[who] != null && snapshot.goals[who] !== '') return true;
+    if (snapshot.recentQ && nonEmpty(snapshot.recentQ[who])) return true;
+    if (snapshot.evidence && nonEmpty(snapshot.evidence[who])) return true;
+    const mastery = snapshot.mastery && snapshot.mastery[who];
+    if (mastery && Object.values(mastery).some(row => row && (
+      Number(row.seen || 0) > 0 || Number(row.correct || 0) > 0 || nonEmpty(row.recent)
+    ))) return true;
+    const strategy = snapshot.strategy && snapshot.strategy[who];
+    if (strategy && (positiveMap(strategy.viewed) || positiveMap(strategy.helped) || nonEmpty(strategy.badges))) return true;
+    const thinking = snapshot.mathThinking && snapshot.mathThinking[who];
+    if (thinking && (
+      nonEmpty(thinking.unlocked) || nonEmpty(thinking.events) || nonEmpty(thinking.review) ||
+      nonEmpty(thinking.topic) || nonEmpty(thinking.errors) || nonEmpty(thinking.seen) ||
+      ['strategyViews','usefulSelections','patternAttempts','patternUseful','hintsUsed'].some(k => Number(thinking[k] || 0) > 0)
+    )) return true;
+    if (Array.isArray(snapshot.requests) && snapshot.requests.some(r => r && r.who === who)) return true;
+    if (Array.isArray(snapshot.log) && snapshot.log.some(entry => entry && entry.who === who)) return true;
+    return false;
+  }
+
+  // For each child, keep a genuinely progressed profile over a fresh one.
+  // When both have progress (or both are fresh), updatedAt remains the conflict
+  // rule so later spending/deductions are not resurrected from an older save.
   function mergeState(local, cloud) {
     if (!cloud) return local;
     if (!local) return cloud;
-    const merged = {
-      ...JSON.parse(JSON.stringify(local)),
-      ...JSON.parse(JSON.stringify(cloud))
-    };
+    const localCopy = JSON.parse(JSON.stringify(local));
+    const cloudCopy = JSON.parse(JSON.stringify(cloud));
+    const localProgressCount = ['alex','katya'].filter(w => hasChildProgress(w, local)).length;
+    const cloudProgressCount = ['alex','katya'].filter(w => hasChildProgress(w, cloud)).length;
+    // Prefer the more progressed family snapshot for global fields (settings,
+    // reward catalog, and forward-compatible top-level fields). A tie keeps
+    // the existing cloud-preferred behavior.
+    const localFamilyWins = localProgressCount > cloudProgressCount;
+    const merged = localFamilyWins
+      ? { ...cloudCopy, ...localCopy }
+      : { ...localCopy, ...cloudCopy };
+    const childFieldMaps = ['activity','daily','recentQ','strategy','evidence','goals','pausedDaily','moneyLabDaily'];
+    childFieldMaps.forEach(field => {
+      const lMap = local[field] && typeof local[field] === 'object' && !Array.isArray(local[field]) ? local[field] : {};
+      const cMap = cloud[field] && typeof cloud[field] === 'object' && !Array.isArray(cloud[field]) ? cloud[field] : {};
+      merged[field] = { ...lMap, ...cMap };
+    });
     ['alex','katya'].forEach(w => {
       const l = local[w], c = cloud[w];
       if (!l) return;
-      const meaningful = p => !!p && (
-        Number(p.totalXP||0) > 0 || Number(p.lvl||1) > 1 ||
-        Number(p.streak||0) > 0 || Number(p.updatedAt||0) > 0
-      );
-      // A freshly initialized profile must never replace a progressed profile,
-      // even if a later initialization accidentally stamped its timestamp.
-      const localWins = !c || (meaningful(l) && !meaningful(c)) ||
-        (meaningful(l) === meaningful(c) && Number(l.updatedAt||0) > Number(c.updatedAt||0));
+      const localProgressed = hasChildProgress(w, local);
+      const cloudProgressed = c && hasChildProgress(w, cloud);
+      const localWins = !c || (localProgressed && !cloudProgressed) ||
+        (localProgressed === cloudProgressed && Number(l.updatedAt||0) > Number(c.updatedAt||0));
       merged[w] = localWins ? { ...(c||{}), ...l } : { ...l, ...c };
+      childFieldMaps.forEach(field => {
+        const preferred = localWins ? local[field] : cloud[field];
+        const fallback = localWins ? cloud[field] : local[field];
+        const preferredValue = preferred && preferred[w];
+        const fallbackValue = fallback && fallback[w];
+        if (preferredValue !== undefined) merged[field][w] = preferredValue;
+        else if (fallbackValue !== undefined) merged[field][w] = fallbackValue;
+      });
     });
     const reqById = new Map();
     (cloud.requests||[]).forEach(r => reqById.set(r.id, r));
@@ -2407,11 +2466,19 @@ const Cloud = (() => {
       const lXP = local[w] ? Number(local[w].totalXP||0) : -1;
       const cXP = cloud[w] ? Number(cloud[w].totalXP||0) : -1;
       const lm = local.mastery && local.mastery[w], cm = cloud.mastery && cloud.mastery[w];
-      merged.mastery[w] = lXP > cXP ? (lm||cm||{}) : (cm||lm||{});
+      const localProgressed = hasChildProgress(w, local);
+      const cloudProgressed = hasChildProgress(w, cloud);
+      if (localProgressed && !cloudProgressed) merged.mastery[w] = lm || cm || {};
+      else if (cloudProgressed && !localProgressed) merged.mastery[w] = cm || lm || {};
+      else merged.mastery[w] = lXP > cXP ? (lm||cm||{}) : (cm||lm||{});
     });
     merged.parentPin = local.parentPin || cloud.parentPin;
-    merged.settings = cloud.settings || local.settings;
-    merged.rewards = cloud.rewards || local.rewards;
+    merged.settings = localFamilyWins
+      ? (local.settings || cloud.settings)
+      : (cloud.settings || local.settings);
+    merged.rewards = localFamilyWins
+      ? (local.rewards || cloud.rewards)
+      : (cloud.rewards || local.rewards);
     const mergeNumberMap = (a, b) => {
       const safeA = a && typeof a === 'object' && !Array.isArray(a) ? a : {};
       const safeB = b && typeof b === 'object' && !Array.isArray(b) ? b : {};
@@ -2466,6 +2533,18 @@ const Cloud = (() => {
       Number(local.mathThinking && local.mathThinking.version || 0),
       Number(cloud.mathThinking && cloud.mathThinking.version || 0)
     );
+    // Logs are bounded event history rather than a replaceable profile value.
+    // Combine both snapshots and remove exact duplicate events before trimming.
+    const logByKey = new Map();
+    [...(Array.isArray(cloud.log) ? cloud.log : []), ...(Array.isArray(local.log) ? local.log : [])]
+      .forEach(entry => {
+        if (!entry || typeof entry !== 'object') return;
+        const key = JSON.stringify([entry.t || 0, entry.who == null ? '' : entry.who, entry.icon || '', entry.text || '']);
+        logByKey.set(key, entry);
+      });
+    merged.log = [...logByKey.values()]
+      .sort((a,b) => Number(b.t || 0) - Number(a.t || 0))
+      .slice(0, 60);
     return merged;
   }
 
