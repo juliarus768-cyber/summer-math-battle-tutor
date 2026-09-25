@@ -98,9 +98,13 @@ assert.equal(preview.some(row => row.includes('Math Secrets: Alex 1, Katya 1')),
 const confirmSource = extractFunction('confirmProgressImport');
 assert.match(confirmSource, /Import stopped: this device has a newer/, 'newer child profiles must block import');
 assert.ok(
-  confirmSource.indexOf("localStorage.setItem('smbt-state-v2-backup-before-import-'") <
+  confirmSource.indexOf("Store.writeAuxiliary('smbt-state-v2-backup-before-import-'") <
     confirmSource.indexOf('Object.keys(state).forEach'),
-  'the complete local backup must be saved before state replacement'
+  'the complete local backup must use the verified Store path before state replacement'
+);
+assert.ok(
+  confirmSource.indexOf('Store.set(PRIMARY_STATE_KEY, imported') < confirmSource.indexOf('Object.keys(state).forEach'),
+  'imported progress must be verified before the live state object is replaced'
 );
 assert.match(confirmSource, /downloadJSONFile\(/, 'the pre-import backup must also be downloaded');
 assert.doesNotMatch(confirmSource, /Cloud\.linkFamily|Cloud\.pushNow|Cloud\.syncNow/, 'import confirmation must never write to Firebase');

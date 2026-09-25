@@ -152,9 +152,10 @@ body {
 .side-card.pink-glow { border-color: rgba(255,46,126,0.4); box-shadow: 0 0 20px rgba(255,46,126,0.12); }
 .side-card.blue-glow { border-color: rgba(25,201,255,0.35); box-shadow: 0 0 20px rgba(25,201,255,0.1); }
 .side-title { font-family: var(--orb); font-size: 13px; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px; }
-.qlink { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; transition: all .15s; }
+.qlink { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; color: var(--muted); font-weight: 700; font-size: 14px; transition: all .15s; background: transparent; border: 0; width: 100%; text-align: left; font-family: inherit; }
 .qlink:hover { background: rgba(120,160,255,0.08); color: var(--text); }
 .qlink svg { width: 18px; height: 18px; stroke: var(--blue); fill: none; stroke-width: 1.8; }
+.math-trick { margin: 8px 0 10px; padding: 7px 10px; border-left: 3px solid #FFD166; border-radius: 8px; background: rgba(255,209,102,.08); color: #FFE7A3; font-size: 13px; font-weight: 700; line-height: 1.35; }
 .quote { font-size: 18px; font-weight: 700; line-height: 1.55; color: #FF8FB8; text-shadow: 0 0 14px rgba(255,46,126,0.5); font-style: italic; }
 
 /* ============ CENTER ============ */
@@ -1166,7 +1167,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
     <div class="lf-text">
       <div class="lf-eyebrow">RECOMMENDED · ONE DAILY MISSION</div>
       <div class="lf-title">DAILY MATH MISSION</div>
-      <div class="lf-sub" id="landing-mission-status">18–20 adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.</div>
+      <div class="lf-sub" id="landing-mission-status">30 adaptive questions across your grade-level math families. Retry gently, build accuracy, earn XP and coins.</div>
     </div>
     <div class="lf-go">▶</div>
   </div>
@@ -1204,18 +1205,20 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="alex-streak">11</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#7FB6FF"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFC93C" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8Z" fill="#FFC93C" opacity=".9"/></svg>BATTLE<br>RANK</div><div class="k">DIVISION II</div></div>
     </div>
-    <button class="btn btn-blue" onclick="event.stopPropagation();setPlayer('alex');toast('⚡ Alex selected! Profile screen coming next build.')">VIEW PROFILE <span style="font-size:18px">›</span></button>
+    <button class="btn btn-blue" onclick="event.stopPropagation();setPlayer('alex');toast('⚡ Alex selected!')">VIEW PROFILE <span style="font-size:18px">›</span></button>
   </div>
 </div>
 
 <div class="side-card blue-glow">
   <div class="side-title" style="color:#9FD8FF">QUICK LINKS</div>
-  <div class="qlink" onclick="startMission('daily')"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Daily Mission</div>
-  <div class="qlink" onclick="goTab('Battle')"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM20 20 10 6 7 4 4 7l2 3 10 10Z"/></svg>Battle Mode</div>
-  <div class="qlink" onclick="goTab('Store')"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>Reward Store</div>
-  <div class="qlink" onclick="goTab('Grant Prize')"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11"/></svg>Grant Prize</div>
-  <div class="qlink" onclick="goTab('Parent')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg>Parent Dashboard</div>
-  <div class="qlink" onclick="openStrategyLib()"><svg viewBox="0 0 24 24"><path d="M12 3c-4 1-7 3-7 7 0 3.5 2.5 5.5 3.5 7 .5.8 1 1.5 1 2h5c0-.5.5-1.2 1-2 1-1.5 3.5-3.5 3.5-7 0-4-3-6-7-7Z"/><path d="M10 22h4"/></svg>Strategy Library</div>
+  <button type="button" class="qlink" onclick="startMission('daily')"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Daily Mission</button>
+  <button type="button" class="qlink" onclick="goTab('Battle')"><svg viewBox="0 0 24 24"><path d="M4 20 14 6l3-2 3 3-2 3L4 20ZM20 20 10 6 7 4 4 7l2 3 10 10Z"/></svg>Battle Mode</button>
+  <button type="button" class="qlink" onclick="goTab('Store')"><svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 12h-13L4 8ZM8 8a4 4 0 0 1 8 0"/></svg>Reward Store</button>
+  <button type="button" class="qlink" onclick="goTab('Grant Prize')"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M4 13h16M12 9v11"/></svg>Grant Prize</button>
+   <button type="button" class="qlink" onclick="goTab('Parent')"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/></svg>Parent Dashboard</button>
+   <button type="button" class="qlink" onclick="openStrategyLib()"><svg viewBox="0 0 24 24"><path d="M12 3c-4 1-7 3-7 7 0 3.5 2.5 5.5 3.5 7 .5.8 1 1.5 1 2h5c0-.5.5-1.2 1-2 1-1.5 3.5-3.5 5.5-7 0-4-3-6-7-7Z"/><path d="M10 22h4"/></svg>Strategy Library</button>
+   <button type="button" class="qlink" onclick="goTab('Money Lab')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v10M15 9.5c-.7-.8-1.7-1.2-3-1.2-1.4 0-2.4.7-2.4 1.7 0 2.6 5.4 1.1 5.4 3.8 0 1.1-1 1.8-2.6 1.8-1.3 0-2.4-.4-3.1-1.3"/></svg>Money Lab</button>
+   <button type="button" class="qlink" onclick="goTab('Equation Escape')"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 19h16M8 9l3 3-3 3M16 9l-3 3 3 3"/></svg>Equation Escape</button>
 </div>
 </aside>
 
@@ -1363,7 +1366,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
       <div class="hstat"><div class="v" style="color:#FF8C28;text-shadow:0 0 10px rgba(255,140,40,.7)"><svg width="14" height="17" viewBox="0 0 20 26"><path d="M10 1 Q16 8 14 12 Q18 11 18 17 A8 8 0 0 1 2 17 Q2 10 7 6 Q6 11 9 12 Q8 6 10 1Z" fill="#FF8C28"/><path d="M10 13 Q13 17 12 19 A3.4 3.4 0 0 1 5.6 19 Q6 15 10 13Z" fill="#FFD166"/></svg><span id="katya-streak">9</span></div><div class="k">STREAK</div></div>
       <div class="hstat"><div class="v" style="font-size:12px;color:#FF8FB8"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M12 2 20 6v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6Z" fill="rgba(255,46,126,.2)" stroke="#FF2E7E" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="none" stroke="#FF6FA5" stroke-width="1.8"/><path d="M13.2 13.2 16 16" stroke="#FF6FA5" stroke-width="1.8"/></svg>DETECTIVE<br>RANK</div><div class="k">CASE SOLVER</div></div>
     </div>
-    <button class="btn btn-pink" onclick="event.stopPropagation();setPlayer('katya');toast('🔍 Katya selected! Profile screen coming next build.')">VIEW PROFILE <span style="font-size:18px">›</span></button>
+    <button class="btn btn-pink" onclick="event.stopPropagation();setPlayer('katya');toast('🔍 Katya selected!')">VIEW PROFILE <span style="font-size:18px">›</span></button>
   </div>
 </div>
 
@@ -1406,6 +1409,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
         <div class="reinforce-badge" id="ms-reinforce-badge" style="display:none">💪 BONUS PRACTICE — YOU&rsquo;VE GOT THIS!</div>
         <div class="q-story" id="ms-story"></div>
         <div class="q-text" id="ms-q"></div>
+        <div class="math-trick" id="ms-trick" style="display:none" aria-live="polite"></div>
         <div class="attempt-dots" id="ms-attempt-dots" aria-label="Attempts used"><i></i><i></i><i></i></div>
         <div class="estimate-nudge">🎯 Try to estimate the answer first — it helps you catch mistakes!</div>
         <div class="bb-wrap">
@@ -1566,17 +1570,22 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
   <div id="pin-gate">
     <div class="pin-wrap">
       <div style="font-family:var(--orb);font-weight:900;letter-spacing:2px;font-size:18px">ENTER PARENT PIN</div>
-      <div style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Default PIN is <b>1234</b> &mdash; you can change it below.</div>
-      <input class="pin-in" id="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Parent PIN" placeholder="••••">
-      <button class="b-start" style="background:linear-gradient(90deg,#19C9FF,#2D6BFF);box-shadow:0 6px 22px rgba(25,201,255,.4);width:100%" onclick="checkPin()">UNLOCK</button>
-      <div id="pin-err" style="color:var(--pink);font-weight:700;font-size:13px;margin-top:10px;min-height:18px"></div>
+       <div id="pin-entry-help" style="color:var(--muted);font-size:13px;font-weight:600;margin-top:6px">Enter your Parent PIN to continue.</div>
+       <input class="pin-in" id="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Parent PIN" placeholder="••••">
+       <button class="b-start" id="pin-unlock-btn" style="background:linear-gradient(90deg,#19C9FF,#2D6BFF);box-shadow:0 6px 22px rgba(25,201,255,.4);width:100%" onclick="checkPin()">UNLOCK</button>
+       <div id="pin-setup" style="display:none">
+         <input class="pin-in" id="pin-new" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="New 4-digit PIN" aria-label="New Parent PIN">
+         <input class="pin-in" id="pin-confirm" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Confirm PIN" aria-label="Confirm Parent PIN">
+         <button class="b-start" style="background:linear-gradient(90deg,#19C9FF,#2D6BFF);box-shadow:0 6px 22px rgba(25,201,255,.4);width:100%" onclick="setupParentPin()">SET PARENT PIN</button>
+       </div>
+       <div id="pin-err" style="color:var(--pink);font-weight:700;font-size:13px;margin-top:10px;min-height:18px"></div>
     </div>
   </div>
 
   <div id="parent-content" style="display:none">
     <div class="s-pending" id="pin-default-notice" style="display:none;border-style:solid;border-color:rgba(255,201,60,.5);background:rgba(255,201,60,.08);margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between">
-        <div style="font-weight:600;color:var(--text)">&#128272; You&rsquo;re still using the default PIN (1234). Change it in Settings below for better security.</div>
+         <div style="font-weight:600;color:var(--text)">&#128272; You&rsquo;re using an older starter PIN. Change it in Settings below for better protection.</div>
         <button class="mgr-toggle" onclick="dismissPinNotice()">Got it</button>
       </div>
     </div>
@@ -1902,7 +1911,7 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 
 <div class="footer">
   <span>Summer Math Battle Tutor © 2026</span>
-  <span>v1.2.0 &middot; build __BUILD_ID__ &nbsp; | &nbsp;Built for Champions ❤</span>
+  <span>v1.2.0 &nbsp; | &nbsp;Built for Champions ❤</span>
 </div>
 </div><!-- /wrap -->
 
@@ -1916,23 +1925,253 @@ input[type="text"], .pin-in, .ml-answer { min-height: 52px; font-size: 18px; }
 const APP_VERSION = '1.2.0';
 const APP_BUILD = '__BUILD_ID__';
 
-/* ============ SAFE STORAGE (localStorage with in-memory fallback) ============ */
-const Store = (() => {
-  let mem = {}, ok = false;
-  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ok = true; } catch(e) {}
+/* ============ SAFE STORAGE (validated persistence with recovery) ============ */
+const PRIMARY_STATE_KEY = 'smbt-state-v2';
+const STATE_BACKUP_KEY = PRIMARY_STATE_KEY + '-backup';
+const STATE_CORRUPT_KEY = PRIMARY_STATE_KEY + '-corrupt';
+
+function createSafeStore(storage, statusHost, cloudProvider) {
+  const mem = {};
+  let persistent = false;
+  let lastGoodRaw = null;
+  let cloudSafe = false;
+  let primaryWriteBlocked = false;
+  let currentLoadStatus = 'unknown';
+
+  try {
+    storage.setItem('__smbt_storage_test__', '1');
+    storage.removeItem('__smbt_storage_test__');
+    persistent = true;
+  } catch (e) {}
+
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const readRaw = key => persistent ? storage.getItem(key) : (mem[key] ?? null);
+  const writeRaw = (key, value) => {
+    if (persistent) storage.setItem(key, value);
+    else mem[key] = value;
+  };
+  const removeRaw = key => {
+    if (persistent) storage.removeItem(key);
+    else delete mem[key];
+  };
+  const setStatus = (reason, recovery = true) => {
+    statusHost.__storageStatus = { recovery, reason };
+    statusHost.__storageWarningPending = true;
+    if (reason === 'recovered') statusHost.__storageRecoveryNotice = true;
+    if (statusHost.__storageUiReady && typeof statusHost.renderStorageWarning === 'function') statusHost.renderStorageWarning();
+    if (statusHost.__storageUiReady && typeof toast === 'function') toast(recovery
+      ? '⚠️ Progress storage needs parent review.'
+      : '⚠️ Progress backup could not be updated.');
+  };
+  const clearStatus = () => {
+    statusHost.__storageStatus = null;
+    statusHost.__storageWarningPending = false;
+    if (statusHost.__storageUiReady && typeof statusHost.renderStorageWarning === 'function') statusHost.renderStorageWarning();
+  };
+  const parseStateRaw = raw => {
+    if (raw == null) return { ok:false, reason:'missing' };
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch (e) { return { ok:false, reason:'corrupt-json' }; }
+    const normalized = normalizeLoadedState(parsed);
+    return normalized.safe
+      ? { ok:true, state:normalized.state, raw:JSON.stringify(normalized.state) }
+      : { ok:false, reason:'invalid-shape', state:normalized.state };
+  };
+  const preserveCorruptRaw = raw => {
+    if (!persistent || raw == null) return false;
+    try {
+      writeRaw(STATE_CORRUPT_KEY, raw);
+      return readRaw(STATE_CORRUPT_KEY) === raw;
+    } catch (e) { return false; }
+  };
+  const writeVerifiedRaw = (key, raw, requireValidState) => {
+    writeRaw(key, raw);
+    const check = readRaw(key);
+    if (check !== raw) return false;
+    if (requireValidState && !parseStateRaw(check).ok) return false;
+    if (!requireValidState) JSON.parse(check);
+    return true;
+  };
+  const queueCloud = () => {
+    const cloud = cloudProvider && cloudProvider();
+    if (cloudSafe && cloud && cloud.scheduleDebouncedPush) cloud.scheduleDebouncedPush();
+  };
+
   return {
-    get(k,d){ try { const v = ok ? localStorage.getItem(k) : mem[k]; return v != null ? JSON.parse(v) : d; } catch(e){ return d; } },
-    set(k,v){
-      try { if (ok) localStorage.setItem(k, JSON.stringify(v)); else mem[k] = JSON.stringify(v); } catch(e){}
-      // Every save of the main game state also queues a debounced cloud push, so
-      // no individual call site needs to know about sync. No-ops if cloud sync
-      // isn't configured/linked yet.
-      if (k === 'smbt-state-v2' && window.Cloud && window.Cloud.scheduleDebouncedPush) {
-        window.Cloud.scheduleDebouncedPush();
+    available: () => persistent,
+    cloudSafe: () => persistent && cloudSafe,
+    loadStatus: () => currentLoadStatus,
+    get(key, fallback) {
+      if (key !== PRIMARY_STATE_KEY) {
+        try {
+          const raw = readRaw(key);
+          return raw == null ? fallback : JSON.parse(raw);
+        } catch (e) { return fallback; }
       }
+      if (!persistent) {
+        currentLoadStatus = 'unavailable';
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        setStatus('unavailable');
+        return { value:clone(fallback), status:'unavailable', source:'memory' };
+      }
+
+      let raw;
+      try { raw = readRaw(key); }
+      catch (e) {
+        currentLoadStatus = 'read-failed';
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        setStatus('read-failed');
+        return { value:clone(fallback), status:'read-failed', source:'defaults' };
+      }
+      if (raw == null) {
+        currentLoadStatus = 'missing';
+        cloudSafe = false;
+        primaryWriteBlocked = false;
+        return { value:clone(fallback), status:'missing', source:'defaults' };
+      }
+
+      const primary = parseStateRaw(raw);
+      if (primary.ok) {
+        lastGoodRaw = primary.raw;
+        cloudSafe = true;
+        primaryWriteBlocked = false;
+        currentLoadStatus = 'ok';
+        try {
+          const backup = parseStateRaw(readRaw(STATE_BACKUP_KEY));
+          if (!backup.ok && !writeVerifiedRaw(STATE_BACKUP_KEY, lastGoodRaw, true)) setStatus('backup-write-failed', false);
+        } catch (e) { setStatus('backup-write-failed', false); }
+        return { value:primary.state, status:'ok', source:'primary' };
+      }
+
+      preserveCorruptRaw(raw);
+      let backup = null;
+      try { backup = parseStateRaw(readRaw(STATE_BACKUP_KEY)); } catch (e) {}
+      if (backup && backup.ok) {
+        lastGoodRaw = backup.raw;
+        try {
+          if (writeVerifiedRaw(key, backup.raw, true)) {
+            cloudSafe = true;
+            primaryWriteBlocked = false;
+            currentLoadStatus = 'recovered';
+            setStatus('recovered');
+            return { value:backup.state, status:'recovered', source:'backup' };
+          }
+        } catch (e) {}
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        currentLoadStatus = 'recovery-readonly';
+        setStatus('recovery-readonly');
+        return { value:backup.state, status:'recovery-readonly', source:'backup' };
+      }
+
+      cloudSafe = false;
+      primaryWriteBlocked = true;
+      currentLoadStatus = primary.reason;
+      setStatus(primary.reason);
+      return {
+        value:primary.state || clone(fallback),
+        status:primary.reason,
+        source:primary.state ? 'repaired-memory' : 'defaults'
+      };
+    },
+    set(key, value, options = {}) {
+      if (key !== PRIMARY_STATE_KEY) return this.writeAuxiliary(key, value);
+      if (!persistent) {
+        try { mem[key] = JSON.stringify(value); } catch (e) {}
+        cloudSafe = false;
+        setStatus('unavailable');
+        return { ok:false, reason:'unavailable' };
+      }
+      if (primaryWriteBlocked && !options.allowRecovery) {
+        setStatus('recovery-readonly');
+        return { ok:false, reason:'recovery-readonly' };
+      }
+
+      let normalized, serialized;
+      try {
+        normalized = normalizeLoadedState(value);
+        if (!normalized.safe) {
+          setStatus('validation');
+          return { ok:false, reason:'validation' };
+        }
+        serialized = JSON.stringify(normalized.state);
+      } catch (e) {
+        setStatus('serialize');
+        return { ok:false, reason:'serialize' };
+      }
+
+      const previousGoodRaw = lastGoodRaw;
+      let backupOk = true;
+      if (previousGoodRaw != null) {
+        try { backupOk = writeVerifiedRaw(STATE_BACKUP_KEY, previousGoodRaw, true); }
+        catch (e) { backupOk = false; }
+      }
+      try {
+        if (!writeVerifiedRaw(key, serialized, true)) throw new Error('readback');
+      } catch (e) {
+        cloudSafe = false;
+        setStatus(e && e.message === 'readback' ? 'readback' : 'write');
+        return { ok:false, reason:e && e.message === 'readback' ? 'readback' : 'write' };
+      }
+
+      lastGoodRaw = serialized;
+      if (previousGoodRaw == null) {
+        try { backupOk = writeVerifiedRaw(STATE_BACKUP_KEY, serialized, true); }
+        catch (e) { backupOk = false; }
+      }
+      cloudSafe = true;
+      primaryWriteBlocked = false;
+      currentLoadStatus = 'ok';
+      if (backupOk) clearStatus();
+      else setStatus('backup-write-failed', false);
+      if (options.queueCloud !== false) queueCloud();
+      return { ok:true, backupOk, value:normalized.state };
+    },
+    writeAuxiliary(key, value) {
+      if (!persistent) return { ok:false, reason:'unavailable' };
+      let serialized;
+      try { serialized = JSON.stringify(value); JSON.parse(serialized); }
+      catch (e) { return { ok:false, reason:'serialize' }; }
+      try {
+        return writeVerifiedRaw(key, serialized, false)
+          ? { ok:true }
+          : { ok:false, reason:'readback' };
+      } catch (e) { return { ok:false, reason:'write' }; }
+    },
+    backupCurrent(value) {
+      if (!persistent) return { ok:false, reason:'unavailable' };
+      let normalized, serialized;
+      try {
+        normalized = normalizeLoadedState(JSON.parse(JSON.stringify(value)));
+        if (!normalized.safe) return { ok:false, reason:'validation' };
+        serialized = JSON.stringify(normalized.state);
+        if (!writeVerifiedRaw(STATE_BACKUP_KEY, serialized, true)) return { ok:false, reason:'readback' };
+      } catch (e) { return { ok:false, reason:'write' }; }
+      lastGoodRaw = serialized;
+      return { ok:true };
+    },
+    resetPrimary(value) {
+      const normalized = normalizeLoadedState(value);
+      if (normalized.safe) {
+        const backedUp = this.backupCurrent(normalized.state);
+        if (!backedUp.ok) return backedUp;
+      }
+      try {
+        removeRaw(PRIMARY_STATE_KEY);
+        if (readRaw(PRIMARY_STATE_KEY) != null) return { ok:false, reason:'remove-readback' };
+        cloudSafe = false;
+        primaryWriteBlocked = true;
+        currentLoadStatus = 'reset';
+        return { ok:true };
+      } catch (e) { return { ok:false, reason:'remove' }; }
     }
   };
-})();
+}
+
+const Store = createSafeStore(localStorage, window, () => window.Cloud);
 
 /* ============ GAME STATE — family defaults for brand-new profiles ============ */
 const FRESH = {
@@ -1940,13 +2179,61 @@ const FRESH = {
   alex:  { lvl: 1, xp: 0, xpMax: 100, coins: 80, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 },
   katya: { lvl: 1, xp: 0, xpMax: 100, coins: 110, streak: 0, totalXP: 0, keys: 0, lastKeyMilestone: 0, updatedAt: 0 }
 };
-const storedState = Store.get('smbt-state-v2', null);
-const state = storedState && typeof storedState === 'object' && !Array.isArray(storedState)
-  ? storedState
-  : JSON.parse(JSON.stringify(FRESH));
-if (!state.activePlayer) state.activePlayer = 'alex';
+function cloneFresh() { return JSON.parse(JSON.stringify(FRESH)); }
+function isPlainObject(value) { return !!value && typeof value === 'object' && !Array.isArray(value); }
+function normalizeLoadedState(raw) {
+  let safe = isPlainObject(raw);
+  const out = safe ? JSON.parse(JSON.stringify(raw)) : cloneFresh();
+  if (!safe) return { state:out, safe:false };
+
+  if (out.activePlayer == null) out.activePlayer = 'alex';
+  else if (!['alex','katya'].includes(out.activePlayer)) { out.activePlayer = 'alex'; safe = false; }
+
+  for (const who of ['alex','katya']) {
+    if (!isPlainObject(out[who])) {
+      out[who] = JSON.parse(JSON.stringify(FRESH[who]));
+      safe = false;
+      continue;
+    }
+    const defaults = FRESH[who];
+    for (const field of ['lvl','xp','xpMax','coins','streak','totalXP','keys','lastKeyMilestone','updatedAt']) {
+      const originalValue = raw[who][field];
+      if (originalValue == null) { out[who][field] = defaults[field]; continue; }
+      const value = typeof originalValue === 'string' && originalValue.trim() !== ''
+        ? Number(originalValue)
+        : originalValue;
+      const minimum = field === 'lvl' || field === 'xpMax' ? 1 : 0;
+      if (!Number.isFinite(value) || value < minimum) {
+        out[who][field] = defaults[field];
+        safe = false;
+      } else out[who][field] = value;
+    }
+  }
+
+  const arrayFields = ['requests','rewards','log'];
+  const objectFields = ['mastery','mathThinking','settings','activity','daily','recentQ','strategy','goals'];
+  for (const field of arrayFields) {
+    if (out[field] != null && !Array.isArray(out[field])) { out[field] = []; safe = false; }
+  }
+  for (const field of objectFields) {
+    if (out[field] != null && !isPlainObject(out[field])) { out[field] = {}; safe = false; }
+  }
+  if (out.pausedDaily == null) out.pausedDaily = { alex:null, katya:null };
+  else if (!isPlainObject(out.pausedDaily)) { out.pausedDaily = { alex:null, katya:null }; safe = false; }
+  if (out.pausedDaily.alex === undefined) out.pausedDaily.alex = null;
+  if (out.pausedDaily.katya === undefined) out.pausedDaily.katya = null;
+  for (const who of ['alex','katya']) {
+    if (out[who].lastDay != null && out[who].lastDay !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(String(out[who].lastDay))) {
+      out[who].lastDay = '';
+      safe = false;
+    }
+  }
+  return { state:out, safe };
+}
+const loadedState = Store.get(PRIMARY_STATE_KEY, cloneFresh());
+const state = loadedState.value;
+let resetInProgress = false;
 // Back-fill new fields for existing saves
-const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
 ['alex','katya'].forEach(w => {
   if (!state[w] || typeof state[w] !== 'object' || Array.isArray(state[w])) {
     state[w] = JSON.parse(JSON.stringify(FRESH[w]));
@@ -1957,7 +2244,8 @@ const BIRTHDAYS = { alex: '2013-12-29', katya: '2016-05-04' };
   if (state[w].keys == null) state[w].keys = FRESH[w].keys;
   if (state[w].updatedAt == null) state[w].updatedAt = 0;
   if (state[w].lastKeyMilestone == null) state[w].lastKeyMilestone = 0;
-  if (state[w].birthday == null) state[w].birthday = BIRTHDAYS[w];
+  if (state[w].lastDay == null) state[w].lastDay = '';
+  if (typeof state[w].lastDay !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(state[w].lastDay)) state[w].lastDay = '';
   if (state[w].gradeOverride === undefined) state[w].gradeOverride = null;
 });
 if (state.pinNoticeDismissed == null) state.pinNoticeDismissed = false;
@@ -2014,6 +2302,7 @@ const Cloud = (() => {
   let sdkLoadPromise = null;
   let initialPullPromise = null;
   let initialPullComplete = false;
+  let applyingCloudState = false;
 
   function configured() {
     return !!(FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('YOUR_'));
@@ -2067,36 +2356,106 @@ const Cloud = (() => {
   }
 
   function snapshotForCloud() {
+    if (!Store.cloudSafe()) return null;
     const { activeProfile, ...rest } = state; // activeProfile is device-local UI state
     return JSON.parse(JSON.stringify(rest));
   }
 
-  // Merge rule: for each child, whichever snapshot has the newer updatedAt is
-  // considered "more advanced" and wins WHOLESALE for that child's stats -- we
-  // never cherry-pick individual fields (e.g. take xp from one side and xpMax
-  // from the other), since that could produce an inconsistent state. updatedAt
-  // is stamped whenever coins, keys, or XP change, so manual deductions and
-  // reward spending win over older cloud snapshots even when totalXP is tied.
-  // Request history and
-  // per-topic mastery are additive records, so those are combined instead of
-  // picked from one side.
+  function validatedCloudState(value) {
+    try {
+      const normalized = normalizeLoadedState(value);
+      return normalized.safe ? normalized.state : null;
+    } catch (e) { return null; }
+  }
+
+  // A timestamp alone is not proof of learning progress: a newly initialized
+  // device can have a newer updatedAt than the family's existing save.
+  // Compare only known substantive profile fields with the actual per-child
+  // defaults; legacy/unknown metadata (for example an old birthday) is ignored.
+  function isFreshLikeProfile(who, profile) {
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return true;
+    const defaults = FRESH[who];
+    for (const field of ['lvl','xp','xpMax','totalXP','coins','streak','keys','lastKeyMilestone']) {
+      const value = profile[field] == null ? defaults[field] : Number(profile[field]);
+      if (!Number.isFinite(value) || value !== defaults[field]) return false;
+    }
+    if (profile.lastDay != null && profile.lastDay !== '') return false;
+    if (profile.gradeOverride != null) return false;
+    return true;
+  }
+
+  function hasChildProgress(who, snapshot) {
+    if (isFreshLikeProfile(who, snapshot[who]) === false) return true;
+    const nonEmpty = value => Array.isArray(value) ? value.length > 0 :
+      !!value && typeof value === 'object' && Object.keys(value).length > 0;
+    const positiveMap = value => !!value && typeof value === 'object' &&
+      Object.values(value).some(n => Number.isFinite(Number(n)) && Number(n) > 0);
+    const activity = snapshot.activity && snapshot.activity[who];
+    if (activity && positiveMap(activity)) return true;
+    const daily = snapshot.daily && snapshot.daily[who];
+    if (daily && (Number(daily.count || 0) > 0 || (daily.date && daily.date !== ''))) return true;
+    if (snapshot.pausedDaily && snapshot.pausedDaily[who]) return true;
+    const moneyLab = snapshot.moneyLabDaily && snapshot.moneyLabDaily[who];
+    if (moneyLab && (Number(moneyLab.rewarded || 0) > 0 || (moneyLab.date && moneyLab.date !== ''))) return true;
+    if (snapshot.goals && snapshot.goals[who] != null && snapshot.goals[who] !== '') return true;
+    if (snapshot.recentQ && nonEmpty(snapshot.recentQ[who])) return true;
+    if (snapshot.evidence && nonEmpty(snapshot.evidence[who])) return true;
+    const mastery = snapshot.mastery && snapshot.mastery[who];
+    if (mastery && Object.values(mastery).some(row => row && (
+      Number(row.seen || 0) > 0 || Number(row.correct || 0) > 0 || nonEmpty(row.recent)
+    ))) return true;
+    const strategy = snapshot.strategy && snapshot.strategy[who];
+    if (strategy && (positiveMap(strategy.viewed) || positiveMap(strategy.helped) || nonEmpty(strategy.badges))) return true;
+    const thinking = snapshot.mathThinking && snapshot.mathThinking[who];
+    if (thinking && (
+      nonEmpty(thinking.unlocked) || nonEmpty(thinking.events) || nonEmpty(thinking.review) ||
+      nonEmpty(thinking.topic) || nonEmpty(thinking.errors) || nonEmpty(thinking.seen) ||
+      ['strategyViews','usefulSelections','patternAttempts','patternUseful','hintsUsed'].some(k => Number(thinking[k] || 0) > 0)
+    )) return true;
+    if (Array.isArray(snapshot.requests) && snapshot.requests.some(r => r && r.who === who)) return true;
+    if (Array.isArray(snapshot.log) && snapshot.log.some(entry => entry && entry.who === who)) return true;
+    return false;
+  }
+
+  // For each child, keep a genuinely progressed profile over a fresh one.
+  // When both have progress (or both are fresh), updatedAt remains the conflict
+  // rule so later spending/deductions are not resurrected from an older save.
   function mergeState(local, cloud) {
     if (!cloud) return local;
     if (!local) return cloud;
-    const merged = JSON.parse(JSON.stringify(cloud));
+    const localCopy = JSON.parse(JSON.stringify(local));
+    const cloudCopy = JSON.parse(JSON.stringify(cloud));
+    const localProgressCount = ['alex','katya'].filter(w => hasChildProgress(w, local)).length;
+    const cloudProgressCount = ['alex','katya'].filter(w => hasChildProgress(w, cloud)).length;
+    // Prefer the more progressed family snapshot for global fields (settings,
+    // reward catalog, and forward-compatible top-level fields). A tie keeps
+    // the existing cloud-preferred behavior.
+    const localFamilyWins = localProgressCount > cloudProgressCount;
+    const merged = localFamilyWins
+      ? { ...cloudCopy, ...localCopy }
+      : { ...localCopy, ...cloudCopy };
+    const childFieldMaps = ['activity','daily','recentQ','strategy','evidence','goals','pausedDaily','moneyLabDaily'];
+    childFieldMaps.forEach(field => {
+      const lMap = local[field] && typeof local[field] === 'object' && !Array.isArray(local[field]) ? local[field] : {};
+      const cMap = cloud[field] && typeof cloud[field] === 'object' && !Array.isArray(cloud[field]) ? cloud[field] : {};
+      merged[field] = { ...lMap, ...cMap };
+    });
     ['alex','katya'].forEach(w => {
       const l = local[w], c = cloud[w];
       if (!l) return;
-      const meaningful = p => !!p && (
-        Number(p.totalXP||0) > 0 || Number(p.lvl||1) > 1 ||
-        Number(p.streak||0) > 0 || Number(p.updatedAt||0) > 0
-      );
-      // A freshly initialized profile must never replace a progressed profile,
-      // even if a later initialization accidentally stamped its timestamp.
-      if (!c || (meaningful(l) && !meaningful(c)) ||
-          (meaningful(l) === meaningful(c) && Number(l.updatedAt||0) > Number(c.updatedAt||0))) {
-        merged[w] = l;
-      }
+      const localProgressed = hasChildProgress(w, local);
+      const cloudProgressed = c && hasChildProgress(w, cloud);
+      const localWins = !c || (localProgressed && !cloudProgressed) ||
+        (localProgressed === cloudProgressed && Number(l.updatedAt||0) > Number(c.updatedAt||0));
+      merged[w] = localWins ? { ...(c||{}), ...l } : { ...l, ...c };
+      childFieldMaps.forEach(field => {
+        const preferred = localWins ? local[field] : cloud[field];
+        const fallback = localWins ? cloud[field] : local[field];
+        const preferredValue = preferred && preferred[w];
+        const fallbackValue = fallback && fallback[w];
+        if (preferredValue !== undefined) merged[field][w] = preferredValue;
+        else if (fallbackValue !== undefined) merged[field][w] = fallbackValue;
+      });
     });
     const reqById = new Map();
     (cloud.requests||[]).forEach(r => reqById.set(r.id, r));
@@ -2107,11 +2466,19 @@ const Cloud = (() => {
       const lXP = local[w] ? Number(local[w].totalXP||0) : -1;
       const cXP = cloud[w] ? Number(cloud[w].totalXP||0) : -1;
       const lm = local.mastery && local.mastery[w], cm = cloud.mastery && cloud.mastery[w];
-      merged.mastery[w] = lXP > cXP ? (lm||cm||{}) : (cm||lm||{});
+      const localProgressed = hasChildProgress(w, local);
+      const cloudProgressed = hasChildProgress(w, cloud);
+      if (localProgressed && !cloudProgressed) merged.mastery[w] = lm || cm || {};
+      else if (cloudProgressed && !localProgressed) merged.mastery[w] = cm || lm || {};
+      else merged.mastery[w] = lXP > cXP ? (lm||cm||{}) : (cm||lm||{});
     });
     merged.parentPin = local.parentPin || cloud.parentPin;
-    merged.settings = cloud.settings || local.settings;
-    merged.rewards = cloud.rewards || local.rewards;
+    merged.settings = localFamilyWins
+      ? (local.settings || cloud.settings)
+      : (cloud.settings || local.settings);
+    merged.rewards = localFamilyWins
+      ? (local.rewards || cloud.rewards)
+      : (cloud.rewards || local.rewards);
     const mergeNumberMap = (a, b) => {
       const safeA = a && typeof a === 'object' && !Array.isArray(a) ? a : {};
       const safeB = b && typeof b === 'object' && !Array.isArray(b) ? b : {};
@@ -2166,14 +2533,32 @@ const Cloud = (() => {
       Number(local.mathThinking && local.mathThinking.version || 0),
       Number(cloud.mathThinking && cloud.mathThinking.version || 0)
     );
+    // Logs are bounded event history rather than a replaceable profile value.
+    // Combine both snapshots and remove exact duplicate events before trimming.
+    const logByKey = new Map();
+    [...(Array.isArray(cloud.log) ? cloud.log : []), ...(Array.isArray(local.log) ? local.log : [])]
+      .forEach(entry => {
+        if (!entry || typeof entry !== 'object') return;
+        const key = JSON.stringify([entry.t || 0, entry.who == null ? '' : entry.who, entry.icon || '', entry.text || '']);
+        logByKey.set(key, entry);
+      });
+    merged.log = [...logByKey.values()]
+      .sort((a,b) => Number(b.t || 0) - Number(a.t || 0))
+      .slice(0, 60);
     return merged;
   }
 
   function applyMergedState(newState) {
+    const normalized = normalizeLoadedState(newState);
+    if (!normalized.safe) return false;
+    const saved = Store.set(PRIMARY_STATE_KEY, normalized.state, { allowRecovery:true, queueCloud:false });
+    if (!saved.ok) return false;
     Object.keys(state).forEach(k => delete state[k]); // many closures hold a ref to `state`
-    Object.assign(state, newState);
-    Store.set('smbt-state-v2', state);
-    if (typeof paint === 'function') paint();
+    Object.assign(state, saved.value);
+    applyingCloudState = true;
+    try { if (typeof paint === 'function') paint(); }
+    finally { applyingCloudState = false; }
+    return true;
   }
 
   async function linkFamily(code) {
@@ -2184,13 +2569,19 @@ const Cloud = (() => {
       const ref = db.collection('families').doc(code);
       const snap = await ref.get();
       const docData = snap.exists ? snap.data() : null;
-      const cloudState = docData && docData.state;
+      const hasCloudState = !!docData && Object.prototype.hasOwnProperty.call(docData, 'state');
+      const rawCloudState = hasCloudState ? docData.state : null;
+      const cloudState = hasCloudState ? validatedCloudState(rawCloudState) : null;
+      if (hasCloudState && !cloudState) return { ok:false, reason:'invalid-cloud-state' };
       const localState = snapshotForCloud();
+      if (!cloudState && !localState) return { ok:false, reason:'unsafe-local-state' };
       const mergedState = !cloudState
         ? localState
-        : mergeState(localState, cloudState);
-      await ref.set({ state: mergedState, updatedAt: Date.now() }, { merge:true });
-      applyMergedState(mergedState);
+        : (localState ? mergeState(localState, cloudState) : cloudState);
+      if (!applyMergedState(mergedState)) return { ok:false, reason:'local-save-failed' };
+      if (!cloudState || localState) {
+        await ref.set({ state: mergedState, updatedAt: Date.now() }, { merge:true });
+      }
       familyCode = code;
       initialPullComplete = true;
       try { localStorage.setItem(FAMILY_CODE_KEY, code); } catch(e){}
@@ -2204,14 +2595,16 @@ const Cloud = (() => {
   }
 
   async function pushNow() {
-    if (!familyCode || !await ensureApp()) return false;
+    if (!familyCode || !Store.cloudSafe() || !await ensureApp()) return false;
     if (initialPullPromise && !initialPullComplete) await initialPullPromise;
     // Never let a default/offline boot push before the linked cloud record has
     // been read and merged at least once.
     if (!initialPullComplete) return false;
     try {
+      const cloudState = snapshotForCloud();
+      if (!cloudState) return false;
       await db.collection('families').doc(familyCode)
-        .set({ state: snapshotForCloud(), updatedAt: Date.now() }, { merge:true });
+        .set({ state: cloudState, updatedAt: Date.now() }, { merge:true });
       setLastSynced(Date.now());
       return true;
     } catch (e) { console.warn('cloud push failed', e); return false; }
@@ -2224,8 +2617,11 @@ const Cloud = (() => {
       const snap = await ref.get();
       if (!snap.exists) return false;
       const docData = snap.data();
-      const merged = mergeState(snapshotForCloud(), docData.state);
-      applyMergedState(merged);
+      const cloudState = validatedCloudState(docData.state);
+      if (!cloudState) return false;
+      const localState = snapshotForCloud();
+      const merged = localState ? mergeState(localState, cloudState) : cloudState;
+      if (!applyMergedState(merged)) return false;
       initialPullComplete = true;
       setLastSynced(Date.now());
       return true;
@@ -2235,12 +2631,15 @@ const Cloud = (() => {
   async function syncNow() {
     if (syncing || !familyCode) return false;
     syncing = true;
-    try { await pullAndMergeNow(); await pushNow(); return true; }
+    try {
+      if (!await pullAndMergeNow()) return false;
+      return await pushNow();
+    }
     finally { syncing = false; }
   }
 
   function scheduleDebouncedPush() {
-    if (!familyCode) return;
+    if (!familyCode || applyingCloudState || !Store.cloudSafe()) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => { pushNow(); }, 4000);
   }
@@ -2276,9 +2675,30 @@ const Cloud = (() => {
     window.addEventListener('online', () => syncNow());
   }
 
+  function unlinkForLocalReset() {
+    const previousCode = familyCode;
+    try {
+      localStorage.removeItem(FAMILY_CODE_KEY);
+      if (localStorage.getItem(FAMILY_CODE_KEY) != null) return false;
+    } catch(e) {
+      if (previousCode) {
+        try { localStorage.setItem(FAMILY_CODE_KEY, previousCode); } catch (_) {}
+      }
+      return false;
+    }
+    clearTimeout(debounceTimer);
+    clearInterval(autoSyncTimer);
+    debounceTimer = null;
+    autoSyncTimer = null;
+    familyCode = null;
+    initialPullComplete = false;
+    initialPullPromise = null;
+    return true;
+  }
+
   return {
     configured, linkFamily, syncNow, pushNow, pullAndMergeNow, genCode, boot,
-    scheduleDebouncedPush, renderSyncStatus, mergeState,
+    scheduleDebouncedPush, renderSyncStatus, mergeState, unlinkForLocalReset,
     getFamilyCode: () => familyCode,
     getLastSynced,
   };
@@ -2369,15 +2789,6 @@ function getCurrentGrade(who, date) {
 }
 function gradeLabel(who) { const g = getCurrentGrade(who); return `GRADE ${g}→${g + 1}`; }
 function gradePlain(who) { const g = getCurrentGrade(who); return `Grade ${g}→${g + 1}`; }
-function ageFromBirthday(iso, date) {
-  if (!iso) return null;
-  const b = new Date(iso + 'T00:00:00');
-  const now = date || new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  const hadBirthday = (now.getMonth() > b.getMonth()) || (now.getMonth() === b.getMonth() && now.getDate() >= b.getDate());
-  if (!hadBirthday) age--;
-  return age;
-}
 // Kept for any older call sites expecting a plain lookup; now backed by the
 // live computed grade so it can never drift out of sync with the display.
 const GRADE = { get alex() { return gradeLabel('alex'); }, get katya() { return gradeLabel('katya'); } };
@@ -2481,7 +2892,31 @@ function paintLanding(p, isA) {
 
 function validPausedMission(who) {
   const saved = state.pausedDaily && state.pausedDaily[who];
-  return saved && saved.player === who && Array.isArray(saved.questions) && saved.questions.length >= 1 && saved.i >= 0 && saved.i < saved.questions.length ? saved : null;
+  if (!isPlainObject(saved) || saved.player !== who || saved.completed === true || !Array.isArray(saved.questions)) return null;
+  if (saved.questions.length < 1 || saved.questions.length > MAX_MISSION_LEN) return null;
+  if (!saved.questions.every(q => {
+    if (!isPlainObject(q)) return false;
+    const validAnswer = (typeof q.a === 'number' && Number.isFinite(q.a)) || (typeof q.a === 'string' && q.a.trim());
+    const choiceValues = Array.isArray(q.choices) ? q.choices.map(String) : null;
+    const validChoices = q.choices == null || (choiceValues && choiceValues.length >= 2 && new Set(choiceValues).size === choiceValues.length && choiceValues.filter(choice => choice === String(q.a)).length === 1 && q.choices.every(choice => typeof choice === 'string' || (typeof choice === 'number' && Number.isFinite(choice))));
+    return typeof q.q === 'string' && q.q.trim() && typeof q.s === 'string' && typeof q.topic === 'string' && q.topic && validAnswer && validChoices;
+  })) return null;
+  const pendingCompletion = saved.pendingCompletion === true && saved.i === saved.questions.length;
+  if (!Number.isInteger(saved.i) || saved.i < 0 || (saved.i >= saved.questions.length && !pendingCompletion)) return null;
+  const normalized = JSON.parse(JSON.stringify(saved));
+  const finiteNonNegative = (value, fallback) => Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
+  normalized.correct = Math.min(normalized.i, finiteNonNegative(normalized.correct, 0));
+  normalized.xpEarned = Math.min(saved.questions.length * (XP_PER_Q + 16), finiteNonNegative(normalized.xpEarned, 0));
+  normalized.combo = Math.min(saved.questions.length, finiteNonNegative(normalized.combo, 0));
+  normalized.best = Math.min(saved.questions.length, finiteNonNegative(normalized.best, 0));
+  normalized.attempts = Number.isInteger(normalized.attempts) ? Math.max(0, Math.min(2, normalized.attempts)) : 0;
+  normalized.bbLevel = Number.isInteger(normalized.bbLevel) ? Math.max(0, Math.min(BB_STEPS.ms.length, normalized.bbLevel)) : 0;
+  normalized.answer = typeof normalized.answer === 'string' ? normalized.answer : '';
+  normalized.completed = false;
+  normalized.transitioning = false;
+  normalized.pendingCompletion = pendingCompletion;
+  normalized.q = pendingCompletion ? null : normalized.questions[normalized.i];
+  return normalized;
 }
 
 function paintDailyMissionStatus() {
@@ -2489,14 +2924,18 @@ function paintDailyMissionStatus() {
   const saved = validPausedMission(who);
   const progress = $('daily-card-progress');
   const landingStatus = $('landing-mission-status');
-  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : (who === 'alex' ? '18 adaptive questions' : '20 adaptive questions');
+  if (progress) progress.textContent = saved ? `Resume question ${saved.i + 1} of ${saved.questions.length}` : '30 base questions';
   if (landingStatus) landingStatus.textContent = saved
     ? `Mission paused at question ${saved.i + 1} of ${saved.questions.length}. Tap to resume exactly where you stopped.`
-    : `${who === 'alex' ? 18 : 20} adaptive questions with a short arithmetic warm-up. Retry gently, build accuracy, earn XP and coins.`;
+    : '30 adaptive questions across your grade-level math families. Retry gently, build accuracy, earn XP and coins.';
 }
 
 function setPlayer(w) {
+  if (typeof lockParent === 'function') lockParent();
   if (state.activePlayer === w) { paint(); return; }
+  pauseDailyMissionRun();
+  if (typeof clearNonDailyActivityState === 'function') clearNonDailyActivityState();
+  if (typeof hideAllActivityScreens === 'function') hideAllActivityScreens();
   state.activePlayer = w;
   paint();
   const h = $('hero-' + w);
@@ -2520,8 +2959,8 @@ $('missions').innerHTML = MISSIONS.map(m => `
   <div class="mcard ${m.cls} daily-only" role="button" tabindex="0" aria-label="Start or resume Daily Math Mission" onclick="startMission('daily')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startMission('daily')}">
     ${ICONS[m.icon]}
     <div class="mname">${m.name.toUpperCase()}</div>
-    <div class="mprog" id="daily-card-progress">18–20 adaptive questions</div>
-    <div class="mxp">+${m.xp} XP + accuracy coins</div>
+    <div class="mprog" id="daily-card-progress">30 base questions</div>
+    <div class="mxp">XP + coins based on mission accuracy</div>
   </div>`).join('');
 
 /* compact landing quick-mode tiles (emoji-led, tap-first) */
@@ -2559,43 +2998,10 @@ const R = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const RNZ = (a,b) => { let v=0; while(v===0) v=R(a,b); return v; };
 const pick = ar => ar[R(0,ar.length-1)];
 
-/* ============ PERSONALIZATION (CHARACTERS.md) ============
-   Real names, interests, and family roles as structured data instead of
-   scattered string literals, per DEVELOPMENT_RULES.md ("never hardcode
-   new personal/family details as string literals -- route them through
-   profile data") and CHARACTERS.md -> Privacy rules (personal details
-   must be data, not hardcoded strings, so they can become parent-
-   editable fields if the app is ever opened to other families). This
-   does not change any visible story output on its own -- generators
-   that already read FRIENDS below get their values from here now
-   instead of a separate literal array. */
-const PERSONALIZATION = {
-  family: {
-    mom: 'Yulia', dad: 'Vadim',
-    grandmaOlga: 'Grandma Olga', grandmaMargarita: 'Grandma Margarita',
-    grandpaSerezha: 'Grandpa Serezha', tolik: 'Tolik the Elf'
-  },
-  alex: {
-    displayName: 'Alex', nickname: 'Sasha',
-    theme: 'battle-champion-strategy',
-    interests: ['gaming (PS5, Fortnite, Valorant, Horizon)', 'chess', 'fencing', 'Duolingo streaks', 'mystery/UFO investigations', 'food (Subway, Popeyes)', 'travel'],
-    friends: [],
-    family: ['Yulia', 'Vadim', 'Grandma Olga', 'Grandma Margarita', 'Grandpa Serezha', 'Tolik the Elf'],
-    rewardVocab: ['gaming time', 'Popeyes', 'Subway', 'a new game', 'a chess upgrade']
-  },
-  katya: {
-    displayName: 'Katya', nickname: 'Katya',
-    theme: 'mystery-detective',
-    interests: ['mysteries', 'Roblox', 'Dress to Impress', 'Toca Boca', 'Sephora', 'bubble tea', 'sushi (avocado rolls)', 'peanut-butter chocolate', 'dancing', 'road trips'],
-    friends: ['Aryna'],
-    family: ['Yulia', 'Vadim', 'Grandma Olga', 'Grandma Margarita', 'Grandpa Serezha', 'Tolik the Elf'],
-    rewardVocab: ['bubble tea', 'a Sephora item', 'sushi night', 'a Roblox item']
-  }
-};
-// Katya's story companions (word problems, Money Lab). Kept as its own
-// binding since it's used dozens of times below -- always the same array
-// PERSONALIZATION.katya.friends points to, so editing one edits both.
-const FRIENDS = PERSONALIZATION.katya.friends;
+/* Story companions remain generic so the public client bundle does not ship
+   private family or friend metadata. Alex and Katya remain the intentional
+   child-facing profile names. */
+const FRIENDS = ['a friend', 'a teammate', 'a classmate'];
 const sgn = n => n < 0 ? `(${n})` : `${n}`;
 
 const BANK = {
@@ -2612,6 +3018,14 @@ alex: {
     () => { const x=R(3,12), m=R(2,8), c=R(1,15); return { s:"🧠 Crack the guardian's second seal!", q:`Solve for x:   ${m}x − ${c} = ${m*x-c}`, a:x }; },
     () => { const n=R(5,15); return { s:'🧠 Power surge! Square the energy core.', q:`${n}² = ?`, a:n*n }; },
     () => { const st=RNZ(2,9), f=R(3,18), k=R(5,9); return { s:'🧠 Decode the pattern to disarm the trap.', q:`Pattern: ${f}, ${f+st}, ${f+2*st}, ${f+3*st}, ... What is term ${k}?`, a:f+(k-1)*st }; }
+  ],
+  longdivision: [
+    () => { const d=R(2,9), q=R(12,80), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Long division checkpoint.', q:`${n} ÷ ${d} = ? Choose quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'Divide, multiply to check, then subtract to find the remainder.', coachKey:'longdivision' }; },
+    () => { const d=R(2,9), q=R(20,90), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Remainder in context.', q:`${n} stickers shared among ${d} teams: how many per team, with leftovers? Choose q r r.`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'The remainder is what is left after making complete equal groups.', coachKey:'longdivision' }; }
+  ],
+  data: [
+    () => { const a=R(12,40), b=R(12,40), c=R(12,40); return { s:'📊 Read the table.', q:`A table records ${a} votes for music, ${b} for art, and ${c} for sports. How many votes were recorded?`, a:a+b+c, hint:'Add each category exactly once.', coachKey:'data', data:{ music:a, art:b, sports:c } }; },
+    () => { const a=R(10,40), b=R(10,40); const larger=Math.max(a,b); return { s:'📊 Compare the data.', q:`A survey shows ${a} students chose bus and ${b} chose walking. How many more chose the larger group?`, a:Math.abs(a-b), hint:'Subtract the smaller count from the larger count.', coachKey:'data', data:{ bus:a, walking:b, larger } }; }
   ],
   money: [
     () => { const p=pick([10,15,20,25,30,40,50,75]), n=R(2,15)*20; return { s:pick(['💰 Mr-Beast-style challenge: split the prize pool!','💰 Money Lab: calculate your creator earnings!']), q:`${p}% of $${n} = ?`, a:p*n/100 }; },
@@ -2674,6 +3088,15 @@ katya: {
    text is remembered so the SAME question rarely repeats back to back. */
 function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a || 1; }
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=R(0,i); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function missionChoices(correct, distractors) {
+  const answer = String(correct);
+  const choices = [answer];
+  for (const distractor of (distractors || [])) {
+    const text = String(distractor);
+    if (text !== answer && !choices.includes(text)) choices.push(text);
+  }
+  return shuffle(choices);
+}
 
 function generateBasicArithmetic() {
   const addition = Array.from({length:2}, () => {
@@ -2695,14 +3118,14 @@ function generateBasicArithmetic() {
   return [...addition, ...subtraction, ...multiplication, ...division];
 }
 
-const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','ratios','algebra','geometry','probability','money','logic','wordproblems'];
-const KATYA_TOPICS = ['multiplication','division','longdivision','fractions','decimals','money','time','measurement','patterns','wordproblems','reading','grammar','french'];
+const ALEX_TOPICS = ['bedmas','fractions','decimals','percent','integers','longdivision','ratios','algebra','geometry','probability','data','money','logic','wordproblems'];
+const KATYA_TOPICS = ['numbersense','multiplication','division','longdivision','fractions','decimals','patterns','data','probability','geometry','measurement','money','wordproblems'];
 const TOPIC_LABEL = {
   bedmas:'BEDMAS', fractions:'Fractions', decimals:'Decimals', percent:'Percentages', integers:'Integers',
   ratios:'Ratios', algebra:'Algebra', geometry:'Geometry', probability:'Probability', money:'Money & Finance',
   logic:'Logic', wordproblems:'Word Problems', multiplication:'Multiplication', division:'Division',
   longdivision:'Long Division', time:'Time', measurement:'Measurement', patterns:'Patterns', reading:'Reading',
-  grammar:'Grammar', french:'French'
+  grammar:'Grammar', french:'French', numbersense:'Number Sense', data:'Data'
 };
 
 const TOPIC_BANK = {
@@ -2717,7 +3140,11 @@ alex: {
   fractions: [
     (d)=>{ const den=pick([3,4,5,6,8,10,12]), num=R(1,den-1), whole=den*R(2,4+d); return { s:'🕵 Decode the fraction of loot.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
     (d)=>{ const den=pick([4,6,8,10,12]); const n1=R(1,den-2), n2=RNZ(1,den-1-n1); const sumN=n1+n2; const g=gcd(sumN,den); const rn=sumN/g, rd=den/g; const wrong1=`${sumN}/${den*2}`, wrong2=`${n1}/${den}`; return { s:'🕵 Same-denominator fraction clue.', q:`${n1}/${den} + ${n2}/${den} = ?`, a:`${rn}/${rd}`, choices: shuffle([`${rn}/${rd}`, wrong1, wrong2]), hint:'Same denominator: just add the top numbers (numerators) and keep the denominator.' }; },
-    (d)=>{ const pairs=[[1,2,3,4],[2,3,3,4],[1,3,2,5],[3,5,2,3],[1,4,1,3],[5,6,3,4]]; const [n1,d1,n2,d2]=pick(pairs); const v1=n1/d1, v2=n2/d2; const bigger = v1>v2 ? `${n1}/${d1}` : `${n2}/${d2}`; return { s:'🕵 Which clue fraction is bigger?', q:`Which is greater: ${n1}/${d1} or ${n2}/${d2}?`, a:bigger, choices: shuffle([`${n1}/${d1}`,`${n2}/${d2}`,'They are equal']), hint:'Turn both into decimals (divide top by bottom) to compare easily.' }; }
+    (d)=>{ const pairs=[[1,2,3,4],[2,3,3,4],[1,3,2,5],[3,5,2,3],[1,4,1,3],[5,6,3,4]]; const [n1,d1,n2,d2]=pick(pairs); const v1=n1/d1, v2=n2/d2; const bigger = v1>v2 ? `${n1}/${d1}` : `${n2}/${d2}`; return { s:'🕵 Which clue fraction is bigger?', q:`Which is greater: ${n1}/${d1} or ${n2}/${d2}?`, a:bigger, choices: shuffle([`${n1}/${d1}`,`${n2}/${d2}`,'They are equal']), hint:'Turn both into decimals (divide top by bottom) to compare easily.' }; },
+    ()=>{ const [n1,d1,n2,d2]=pick([[1,2,1,3],[2,3,1,4],[3,4,1,6],[2,5,3,10]]); const num=n1*d2+n2*d1, den=d1*d2, g=gcd(num,den), correct=`${num/g}/${den/g}`; return { s:'🧠 Add unlike fractions.', q:`${n1}/${d1} + ${n2}/${d2} = ?`, a:correct, choices:missionChoices(correct,[`${n1+n2}/${den}`,`${num+1}/${den}`]), hint:'Find a common denominator, add the numerators, then simplify.', coachKey:'fraction-addition' }; },
+    ()=>{ const [n1,d1,n2,d2]=pick([[3,4,1,6],[4,5,1,10],[5,6,1,3],[7,8,1,4]]); const num=n1*d2-n2*d1, den=d1*d2, g=gcd(num,den), correct=`${num/g}/${den/g}`; return { s:'🧠 Subtract unlike fractions.', q:`${n1}/${d1} − ${n2}/${d2} = ?`, a:correct, choices:missionChoices(correct,[`${n1-n2}/${den}`,`${num+1}/${den}`]), hint:'Find a common denominator, subtract the numerators, then simplify.', coachKey:'fraction-subtraction' }; },
+    ()=>{ const whole=R(1,3), den=pick([2,3,4,5]), num=R(1,den-1), improper=whole*den+num; return { s:'🧠 Mixed-number conversion.', q:`Write ${whole} ${num}/${den} as an improper fraction.`, a:`${improper}/${den}`, choices:missionChoices(`${improper}/${den}`,[`${whole+num}/${den}`,`${whole*den}/${den}`]), hint:'Multiply the whole number by the denominator, then add the numerator.', coachKey:'fraction-mixed' }; },
+    ()=>{ const [num,den]=pick([[1,2],[1,4],[3,4],[1,5],[2,5],[3,5]]), correct=num/den*100; return { s:'💯 Fraction-percent connection.', q:`Convert ${num}/${den} to a percent.`, a:correct, choices:missionChoices(correct,[correct+10,correct-10]), hint:'Convert the fraction to a decimal, then multiply by 100.', coachKey:'fraction-percent' }; }
   ],
   decimals: [
     (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'💰 Decimal supply count.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
@@ -2757,9 +3184,9 @@ alex: {
     (d)=>{ const r=pick([2,3,4,5,6,7]); return { s:'🔵 Circular energy shield.', q:`A circle has radius ${r} cm. What is its CIRCUMFERENCE? Use π ≈ 3.14, round to 1 decimal.`, a: Math.round(2*3.14*r*10)/10, mode:'decimal', hint:'Circumference = 2 × π × radius.' }; }
   ],
   probability: [
-    (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total); return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:`${red/g}/${total/g}`, choices: shuffle([`${red/g}/${total/g}`, `${blue/g}/${total/g}`, `${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
+    (d)=>{ const red=R(2,6), blue=R(2,6), total=red+blue, g=gcd(red,total), correct=`${red/g}/${total/g}`; return { s:'🕵 Marble draw probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of drawing RED?`, a:correct, choices: missionChoices(correct,[`${blue/g}/${total/g}`,`${red}/${blue}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; },
     (d)=>{ return { s:'🎲 Dice roll probability.', q:'Rolling a standard 6-sided die, what is the probability of rolling an EVEN number?', a:'1/2', choices: shuffle(['1/2','1/3','2/3']), hint:'List the even faces on a die (2, 4, 6), count them, then write that count over the total number of faces — and simplify.' }; },
-    (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total); return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:`${green/g}/${total/g}`, choices: shuffle([`${green/g}/${total/g}`, `${yellow/g}/${total/g}`, `${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
+    (d)=>{ const yellow=R(3,7), green=R(3,7), total=yellow+green, g=gcd(green,total), correct=`${green/g}/${total/g}`; return { s:'🕵 Spinner probability.', q:`A spinner has ${yellow} yellow and ${green} green sections, all equal size. What is the probability of landing on GREEN?`, a:correct, choices: missionChoices(correct,[`${yellow/g}/${total/g}`,`${total}/${green}`]), hint:'Probability = favorable outcomes ÷ total outcomes.' }; }
   ],
   money: [
     (d)=>{ const r=R(3,9+d*2), w=R(6,15+d*3); return { s:'💰 Grinding coins in the arena.', q:`You earn ${r} coins per win. Coins after ${w} wins?`, a:r*w, hint:'Multiply coins-per-win by the number of wins.' }; },
@@ -2777,6 +3204,12 @@ alex: {
     (d)=>{ const price=R(15,40+d*10), qty=R(2,5), coupon=pick([5,10,15]); return { s:'🛒 Multi-step shopping run.', q:`${qty} items at $${price} each, then a $${coupon} coupon is applied. What is the FINAL total?`, a: price*qty-coupon, mode:'decimal', hint:'Multiply price by quantity FIRST, then subtract the coupon.' }; },
     (d)=>{ const speed=R(40,80+d*10), t1=R(2,4), t2=R(1,3); return { s:'🏎 Two-leg journey.', q:`A car drives at ${speed} km/h for ${t1} hours, then the same speed for ${t2} more hours. Total distance?`, a: speed*(t1+t2), hint:'Add the hours together, then multiply by the speed.' }; },
     (d)=>{ const d1=pick([4,5,8,10]), m=d1*R(3,12+d*3); return { s:'🛡 Divide the supplies evenly.', q:`${m} energy cells shared by ${d1} squads. Each squad gets?`, a: m/d1, hint:'Division = sharing into equal groups.' }; }
+  ],
+  longdivision: [
+    () => { const d=R(2,9), q=R(12,80), r=R(1,d-1), n=d*q+r, correct=`${q} r ${r}`; return { s:'🔍 Long division checkpoint.', q:`${n} ÷ ${d} = ? Choose quotient and remainder (q r r).`, a:correct, choices:missionChoices(correct,[`${q+1} r ${r}`,`${q} r 0`]), hint:'Divide, multiply to check, then subtract to find the remainder.', coachKey:'longdivision' }; }
+  ],
+  data: [
+    () => { const a=R(12,40), b=R(12,40), c=R(12,40); return { s:'📊 Read the table.', q:`A table records ${a} votes for music, ${b} for art, and ${c} for sports. How many votes were recorded?`, a:a+b+c, hint:'Add each category exactly once.', coachKey:'data' }; }
   ]
 },
 katya: {
@@ -2796,7 +3229,12 @@ katya: {
   fractions: [
     (d)=>{ const den=pick([2,3,4,5,10]), num=R(1,den-1), whole=den*R(2,6+d); return { s:'🔍 Fraction of the clue stash.', q:`${num}/${den} of ${whole} = ?`, a: whole*num/den, hint:`Divide ${whole} by ${den} first, then multiply by ${num}.` }; },
     (d)=>{ const den=pick([3,4,5,6,8]); const nums=Array.from({length:den-1},(_,i)=>i+1); const correct=pick(nums); const wrong1=pick(nums.filter(n=>n!==correct)) || correct; return { s:'🔍 Fraction clue match.', q:`Which fraction means ${correct} out of ${den} equal parts?`, a:`${correct}/${den}`, choices: shuffle([`${correct}/${den}`, `${wrong1}/${den}`, `${den}/${correct}`]), hint:'The top number (numerator) counts the parts you have; the bottom counts the total equal parts.' }; },
-    (d)=>{ const pairs=[[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5]]; const [n,dd]=pick(pairs); const correct = String(Math.round((n/dd)*100)/100); const w1 = String(Math.round((n/dd+0.1)*100)/100), w2 = String(Math.round((n/dd-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:`Which decimal equals ${n}/${dd}?`, a: correct, choices: shuffle([correct, w1, w2]), hint:'Divide the top number by the bottom number to get the decimal.' }; }
+    (d)=>{ const exactPairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[1,10],[3,10],[7,10],[1,20],[3,20]], roundedPairs=[[1,3],[2,3],[1,6],[5,6]]; const [n,dd]=pick([...exactPairs,...roundedPairs]); const value=n/dd, rounded=String(Math.round(value*100)/100), exact=exactPairs.some(([a,b])=>a===n&&b===dd), correct=rounded, w1=String(Math.round((value+0.1)*100)/100), w2=String(Math.round((value-0.15)*100)/100); return { s:'🔍 Fraction to decimal clue.', q:exact?`Which decimal equals ${n}/${dd}?`:`What is ${n}/${dd} rounded to the nearest hundredth?`, a:correct, choices:missionChoices(correct,[w1,w2]), hint:exact?'Divide the top number by the bottom number to get the exact decimal.':'Divide the top number by the bottom number, then round to the nearest hundredth.' }; },
+    ()=>{ const n=R(1,4), dd=pick([2,4,5,10]), k=R(2,4), correct=`${n*k}/${dd*k}`; return { s:'🔍 Equivalent fraction clue.', q:`Which fraction is equivalent to ${n}/${dd}?`, a:correct, choices:missionChoices(correct,[`${n+1}/${dd}`,`${n}/${dd+1}`]), hint:'Multiply the numerator and denominator by the same number.', coachKey:'fraction-equivalence' }; },
+    ()=>{ const dd=pick([4,6,8,10]), a=R(1,dd-2), b=R(1,dd-a-1), correct=`${a+b}/${dd}`; return { s:'🔍 Fraction addition clue.', q:`${a}/${dd} + ${b}/${dd} = ?`, a:correct, choices:missionChoices(correct,[`${a+b}/${dd*2}`,`${a}/${dd}`]), hint:'The denominators match, so add only the numerators.', coachKey:'fraction-addition' }; },
+    ()=>{ const dd=pick([4,6,8,10]), a=R(2,dd-1), b=R(1,a-1), correct=`${a-b}/${dd}`; return { s:'🔍 Fraction subtraction clue.', q:`${a}/${dd} − ${b}/${dd} = ?`, a:correct, choices:missionChoices(correct,[`${a-b}/${dd*2}`,`${a}/${dd}`]), hint:'The denominators match, so subtract only the numerators.', coachKey:'fraction-subtraction' }; },
+    ()=>{ const pairs=[[1,2,3,4],[2,3,3,5],[3,4,2,3],[1,3,1,2]]; const [a,dd,b,ee]=pick(pairs); const av=a/dd,bv=b/ee,correct=av>bv?`${a}/${dd}`:`${b}/${ee}`; return { s:'🔍 Compare two fractions.', q:`Which fraction is greater: ${a}/${dd} or ${b}/${ee}?`, a:correct, choices:missionChoices(correct,[av>bv?`${b}/${ee}`:`${a}/${dd}`]), hint:'Compare using a common denominator or convert both to decimals.', coachKey:'fraction-comparison' }; },
+    ()=>{ const whole=R(1,3), dd=pick([2,3,4]), n=R(1,dd-1), improper=whole*dd+n; return { s:'🔍 Mixed-number clue.', q:`Write ${whole} ${n}/${dd} as an improper fraction.`, a:`${improper}/${dd}`, choices:missionChoices(`${improper}/${dd}`,[`${whole+n}/${dd}`,`${whole*dd}/${dd}`]), hint:'Multiply the whole number by the denominator, then add the numerator.', coachKey:'fraction-mixed' }; }
   ],
   decimals: [
     (d)=>{ const a=R(10,99)/10, b=R(10,99)/10; return { s:'🔍 Decimal clue combine.', q:`${a} + ${b} = ?`, a: Math.round((a+b)*100)/100, mode:'decimal', hint:'Line up the decimal points, then add like whole numbers.' }; },
@@ -2828,6 +3266,25 @@ katya: {
     (d)=>{ const a=R(25,80+d*10), b=R(15,60+d*10), c=R(10,Math.min(40+d*5,a+b-5)); return { s:'💀 The Shadow of the Arcade blocks your path!', q:`${a} + ${b} − ${c} = ?`, a:a+b-c, hint:'Work left to right: add first, then subtract.' }; },
     (d)=>{ const price=R(4,9), qty=R(2,5+d); return { s:'🛍 Word problem.', q:`A toy costs $${price}. You buy ${qty}. What is the TOTAL cost?`, a: price*qty, hint:'Multiply the cost of one toy by how many you buy.' }; },
     (d)=>{ const f=pick(FRIENDS), t=R(3,7+d), c=R(4,9); return { s:`🔍 Flashlights on! You and ${f} search the rooms.`, q:`${t} rooms with ${c} clues in each. Total clues?`, a: t*c, hint:'Multiply the number of rooms by the clues in each room.' }; }
+  ],
+  numbersense: [
+    () => { const n=R(10000,99999), place=pick([1,10,100,1000,10000]), digit=Math.floor(n/place)%10; return { s:'🔢 Place-value checkpoint.', q:`In ${n.toLocaleString('en-US')}, what digit is in the place worth ${place}?`, a:digit, hint:'Read the digits from right to left: ones, tens, hundreds, thousands, ten-thousands.', coachKey:'numbersense' }; },
+    () => { const a=R(10000,99999), b=R(10000,99999), correct=String(Math.max(a,b)); return { s:'🔢 Compare the code numbers.', q:`Which number is greater: ${a} or ${b}?`, a:correct, choices:missionChoices(correct,[String(Math.min(a,b)),'They are equal']), hint:'Compare digits from the leftmost place first.', coachKey:'numbersense' }; },
+    () => { let n=R(1000,99999); if(n%10===5)n++; return { s:'🎯 Estimation checkpoint.', q:`Round ${n} to the nearest 100.`, a:Math.round(n/100)*100, hint:'Look at the tens digit to round to the nearest hundred.', coachKey:'estimation' }; },
+    () => { const a=R(200,900), b=R(200,900); return { s:'🎯 Reasonableness check.', q:`Estimate ${a} + ${b} by rounding each number to the nearest 100.`, a:Math.round(a/100)*100+Math.round(b/100)*100, hint:'Round both addends first, then add the friendly numbers.', coachKey:'estimation' }; }
+  ],
+  data: [
+    () => { const vals=[R(2,9),R(2,9),R(2,9),R(2,9)]; return { s:'📊 Read the class table.', q:`A table shows ${vals[0]} votes for cats, ${vals[1]} for dogs, ${vals[2]} for birds, and ${vals[3]} for fish. How many votes altogether?`, a:vals.reduce((x,y)=>x+y,0), hint:'Add all four categories.', coachKey:'data', data:{ cats:vals[0], dogs:vals[1], birds:vals[2], fish:vals[3] } }; },
+    () => { const a=R(5,18); let b=R(5,18); if(a===b) b=a===18?17:a+1; return { s:'📊 Compare the data.', q:`A chart shows ${a} students chose soccer and ${b} chose hockey. How many more chose the larger group?`, a:Math.abs(a-b), hint:'Subtract the smaller count from the larger count.', coachKey:'data', data:{ soccer:a, hockey:b } }; }
+  ],
+  probability: [
+    () => { const red=R(1,5), blue=R(1,5), total=red+blue, g=gcd(red,total), correct=`${red/g}/${total/g}`; return { s:'🎲 Marble probability.', q:`A bag has ${red} red and ${blue} blue marbles. What is the probability of RED?`, a:correct, choices:missionChoices(correct,[`${blue/g}/${total/g}`,'1/3','2/3']), hint:'Probability = favorable outcomes divided by total outcomes.', coachKey:'probability' }; },
+    () => { const green=R(1,4), yellow=R(1,4), total=green+yellow, g=gcd(green,total), correct=`${green/g}/${total/g}`; return { s:'🎲 Spinner probability.', q:`A spinner has ${green} green and ${yellow} yellow equal sections. What is the probability of GREEN?`, a:correct, choices:missionChoices(correct,[`${yellow/g}/${total/g}`,'1/4','3/4']), hint:'Count green sections, then divide by all sections.', coachKey:'probability' }; }
+  ],
+  geometry: [
+    () => { const l=R(3,12), w=R(2,9); return { s:'📐 Rectangle area.', q:`A rectangle is ${l} m long and ${w} m wide. What is its AREA in square metres?`, a:l*w, hint:'Area = length × width.', coachKey:'geometry', geometry:{ shape:'rectangle', length:l, width:w, unit:'m²' } }; },
+    () => { const a=R(30,80), b=R(30,120-a-10); return { s:'📐 Angle reasoning.', q:`A triangle has angles ${a}° and ${b}°. What is the third angle?`, a:180-a-b, hint:'The angles in a triangle add to 180°.', coachKey:'geometry', geometry:{ shape:'triangle-angle', given:[a,b], unit:'degrees' } }; },
+    () => { const side=R(3,12); return { s:'📐 Shape properties.', q:`A square has side length ${side} cm. What is its PERIMETER in centimetres?`, a:side*4, hint:'A square has four equal sides.', coachKey:'geometry', geometry:{ shape:'square', side, unit:'cm' } }; }
   ],
   reading: [
     ()=>({ s:'Maya planted tomato seeds in April. By July, the plants were taller than her little brother. She picked the first ripe tomato in August.', q:'In what month did Maya PLANT the seeds?', a:'April', choices: shuffle(['April','July','August']), hint:'Look back at the passage — the answer is stated directly in the text.' }),
@@ -2960,6 +3417,16 @@ const STRATEGY_LIBRARY = {
     example:'Try: 96 ÷ 4 — split 96 into 80 + 16. 80÷4=20, 16÷4=4. Add: 20+4=24.',
     memoryHook:'Split it into friendly chunks, divide each chunk, then add the pieces back together.',
     commonMistake:'forgetting to add all the leftover pieces back together at the end' },
+  numbersense: { name:'Number Sense & Estimation', icon:'🔢',
+    strategy:'Read large numbers by place value from left to right. To compare, check the leftmost place where the digits differ. For rounding, look one place to the right of the target place: 5 or more rounds up; 4 or less stays down.',
+    example:'Try: 47,382 rounded to the nearest hundred is 47,400 because the tens digit is 8.',
+    memoryHook:'Place value is a map: each step left is ten times greater. Round by checking the next digit.',
+    commonMistake:'rounding from the wrong digit or comparing only the last digits of large numbers' },
+  data: { name:'Data & Tables', icon:'📊',
+    strategy:'Read each category carefully, then choose the operation the question asks for: add for a total, subtract smaller from larger for a difference, and compare labels before calculating.',
+    example:'Try: 12 students chose art and 9 chose music. The difference is 12 − 9 = 3 students.',
+    memoryHook:'Read the labels, write the numbers, then answer exactly what the question asks.',
+    commonMistake:'adding categories twice or subtracting in the wrong order when finding how many more' },
   time: { name:'Time', icon:'⏰',
     strategy:'Remember: 60 seconds = 1 minute, 60 minutes = 1 hour, 24 hours = 1 day. For elapsed time, count forward from the start time to the end time in convenient jumps.',
     example:'Try: minutes in 2 hours 15 minutes? 2 × 60 = 120, plus 15 = 135 minutes.',
@@ -3031,6 +3498,26 @@ function strategyFor(topic) {
   }
   return STRATEGY_LIBRARY[topic] || null;
 }
+const COACHING_ALIASES = {
+  'fraction-equivalence':'fractions', 'fraction-comparison':'fractions',
+  'fraction-addition':'fractions', 'fraction-subtraction':'fractions', 'fraction-mixed':'fractions', 'fraction-of-number':'fractions', 'fraction-percent':'percent',
+  'fraction-decimal':'fractions', addition:'mentalmath', subtraction:'mentalmath',
+  bedmas:'bedmas', multiplication:'multiplication', division:'division', percent:'percent',
+  numbersense:'numbersense', data:'data', estimation:'estimation', geometry:'geometry', longdivision:'longdivision'
+};
+function coachingKeyFor(q) {
+  if (!q) return null;
+  if (q.coachKey) return q.coachKey;
+  if (q.topic === 'fractions') {
+    const text = String(q.q || '');
+    if (/which decimal equals|decimal/i.test(text)) return 'fraction-decimal';
+    if (/which is greater|compare/i.test(text)) return 'fraction-comparison';
+    if (/\bof\b/i.test(text)) return 'fraction-of-number';
+    if (/[+−]/.test(text)) return 'fraction-addition';
+  }
+  if (q.operation) return q.operation;
+  return q.topic || null;
+}
 
 // Defensive net: whatever a generator computes, the keyboard the child gets
 // must be able to type it. A whole-number answer gets the plain numeric pad;
@@ -3048,16 +3535,18 @@ function applyKeyboardMode(item) {
 }
 function questionOperation(item) {
   const text = String(item.q || '');
-  if (text.includes('÷') || /shared|per |speed|unit rate/i.test(text)) return 'division';
-  if (text.includes('×') || /\bof\b/i.test(text)) return 'multiplication';
-  if (text.includes('+')) return 'addition';
-  if (text.includes('−') || text.includes(' - ')) return 'subtraction';
+  if (/triangle has angles|third angle|triangle angles/i.test(text)) return 'triangle-angle';
   if (/perimeter/i.test(text)) return 'perimeter';
   if (/surface area/i.test(text)) return 'surface-area';
   if (/\barea\b/i.test(text)) return 'area';
   if (/volume/i.test(text)) return 'volume';
   if (/probability|chance/i.test(text)) return 'probability';
   if (/solve for x|equation/i.test(text)) return 'solve-equation';
+  if (/%/.test(text)) return 'percent';
+  if (text.includes('÷') || /shared|per |speed|unit rate/i.test(text)) return 'division';
+  if (text.includes('×') || /\bof\b/i.test(text)) return 'multiplication';
+  if (text.includes('+')) return 'addition';
+  if (text.includes('−') || text.includes(' - ')) return 'subtraction';
   return 'reasoning';
 }
 function fallbackWorkedExample(item) {
@@ -3075,13 +3564,27 @@ function fallbackWorkedExample(item) {
   };
   return examples[item.operation || questionOperation(item)] || null;
 }
+function normalizeChoices(item) {
+  if (!Array.isArray(item.choices)) return item;
+  const answer = String(item.a);
+  const seen = new Set();
+  const unique = [];
+  for (const choice of item.choices) {
+    const text = String(choice);
+    if (!seen.has(text)) { seen.add(text); unique.push(text); }
+  }
+  // Keep exactly one representation of the correct answer, even when a
+  // generator accidentally produces a duplicate or omits it.
+  item.choices = [answer, ...unique.filter(choice => choice !== answer)];
+  return item;
+}
 function addQuestionMetadata(item, who, topic, idx) {
   item.topic = topic;
   item.skill = item.skill || `${topic}.generator-${idx + 1}`;
   item.operation = item.operation || questionOperation(item);
   item.genIdx = idx;
   item.who = who;
-  return applyKeyboardMode(item);
+  return applyKeyboardMode(normalizeChoices(item));
 }
 function genQuestion(who, topic, diff) {
   const pool = TOPIC_BANK[who][topic];
@@ -3098,7 +3601,13 @@ function genQuestion(who, topic, diff) {
 function similarQuestion(who, topic, genIdx, diff) {
   const pool = TOPIC_BANK[who] && TOPIC_BANK[who][topic];
   if (!pool || !pool[genIdx]) return null;
-  const item = pool[genIdx](diff);
+  const live = M && M.q && M.q.topic === topic ? M.q : null;
+  let item = null;
+  for (let tries = 0; tries < 6; tries++) {
+    const candidate = pool[genIdx](diff);
+    if (!live || (candidate.q !== live.q && String(candidate.a) !== String(live.a))) { item = candidate; break; }
+  }
+  if (!item) return null;
   return addQuestionMetadata(item, who, topic, genIdx);
 }
 
@@ -3215,7 +3724,28 @@ function weakStrongSubjects(who) {
 /* ---- Build a fresh mission with child-appropriate session length ---- */
 function buildTopicSequence(who, count) {
   const topics = who === 'alex' ? ALEX_TOPICS : KATYA_TOPICS;
+  if (count <= 0) return [];
   const weights = topics.map(t => topicWeight(who, t));
+  // A short base mission cannot give every family a slot. Select distinct
+  // families for this run so the length stays exact, while still giving
+  // struggling or due-review topics their existing higher weight. Later
+  // missions rotate omitted families back in instead of adding a question.
+  if (count < topics.length) {
+    const pool = topics.map((topic, i) => ({ topic, weight: Math.max(1, weights[i]) }));
+    const selected = [];
+    while (selected.length < count && pool.length) {
+      const total = pool.reduce((sum, item) => sum + item.weight, 0);
+      let cursor = R(1, total);
+      let chosen = 0;
+      for (let i = 0; i < pool.length; i++) {
+        cursor -= pool[i].weight;
+        if (cursor <= 0) { chosen = i; break; }
+      }
+      selected.push(pool[chosen].topic);
+      pool.splice(chosen, 1);
+    }
+    return shuffle(selected);
+  }
   const totalW = weights.reduce((a,b)=>a+b,0);
   const slots = topics.map((t,i) => Math.max(1, Math.round(weights[i] / totalW * count)));
   let diff = count - slots.reduce((a,b)=>a+b,0);
@@ -3240,10 +3770,38 @@ function buildTopicSequence(who, count) {
   }
   return seq;
 }
+const KATYA_GRADE5_PLAN = [
+  ['numbersense', 4], ['multiplication', 4], ['division', 2], ['longdivision', 2],
+  ['fractions', 4], ['decimals', 3], ['patterns', 2], ['data', 1], ['probability', 1],
+  ['geometry', 2], ['measurement', 1], ['money', 2], ['wordproblems', 2]
+];
+const ALEX_GRADE8_PLAN = [
+  ['integers', 4], ['bedmas', 3], ['fractions', 4], ['decimals', 2], ['percent', 1],
+  ['ratios', 3], ['algebra', 4], ['geometry', 3], ['data', 2], ['probability', 1],
+  ['money', 2], ['wordproblems', 1]
+];
+function generatePlannedMission(who, plan) {
+  const recent = state.recentQ[who] || (state.recentQ[who] = []);
+  const questions = [];
+  for (const [topic, count] of plan) {
+    for (let i = 0; i < count; i++) {
+      const diff = topicDifficulty(who, topic);
+      let item, tries = 0;
+      do { item = genQuestion(who, topic, diff); tries++; } while (recent.includes(item.q) && tries < 10);
+      recent.push(item.q);
+      questions.push(item);
+    }
+  }
+  if (recent.length > 60) recent.splice(0, recent.length - 60);
+  return shuffle(questions);
+}
 function generateDailyMission(who) {
-  const targetCount = who === 'alex' ? 18 : 20;
-  const basics = generateBasicArithmetic().slice(0, who === 'alex' ? 6 : 8);
-  const seq = buildTopicSequence(who, targetCount - basics.length);
+  if (who === 'alex') return generatePlannedMission(who, ALEX_GRADE8_PLAN);
+  if (who === 'katya') return generatePlannedMission(who, KATYA_GRADE5_PLAN);
+  const basics = generateBasicArithmetic().slice(0, 8).map((item, idx) => ({
+    ...item, who, skill: item.skill || `mentalmath.warmup-${idx + 1}`
+  }));
+  const seq = buildTopicSequence(who, 30 - basics.length);
   const recent = state.recentQ[who] || (state.recentQ[who] = []);
   const questions = seq.map(topic => {
     const diff = topicDifficulty(who, topic);
@@ -3257,10 +3815,21 @@ function generateDailyMission(who) {
 }
 
 /* ============ HELPERS: dates, confetti, hints ============ */
-const todayStr = () => new Date().toISOString().slice(0,10);
-const yestStr = () => new Date(Date.now() - 864e5).toISOString().slice(0,10);
+function localDateKey(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+const todayStr = () => localDateKey();
+const yestStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return localDateKey(d); };
 if (!state.daily || !state.daily.alex || !state.daily.katya) {
   state.daily = { alex: { date: '', count: 0 }, katya: { date: '', count: 0 } };
+}
+for (const who of ['alex','katya']) {
+  if (!state.daily[who] || typeof state.daily[who] !== 'object' || Array.isArray(state.daily[who])) state.daily[who] = { date:'', count:0 };
+  if (typeof state.daily[who].date !== 'string' || (state.daily[who].date && !/^\d{4}-\d{2}-\d{2}$/.test(state.daily[who].date))) state.daily[who].date = '';
+  if (!Number.isFinite(state.daily[who].count) || state.daily[who].count < 0) state.daily[who].count = 0;
 }
 function dailyCountFor(who) {
   const d = state.daily[who];
@@ -3292,10 +3861,10 @@ const KEY_MILESTONES = [3, 7, 14, 30];
    streak alive, walking back from today and skipping Saturday/Sunday. So
    playing Friday keeps the streak alive all through the weekend into Monday. */
 function lastRequiredDay(todayDateStr) {
-  const d = new Date(todayDateStr + 'T00:00:00');
-  d.setDate(d.getDate() - 1);
+  const [y, m, day] = String(todayDateStr).split('-').map(Number);
+  const d = new Date(y, m - 1, day - 1);
   while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
-  return d.toISOString().slice(0,10);
+  return localDateKey(d);
 }
 
 function bumpStreak(p, name) {
@@ -3323,7 +3892,22 @@ function awardKeyMoment(name, streak) {
 }
 
 function hintFor() {
-  const q = M.q.q;
+  const question = M.q;
+  if (question.hint) return question.hint;
+  const key = coachingKeyFor(question);
+  if (key === 'triangle-angle') return 'Triangle angles add to 180°. Subtract the two known angles from 180°.';
+  if (key === 'addition') return 'Add the numbers carefully, keeping place values aligned.';
+  if (key === 'subtraction') return 'Subtract each place value carefully, regrouping when needed.';
+  if (key === 'multiplication') return 'Break the multiplication into place-value parts, then add the partial products.';
+  if (key === 'division') return 'Use multiplication facts in reverse: ask how many equal groups fit in the total.';
+  if (key === 'bedmas') return 'Brackets first; then evaluate × and ÷ left to right, followed by + and − left to right.';
+  if (key === 'percent') return 'Find the requested percent of the whole, then follow the wording: discount, sale price, or percent of a whole.';
+  if (key === 'fraction-equivalence') return 'Equivalent fractions name the same amount; multiply or divide the numerator and denominator by the same number.';
+  if (key === 'fraction-comparison') return 'Compare the fraction values using a common denominator or decimal conversion.';
+  if (key === 'fraction-addition') return 'Add or subtract the numerators when denominators match; keep the common denominator.';
+  if (key === 'fraction-of-number') return 'Divide the whole by the denominator, then multiply by the numerator.';
+  if (key === 'fraction-decimal') return 'Divide the numerator by the denominator to convert the fraction to a decimal.';
+  const q = question.q;
   if (q.includes('Solve for x')) return q.includes('\u2212') ? 'Add the number to BOTH sides first, then divide by the number in front of x.' : 'Subtract the number from BOTH sides first, then divide by the number in front of x.';
   if (q.includes('\u00B2')) return 'Squared means multiply the number by itself.';
   if (q.includes('Pattern:')) return 'Find the jump between numbers, then keep jumping to the term you need.';
@@ -3340,7 +3924,7 @@ function hintFor() {
   if (q.includes('\u00F7') || q.includes('shared') || q.includes('Each gets')) return 'Division = sharing into equal groups. Times tables in reverse!';
   if (q.includes('(') && q.includes('\u00D7')) return 'Brackets FIRST, then multiply!';
   if (q.includes('\u00D7') && q.includes('+')) return 'Multiply FIRST, then add. (BEDMAS!)';
-  if (q.includes('\u00D7')) return 'Break it up: 7\u00D78 is the same as 7\u00D74, doubled.';
+  if (q.includes('\u00D7')) return 'Break the multiplication into place-value parts, then add the partial products.';
   if (q.includes('\u2212') && M.player === 'katya') return 'Stack the numbers \u2014 borrow when the top digit is smaller.';
   if (q.includes('\u2212')) return 'Watch the signs! Subtracting a negative = ADDING.';
   return 'Take it step by step on the scratchpad \u2014 you got this!';
@@ -3377,10 +3961,15 @@ function advanceBrainBoost(prefix) {
   const level = (ctx.bbLevel || 0) + 1;
   if (level > steps.length) return;
   ctx.bbLevel = level;
+  renderBrainBoostLevel(prefix, level, true);
+}
+function renderBrainBoostLevel(prefix, level, recordView) {
+  const ctx = prefix === 'ms' ? M : B;
+  const steps = BB_STEPS[prefix];
   const topic = bbTopicFor(prefix);
   const lib = strategyFor(topic);
   const who = prefix === 'ms' ? ctx.player : ctx.turn;
-  if (level === 1) markStrategyViewed(who, topic);
+  if (recordView && level === 1) markStrategyViewed(who, topic);
   const panel = $(prefix + '-bb-panel');
   const card = document.createElement('div');
   card.className = 'bb-card';
@@ -3413,6 +4002,15 @@ function advanceBrainBoost(prefix) {
     btn.disabled = true;
   } else {
     btn.innerHTML = steps[level] + '<span class="bb-progress">' + level + '/' + steps.length + '</span>';
+  }
+}
+function restoreBrainBoost(prefix, savedLevel) {
+  const ctx = prefix === 'ms' ? M : B;
+  const target = Number.isInteger(savedLevel) ? Math.max(0, Math.min(BB_STEPS[prefix].length, savedLevel)) : 0;
+  resetBrainBoost(prefix);
+  for (let level = 1; level <= target; level++) {
+    ctx.bbLevel = level;
+    renderBrainBoostLevel(prefix, level, false);
   }
 }
 
@@ -3459,7 +4057,12 @@ function explainStepByStep(q) {
     steps.push(`Find 10% first: ${N} ÷ 10 = ${N / 10}`);
     steps.push(`Scale that 10% block up or down to reach ${P}% of ${N}.`);
   }
-  if (!steps.length) steps.push(lib ? lib.strategy : 'Apply the method for this topic, step by step.');
+  if (!steps.length) {
+    steps.push('Known: identify the numbers, units, and facts given in the question.');
+    steps.push('Asked: identify exactly what the question wants you to find.');
+    steps.push(lib ? `Plan: ${lib.strategy}` : 'Plan: choose the operation that matches the relationship in the question.');
+    steps.push('Calculate carefully, then check whether the result and units make sense.');
+  }
   steps.push(`So the answer to your question is ${q.a}.`);
   return steps;
 }
@@ -3480,62 +4083,97 @@ function updateAttemptDots() {
 // that topic) to appear later in this mission, so a "learned, not yet
 // earned" question always gets a second real chance before the mission
 // ends. Total mission length is capped so sessions stay in the
-// EDUCATION.md 15-20 minute band even after reinforcement is added.
-const MAX_MISSION_LEN = 26;
+// the reviewed 30-question base plus at most six reinforcement questions.
+const MAX_REMEDIATION = 6, MAX_MISSION_LEN = 36;
 function queueReinforcement(topic) {
-  const room = MAX_MISSION_LEN - M.questions.length;
-  if (room <= 0) return;
+  const room = Math.min(MAX_REMEDIATION - (M.remediationQueued || 0), MAX_MISSION_LEN - M.questions.length);
+  if (room <= 0) return 0;
   const count = Math.min(R(1, 3), room);
   const diff = topicDifficulty(M.player, topic);
+  const existing = new Set(M.questions.map(q => q.q));
+  let added = 0;
   for (let i = 0; i < count; i++) {
-    let item = (M.q.genIdx != null) ? similarQuestion(M.player, topic, M.q.genIdx, diff) : null;
-    if (!item) item = genQuestion(M.player, topic, diff);
+    let item = null;
+    for (let tries = 0; tries < 6 && !item; tries++) {
+      const candidate = (M.q.genIdx != null) ? similarQuestion(M.player, topic, M.q.genIdx, diff) : genQuestion(M.player, topic, diff);
+      if (candidate && !existing.has(candidate.q) && String(candidate.a) !== String(M.q.a)) item = candidate;
+    }
+    if (!item) continue;
     item.reinforcement = true;
+    existing.add(item.q);
     M.questions.push(item);
+    added++;
   }
+  M.remediationQueued = Math.min(MAX_REMEDIATION, (M.remediationQueued || 0) + added);
+  return added;
 }
 
 /* ============ ACTIVE MISSION FLOW ============ */
 let M = null;
+let missionRunToken = 0;
 const QCOUNT = 20, DAILY_BASIC_COUNT = 8, XP_PER_Q = 8;
+function missionRunIsCurrent(token, mission) {
+  return token === missionRunToken && M === mission && !!M && !M.completed;
+}
+function scheduleMissionCallback(fn, delay) {
+  const token = missionRunToken, mission = M;
+  return setTimeout(() => {
+    if (missionRunIsCurrent(token, mission)) fn();
+  }, delay);
+}
 function savePausedMission() {
-  if (!M || !M.player || !Array.isArray(M.questions) || M.i >= M.questions.length || $('ms-result').style.display === 'block') return;
+  if (resetInProgress || !M || M.completed || !M.player || !Array.isArray(M.questions) || M.i > M.questions.length || $('ms-result').style.display === 'block') return;
   const snapshot = JSON.parse(JSON.stringify(M));
   const isCurrentQuestion = M.q === M.questions[M.i];
   snapshot.answer = isCurrentQuestion && $('ms-answer') ? $('ms-answer').value : '';
-  if (!isCurrentQuestion) snapshot.attempts = 0;
+  if (!isCurrentQuestion) {
+    snapshot.attempts = 0;
+    snapshot.bbLevel = 0;
+  }
+  snapshot.completed = false;
+  snapshot.transitioning = false;
+  snapshot.pendingCompletion = snapshot.i === snapshot.questions.length;
+  snapshot.q = snapshot.pendingCompletion ? null : snapshot.questions[snapshot.i];
   snapshot.savedAt = Date.now();
   state.pausedDaily[M.player] = snapshot;
-  Store.set('smbt-state-v2', state);
+  return Store.set('smbt-state-v2', state);
+}
+function pauseDailyMissionRun() {
+  if (!M) return;
+  savePausedMission();
+  missionRunToken++;
+  M = null;
 }
 
 function startMission(id) {
   const def = MISSIONS[0];
+  if (M && !M.completed) savePausedMission();
+  if (typeof enterActivity === 'function') enterActivity('daily');
+  missionRunToken++;
   const saved = validPausedMission(state.activePlayer);
   M = saved
     ? { ...JSON.parse(JSON.stringify(saved)), def }
-    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, xpEarned: 0, combo: 0, best: 0, questions: generateDailyMission(state.activePlayer) };
-  const restoredAttempts = M.attempts || 0;
-  const restoredAnswer = M.answer || '';
+    : { def, player: state.activePlayer, i: 0, correct: 0, attempts: 0, bbLevel: 0, answer: '', xpEarned: 0, combo: 0, best: 0, remediationQueued: 0, questions: generateDailyMission(state.activePlayer) };
+  const remediationCap = typeof MAX_REMEDIATION === 'number' ? MAX_REMEDIATION : 6;
+  M.remediationQueued = Math.min(remediationCap, Math.max(0, Number(M.remediationQueued) || 0));
+  M.completed = false;
+  M.transitioning = false;
+  M.pendingCompletion = M.i === M.questions.length;
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   const sc = $('mission-screen');
   sc.classList.add('on');
   sc.classList.toggle('th-katya', M.player === 'katya');
   $('ms-title').textContent = `DAILY GRADE ${getCurrentGrade(M.player) + 1} PREP MISSION`;
   $('ms-player').textContent = (M.player === 'alex' ? 'ALEX ⚡ ' : 'KATYA 🔍 ') + GRADE[M.player];
-  $('ms-xp-pill').textContent = '? +' + def.xp + ' XP + accuracy coins';
+  $('ms-xp-pill').textContent = 'XP + coins based on mission accuracy';
   $('ms-result').style.display = 'none';
   $('ms-play').style.display = 'block';
   const padCard = $('pad-card'), padToggle = $('pad-toggle-btn');
   if (padCard) padCard.classList.remove('mobile-open');
   if (padToggle) padToggle.textContent = '✏️ SCRATCHPAD';
   initPad();
-  nextQ();
-  if (saved) {
-    M.attempts = restoredAttempts;
-    updateAttemptDots();
-    $('ms-answer').value = restoredAnswer;
-    if (M.q.choices) document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === restoredAnswer));
+  nextQ(!!saved);
+  if (saved && !M.completed) {
     $('ms-fb').textContent = 'Mission resumed — keep going!';
     $('ms-fb').className = 'feedback fb-good';
     toast(`▶ Resumed question ${M.i + 1} of ${M.questions.length}`);
@@ -3547,15 +4185,27 @@ function segs() {
   $('ms-segs').innerHTML = Array.from({length:total},(_,j)=>`<i class="${j<M.i?'done':j===M.i?'cur':''}"></i>`).join('');
   $('ms-count').textContent = M.i < total ? `Question ${M.i+1} of ${total}` : 'Mission complete!';
 }
-function nextQ() {
+function nextQ(restoring) {
+  if (!M || M.completed) return;
   if (M.i >= M.questions.length) return showResult();
-  M.attempts = 0;
+  if (!restoring) {
+    M.attempts = 0;
+    M.bbLevel = 0;
+    M.answer = '';
+  }
+  M.transitioning = false;
   M.q = M.questions[M.i];
   if (window.MathThinkingSystem) {
     window.MathThinkingSystem.questionPresented({ child:M.player, grade:getCurrentGrade(M.player), question:M.q });
   }
   $('ms-story').textContent = M.q.s;
   $('ms-q').textContent = M.q.q;
+  const trick = $('ms-trick');
+  const trickText = typeof mathTrickFor === 'function' ? mathTrickFor(M.q) : null;
+  if (trick) {
+    trick.textContent = trickText ? '⚡ MATH TRICK  ' + trickText : '';
+    trick.style.display = trickText ? 'block' : 'none';
+  }
   const reinforceBadge = $('ms-reinforce-badge');
   if (reinforceBadge) reinforceBadge.style.display = M.q.reinforcement ? 'inline-flex' : 'none';
   updateAttemptDots();
@@ -3563,40 +4213,228 @@ function nextQ() {
   if (wt) { wt.style.display = 'none'; wt.innerHTML = ''; }
   const choices = $('ms-choices');
   const inp = $('ms-answer');
-  inp.value = ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
+  inp.value = restoring ? (M.answer || '') : ''; inp.disabled = false; inp.inputMode = M.q.mode || 'decimal';
   const signBtn = $('ms-sign-btn');
   if (signBtn) { signBtn.style.display = (!M.q.choices && topicAllowsNegative(M.q.topic)) ? '' : 'none'; signBtn.classList.remove('active'); }
   if (M.q.choices) {
     choices.style.display = 'grid';
-    choices.innerHTML = M.q.choices.map(c => '<button class="choice-answer" onclick="chooseMissionAnswer(\'' + c + '\')">' + c + '</button>').join('');
+    choices.replaceChildren();
+    M.q.choices.forEach(choice => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'choice-answer';
+      button.textContent = String(choice);
+      button.addEventListener('click', () => chooseMissionAnswer(String(choice)));
+      choices.appendChild(button);
+    });
     inp.style.display = 'none';
   } else {
     choices.style.display = 'none'; choices.innerHTML = '';
     inp.style.display = 'block';
-    setTimeout(() => { inp.focus(); inp.scrollIntoView({behavior:'smooth', block:'center'}); }, 80);
+    scheduleMissionCallback(() => { inp.focus(); inp.scrollIntoView({behavior:'smooth', block:'center'}); }, 80);
   }
   $('ms-fb').textContent = ''; $('ms-fb').className = 'feedback';
   $('ms-submit').disabled = false;
-  resetBrainBoost('ms');
+  if (restoring) restoreBrainBoost('ms', M.bbLevel);
+  else resetBrainBoost('ms');
+  if (restoring && M.q.choices) document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === (M.answer || '')));
   segs();
 }
 function chooseMissionAnswer(v) {
   $('ms-answer').value = v;
   document.querySelectorAll('.choice-answer').forEach(b => b.classList.toggle('selected', b.textContent === v));
 }
+function parseStrictNumber(raw) {
+  const text = String(raw == null ? '' : raw).trim();
+  if (!text) return null;
+  const normalized = text.replace(/^\$\s*/, '').replace(',', '.');
+  if (!/^-?\d+(?:\.\d+)?$/.test(normalized)) return null;
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
 function answerOk(q, raw) {
   const val = String(raw || '').trim();
   if (!val) return false;
   if (q.choices) return val === String(q.a);
-  const n = parseFloat(val.replace(',', '.').replace(/^\$/, ''));
-  return !isNaN(n) && Math.abs(n - Number(q.a)) < 0.001;
+  const n = parseStrictNumber(val);
+  const expected = Number(q.a);
+  return n !== null && Number.isFinite(expected) && Math.abs(n - expected) < 0.001;
+}
+// A proactive Math Trick is a short, question-local strategy reminder. It is
+// deliberately pure and excludes multiple-choice questions so it never gives
+// away a choice or answer. Brain Boost remains the explicit support action.
+function mathTrickFor(q) {
+  if (!q || q.choices || q.options || typeof q.q !== 'string') return null;
+  const text = q.q.trim();
+  const topicAllowed = (...topics) => !q.topic || topics.includes(q.topic);
+  const decimalText = value => /\./.test(value);
+  const wholeAsDecimal = value => Number(value).toFixed(1);
+  const multiplicationTrick = factor => {
+    if (!Number.isFinite(factor) || factor <= 0) return null;
+    if (factor === 2) return 'Double the other factor.';
+    if (factor === 5) return 'Multiply by 10, then take half.';
+    if (factor === 9) return 'Multiply by 10, then subtract one group.';
+    if (factor === 25) return 'Multiply by 100, then divide by 4.';
+    if (factor === 10) return 'Multiplying by 10 shifts the digits one place left.';
+    if (factor === 100) return 'Multiplying by 100 shifts the digits two places left.';
+    if (factor === 1000) return 'Multiplying by 1000 shifts the digits three places left.';
+    return null;
+  };
+  let m = text.match(/^(-?\d+(?:\.\d+)?)\s*[×x]\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
+  if (m) {
+    const left = Number(m[1]), right = Number(m[2]);
+    if (!topicAllowed('multiplication', 'decimals', 'integers', 'mentalmath')) return null;
+    if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
+    if (left < 0 || right < 0) return 'Check the signs first: same signs make a positive product; different signs make a negative product.';
+    if (decimalText(m[1]) || decimalText(m[2])) {
+      const decimalTrick = multiplicationTrick(right) || multiplicationTrick(left);
+      return decimalTrick || 'Multiply the digits, then count the decimal places back into the product.';
+    }
+    const trick = multiplicationTrick(right) || multiplicationTrick(left);
+    if (trick) return trick;
+    return 'Break a factor into tens and ones, multiply each part, then add the partial products.';
+  }
+  m = text.match(/^(-?\d+(?:\.\d+)?)\s*÷\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
+  if (m) {
+    if (!topicAllowed('division', 'longdivision', 'decimals', 'integers', 'mentalmath')) return null;
+    const dividend = Number(m[1]);
+    const divisor = Number(m[2]);
+    if (!Number.isFinite(dividend) || !Number.isFinite(divisor) || divisor === 0) return null;
+    if (dividend < 0 || divisor < 0) return 'Check the signs first: same signs make a positive quotient; different signs make a negative quotient.';
+    if (divisor === 2) return 'Divide by 2: find half.';
+    if (divisor === 10) return 'Dividing by 10 shifts the digits one place right.';
+    if (divisor === 100) return 'Dividing by 100 shifts the digits two places right.';
+    if (divisor === 1000) return 'Dividing by 1000 shifts the digits three places right.';
+    if (decimalText(m[1]) || decimalText(m[2])) return 'Divide carefully, then place the decimal point in the quotient.';
+    if (dividend >= 100 && Number.isInteger(divisor)) return 'Use the long-division loop: divide, multiply, subtract, bring down, then repeat.';
+    return 'Ask what number times the divisor makes the dividend, then check by multiplying.';
+  }
+  m = text.match(/^(\d+)%\s+of\s+\$?\d+(?:\.\d+)?\s*=\s*\?$/i);
+  if (m) {
+    if (!topicAllowed('percent', 'money', 'decimals')) return null;
+    const percent = Number(m[1]);
+    if (percent === 1) return 'For 1%, divide the number by 100.';
+    if (percent === 5) return 'For 5%, find 10% first, then take half.';
+    if (percent === 10) return 'For 10%, divide the number by 10.';
+    if (percent === 15) return 'For 15%, add 10% and 5% together.';
+    if (percent === 20) return 'For 20%, find 10% first, then double it.';
+    if (percent === 25) return '25% means one quarter — divide by 4.';
+    if (percent === 50) return '50% means half — divide by 2.';
+    if (percent === 75) return '75% = half plus one quarter.';
+    if (percent >= 0 && percent <= 100) return 'Think of the percent as a part out of 100, then multiply by the whole.';
+  }
+  m = text.match(/^(\d+)\/(\d+)\s+of\s+\$?\d+(?:\.\d+)?\s*=\s*\?$/i);
+  if (m) {
+    if (!topicAllowed('fractions', 'money', 'decimals')) return null;
+    const numerator = Number(m[1]), denominator = Number(m[2]);
+    if (Number.isFinite(numerator) && Number.isFinite(denominator) && numerator > 0 && denominator > 0 && numerator <= denominator) {
+      if (numerator === 1 && denominator === 2) return '1/2 means half — divide by 2.';
+      if (numerator === 1 && denominator === 4) return '1/4 means one quarter — divide by 4.';
+      return 'Divide by the denominator, then multiply by the numerator.';
+    }
+  }
+  m = text.match(/^A treat costs \$(\d+(?:\.\d+)?)\. How much change from \$20\?$/i);
+  if (m && topicAllowed('money') && Number.isFinite(Number(m[1])) && Number(m[1]) >= 0 && Number(m[1]) <= 20) return 'Count up from the price to $20.';
+  m = text.match(/^(-?\d+(?:\.\d+)?)\s*([+−-])\s*(-?\d+(?:\.\d+)?)\s*=\s*\?$/);
+  if (m) {
+    if (!topicAllowed('decimals', 'integers', 'numbersense', 'mentalmath')) return null;
+    const left = Number(m[1]), right = Number(m[3]);
+    if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
+    if (left < 0 || right < 0) return 'Use a number line: addition moves right or left according to each sign, and subtracting a negative moves right.';
+    if (decimalText(m[1]) || decimalText(m[3])) {
+      const operation = m[2] === '+' ? 'adding' : 'subtracting';
+      if (!decimalText(m[1]) || !decimalText(m[3])) {
+        const whole = !decimalText(m[1]) ? wholeAsDecimal(m[1]) : wholeAsDecimal(m[3]);
+        return `Think of the whole number as ${whole}. Line up the decimal points before ${operation}.`;
+      }
+      return `Line up the decimal points so each place stays in its column before ${operation}.`;
+    }
+    if (m[2] === '+' && left > 0 && right > 0 && (left % 10 >= 8 || right % 10 >= 8)) return 'Make a friendly ten or hundred, then compensate.';
+    return 'Use place value and check the sign of the result.';
+  }
+  m = text.match(/^Convert (\d+)\/(\d+) to (?:a )?decimal\.?$/i);
+  if (m && topicAllowed('fractions', 'decimals')) {
+    const numerator = Number(m[1]), denominator = Number(m[2]);
+    if (denominator <= 0 || numerator < 0 || numerator > denominator) return null;
+    let reduced = denominator, remainder = numerator;
+    while (remainder && reduced) { const next = reduced % remainder; reduced = remainder; remainder = next; }
+    let factor = reduced;
+    while (factor % 2 === 0) factor /= 2;
+    while (factor % 5 === 0) factor /= 5;
+    if (factor === 1) return 'Divide the numerator by the denominator to get the exact decimal.';
+  }
+  m = text.match(/^(\d+)\/(\d+)\s*([+−-])\s*(\d+)\/(\d+)\s*=\s*\?$/);
+  if (m && topicAllowed('fractions')) {
+    const d1 = Number(m[2]), d2 = Number(m[5]);
+    if (d1 > 0 && d2 > 0) return d1 === d2 ? 'The denominators match, so combine the numerators and keep the denominator.' : 'Find a common denominator before combining the numerators.';
+  }
+  m = text.match(/^(\d+)\/(\d+)\s*([×x÷])\s*(\d+)\/(\d+)\s*=\s*\?$/);
+  if (m && topicAllowed('fractions')) {
+    const d1 = Number(m[2]), d2 = Number(m[5]);
+    if (d1 > 0 && d2 > 0) return m[3] === '÷' ? 'Keep the first fraction, flip the second, then multiply and simplify.' : 'Multiply numerators together and denominators together, then simplify.';
+  }
+  m = text.match(/^Which fraction is greater: (\d+)\/(\d+) or (\d+)\/(\d+)\?$/i);
+  if (m && topicAllowed('fractions')) return 'Use a common denominator or compare the two fractions as decimals.';
+  m = text.match(/^Write (\d+) (\d+)\/(\d+) as an improper fraction\.?$/i);
+  if (m && topicAllowed('fractions')) return 'Multiply the whole number by the denominator, then add the numerator.';
+  m = text.match(/^Convert (\d+)\/(\d+) to a percent\.?$/i);
+  if (m && topicAllowed('fractions', 'percent')) return 'Convert the fraction to a decimal, then multiply by 100.';
+  m = text.match(/^A recipe uses (\d+(?:\.\d+)?) cups flour for (\d+) pancakes\. How many cups for (\d+) pancakes\?$/i);
+  if (m && topicAllowed('ratios') && Number(m[1]) > 0 && Number(m[2]) > 0 && Number(m[3]) > 0) return 'Scale both quantities by the same factor.';
+  m = text.match(/^A car travels (\d+(?:\.\d+)?) km in (\d+(?:\.\d+)?) hours\. Speed in km\/h\?$/i);
+  if (m && topicAllowed('ratios')) return 'Find the amount for one hour by dividing distance by time.';
+  m = text.match(/^(\d+) items at \$(\d+(?:\.\d+)?) each\. Total cost\?$/i);
+  if (m && topicAllowed('money', 'wordproblems')) return 'Find the cost of one item, then multiply by the number of items.';
+  m = text.match(/^You save \$(\d+(?:\.\d+)?) a week\. How many weeks to reach \$(\d+(?:\.\d+)?)\?$/i);
+  if (m && topicAllowed('money')) return 'Divide the goal amount by the weekly saving.';
+  m = text.match(/^A \$(\d+(?:\.\d+)?) item is (\d+(?:\.\d+)?)% off\. What is the SALE price\?$/i);
+  if (m && topicAllowed('percent')) return 'Find the discount amount first, then subtract it from the original price.';
+  m = text.match(/^A \$(\d+(?:\.\d+)?) item plus (\d+(?:\.\d+)?)% tax\. TOTAL cost\?$/i);
+  if (m && topicAllowed('percent')) return 'Find the tax amount first, then add it to the original price.';
+  m = text.match(/^(\d+(?:\.\d+)?) out of (\d+(?:\.\d+)?) — what PERCENT is that\? \(round to 1 decimal\)$/i);
+  if (m && topicAllowed('percent')) return 'Divide the part by the whole, multiply by 100, then round as requested.';
+  m = text.match(/^A \$(\d+(?:\.\d+)?) item needs a (\d+(?:\.\d+)?)% deposit\. How much is the deposit\?$/i);
+  if (m && topicAllowed('money', 'percent')) return 'Find the stated percent of the total price.';
+  m = text.match(/^Solve for x:\s*(-?\d+)\s*x(?:\s*[+−-]\s*\d+)?\s*=\s*-?\d+\s*$/i);
+  const algebraWithParentheses = text.match(/^Solve for x:\s*(-?\d+)\s*\(\s*x\s*[+−-]\s*\d+\s*\)\s*=\s*-?\d+\s*$/i);
+  if (topicAllowed('algebra') && ((m && Number(m[1]) !== 0) || (algebraWithParentheses && Number(algebraWithParentheses[1]) !== 0))) return 'Keep both sides balanced while you undo operations to isolate x.';
+  if (topicAllowed('geometry', 'measurement') && /^A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m\. What is its AREA(?: in square metres)?\??$/i.test(text)) return 'Area measures the space inside a shape.';
+  if (topicAllowed('geometry', 'measurement') && /^(?:A rectangle is \d+(?:\.\d+)? m by \d+(?:\.\d+)? m|A square has side length \d+(?:\.\d+)? cm)\. What is its PERIMETER(?: in centimetres)?\??$/i.test(text)) return 'Perimeter means the distance around the outside.';
+  if (topicAllowed('geometry') && /^A triangle has base \d+(?:\.\d+)? cm and height \d+(?:\.\d+)? cm\. What is its AREA\??$/i.test(text)) return 'A triangle covers half of a base-by-height rectangle.';
+  m = text.match(/^A triangle has angles (\d+)° and (\d+)°\. What is the third angle\?$/i);
+  if (m && topicAllowed('geometry') && Number(m[1]) > 0 && Number(m[2]) > 0 && Number(m[1]) + Number(m[2]) < 180) return 'The angles in a triangle total 180°.';
+  if (topicAllowed('geometry') && /^A box is \d+(?:\.\d+)? m long, \d+(?:\.\d+)? m wide, \d+(?:\.\d+)? m tall\. What is its VOLUME\??$/i.test(text)) return 'Volume measures the space inside a 3-D shape.';
+  if (topicAllowed('geometry') && /^A circle has radius \d+(?:\.\d+)? cm\. What is its CIRCUMFERENCE\? Use π ≈ 3\.14, round to 1 decimal\.$/i.test(text)) return 'Circumference measures the distance around a circle.';
+  if (topicAllowed('measurement') && /^\d+(?:\.\d+)? meters = how many centimeters\?$/i.test(text)) return 'Moving from meters to centimeters means multiplying by 100.';
+  if (topicAllowed('measurement') && /^\d+(?:\.\d+)? liters = how many milliliters\?$/i.test(text)) return 'Moving from liters to milliliters means multiplying by 1000.';
+  if (topicAllowed('measurement') && /^\d+(?:\.\d+)? kilograms = how many grams\?$/i.test(text)) return 'Moving from kilograms to grams means multiplying by 1000.';
+  if (topicAllowed('data') && /^A table records .+ votes for .+ and .+ for .+\. How many votes were recorded\?$/i.test(text)) return 'Add each labelled category exactly once.';
+  if (topicAllowed('data') && /^A chart shows .+ students chose .+ and .+ chose .+\. How many more chose the larger group\?$/i.test(text)) return 'Subtract the smaller count from the larger count.';
+  if (topicAllowed('data') && /\b(?:mean|average)\b/i.test(text) && /\?\s*$/.test(text)) return 'Add the values, then divide by how many values there are.';
+  if (topicAllowed('probability') && /^A (?:bag|spinner) has .+\. What is the probability of .+\?$/i.test(text)) return 'Probability is favorable outcomes divided by total outcomes.';
+  if (topicAllowed('patterns', 'logic', 'numbersense', 'estimation') && /^Pattern: .+\.\.\. What (?:is|number is) (?:term|number|the next term) \d+\??$/i.test(text)) return 'Find the rule between terms, then count the jumps to the requested term.';
+  if (topicAllowed('patterns', 'numbersense', 'estimation') && /^Round [\d,]+ to the nearest (?:10|100)\.?$/i.test(text)) return 'Check the digit immediately to the right of the place you are rounding.';
+  if (topicAllowed('patterns') && /^\d+ \+ \? = \d+\.\s*What is the missing number\?$/i.test(text)) return 'Work backward with the opposite operation to find the missing number.';
+  if (topicAllowed('bedmas') && /^\d+²\s*=\s*\?$/i.test(text)) return 'An exponent tells how many times the base is multiplied by itself.';
+  const expression = text.replace(/\s+/g, ''), atom = '-?\\d+(?:\\.\\d+)?';
+  const validExpression = new RegExp(`^(?:${atom}(?:[+−×x÷]${atom})+|\\(${atom}[+−]${atom}\\)[×x÷]${atom})=\\?$`);
+  if (topicAllowed('bedmas') && validExpression.test(expression)) {
+    const mulDivCount = (expression.match(/[×x÷]/g) || []).length;
+    const addSubCount = (expression.match(/[+−]/g) || []).length;
+    if (/[()]/.test(expression) || (mulDivCount > 0 && addSubCount > 0)) return 'Do brackets first, then × and ÷ left to right, then + and − left to right.';
+    if (mulDivCount >= 2) return 'Evaluate × and ÷ left to right.';
+    if (addSubCount >= 2) return 'Evaluate + and − left to right.';
+  }
+  return null;
 }
 function submitQ() {
+  if (!M || M.completed || M.transitioning) return;
   const raw = $('ms-answer').value.trim();
   const fb = $('ms-fb');
   if (!raw) { fb.textContent = M.q.choices ? 'Pick an answer first!' : 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
   const cb = $('ms-combo');
   if (answerOk(M.q, raw)) {
+    M.transitioning = true;
     M.combo++; M.best = Math.max(M.best, M.combo);
     let gain = Math.max(4, XP_PER_Q - Math.min(M.attempts, 2) * 2) + 3 * Math.min(M.combo - 1, 4);
     if (M.q.reinforcement) gain += 4; // comeback bonus for sticking with a re-practiced topic
@@ -3619,7 +4457,10 @@ function submitQ() {
       });
     }
     if (M.bbLevel > 0) markStrategyHelped(M.player, M.q.topic);
-    M.i++; lockThen(nextQ);
+    M.i++;
+    M.pendingCompletion = M.i === M.questions.length;
+    savePausedMission();
+    lockThen(nextQ);
   } else {
     M.combo = 0; cb.textContent = '';
     M.attempts++;
@@ -3632,6 +4473,7 @@ function submitQ() {
     updateAttemptDots();
     const lib = strategyFor(M.q.topic);
     if (M.attempts >= 3) {
+      M.transitioning = true;
       // Learned, not yet earned: no XP awarded for this question (and none
       // taken away either), a full worked walkthrough using this exact
       // question's numbers, a recorded miss for the adaptive engine, and
@@ -3639,37 +4481,70 @@ function submitQ() {
       // second chance (EDUCATION.md wrong-answer rule).
       recordAnswer(M.player, M.q.topic, false);
       showWalkthrough(M.q);
-      queueReinforcement(M.q.topic);
+      const added = queueReinforcement(M.q.topic);
       segs();
-      fb.textContent = 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.';
+      fb.textContent = added > 0
+        ? 'That’s okay — let’s learn this one together. Read below, then we’ll practice it again soon.'
+        : 'That’s okay — let’s learn this one together. Read below, then keep building the skill.';
       fb.className = 'feedback fb-bad';
       document.querySelectorAll('.choice-answer').forEach(b => b.disabled = true);
       $('ms-answer').disabled = true;
       $('ms-submit').disabled = true;
       M.i++;
+      M.pendingCompletion = M.i === M.questions.length;
+      savePausedMission();
       const continueButton = $('ms-walkthrough-next');
-      if (continueButton) continueButton.onclick = nextQ;
+      if (continueButton) {
+        const token = missionRunToken, mission = M;
+        continueButton.onclick = () => {
+          if (missionRunIsCurrent(token, mission)) nextQ();
+        };
+      }
     } else if (M.attempts === 2) {
       fb.textContent = 'Not quite yet — here’s a strategy and an example to help.';
       fb.className = 'feedback fb-bad';
       while (M.bbLevel < 3) advanceBrainBoost('ms');
+      savePausedMission();
       const active = $('ms-answer');
-      setTimeout(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
+      scheduleMissionCallback(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
     } else {
       fb.textContent = 'Not yet — here’s a clue to help. A common mistake here is ' + (lib ? lib.commonMistake : 'rushing without checking each step') + '.';
       fb.className = 'feedback fb-bad';
       if (!M.bbLevel) advanceBrainBoost('ms');
+      savePausedMission();
       const active = $('ms-answer');
-      setTimeout(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
+      scheduleMissionCallback(() => active.scrollIntoView({behavior:'smooth', block:'center'}), 80);
     }
   }
 }
-function lockThen(f, delay) { $('ms-answer').disabled = true; $('ms-submit').disabled = true; setTimeout(f, delay || 1300); }
+function lockThen(f, delay) { $('ms-answer').disabled = true; $('ms-submit').disabled = true; scheduleMissionCallback(f, delay || 1300); }
+function dailyCompletionRewards(accuracy) {
+  const n = Number(accuracy);
+  const a = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+  if (a === 0) return { completionXp:20, completionCoins:5 };
+  if (a < 40) return { completionXp:50, completionCoins:15 };
+  if (a < 70) return { completionXp:90, completionCoins:25 };
+  if (a < 90) return { completionXp:120, completionCoins:35 };
+  return { completionXp:140, completionCoins:45 };
+}
 function showResult() {
+  if (!M || M.completed) return;
+  M.completed = true;
+  M.pendingCompletion = false;
+  missionRunToken++;
   const total = M.questions.length;
   const accuracy = Math.round((M.correct / total) * 100);
   const bonus = Math.round(accuracy / 3);
-  const baseXp = M.xpEarned + M.def.xp + bonus, coins = 35 + Math.round(accuracy / 5);
+  const completion = typeof dailyCompletionRewards === 'function'
+    ? dailyCompletionRewards(accuracy)
+    : (() => {
+      if (accuracy === 0) return { completionXp:20, completionCoins:5 };
+      if (accuracy < 40) return { completionXp:50, completionCoins:15 };
+      if (accuracy < 70) return { completionXp:90, completionCoins:25 };
+      if (accuracy < 90) return { completionXp:120, completionCoins:35 };
+      return { completionXp:140, completionCoins:45 };
+    })();
+  const baseXp = M.xpEarned + completion.completionXp + bonus, coins = completion.completionCoins;
   const sibling = M.player === 'alex' ? 'katya' : 'alex';
   const teamBonus = dailyCountFor(sibling) >= 1;
   const wMult = weekendXpMult();
@@ -3704,18 +4579,10 @@ function showResult() {
   segs();
 }
 function closeMission() {
-  savePausedMission();
-  $('mission-screen').classList.remove('on');
-  $('battle-screen').classList.remove('on');
-  $('store-screen').classList.remove('on');
-  $('parent-screen').classList.remove('on');
-  $('moneylab-screen').classList.remove('on');
-  $('grant-screen').classList.remove('on');
-  $('guided-screen').classList.remove('on');
-  $('escape-screen').classList.remove('on');
-  $('strategy-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  paint();
+  if (typeof goHome === 'function') { goHome(); return; }
+  pauseDailyMissionRun();
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen']
+    .forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
 }
 
 window.addEventListener('beforeunload', savePausedMission);
@@ -3766,7 +4633,6 @@ $('ms-answer').addEventListener('focus', () => setTimeout(() => $('ms-answer').s
 
 /* ============ STORE — real prizes + parent approval ============ */
 if (!state.requests) state.requests = [];
-if (!state.parentPin) state.parentPin = '1234';
 if (!state.activity) state.activity = { alex: { missions:0, battles:0, money:0 }, katya: { missions:0, battles:0, money:0 } };
 if (!state.settings) state.settings = { muted: false };
 
@@ -3799,6 +4665,7 @@ function catalogFor(who) {
 }
 
 function openStore() {
+  enterActivity('store');
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Store'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -3809,9 +4676,7 @@ function openStore() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeStore() {
-  $('store-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 
 function hasPendingFor(who, id) {
@@ -3901,6 +4766,7 @@ function requestPrize(id) {
 // Parent decides. On APPROVE, re-check balance at this moment and deduct coins
 // (and keys, if premium). On DECLINE, nothing is deducted.
 function decideRequest(rid, ok) {
+  if (!requireParentAuth()) return;
   const r = state.requests.find(x => x.id === rid);
   if (!r || r.status !== 'pending') return;
   const p = state[r.who];
@@ -3942,15 +4808,23 @@ let parentUnlocked = false;
 let pendingProgressImport = null;
 const PIN_MAX_FAILURES = 5, PIN_LOCK_MS = 30000;
 let pinFailures = 0, pinLockedUntil = 0;
+function lockParent() { parentUnlocked = false; }
+function isValidParentPin(pin) { return typeof pin === 'string' && /^\d{4}$/.test(pin); }
+function requireParentAuth() {
+  if (parentUnlocked) return true;
+  if (typeof toast === 'function') toast('🔒 Parent PIN required.');
+  return false;
+}
 function verifyParentPin(value) {
   const now = Date.now();
   if (now < pinLockedUntil) return { ok:false, wait:Math.ceil((pinLockedUntil-now)/1000) };
-  if (value === state.parentPin) { pinFailures = 0; pinLockedUntil = 0; return { ok:true, wait:0 }; }
+  if (isValidParentPin(state.parentPin) && value === state.parentPin) { pinFailures = 0; pinLockedUntil = 0; return { ok:true, wait:0 }; }
   pinFailures++;
   if (pinFailures >= PIN_MAX_FAILURES) { pinFailures = 0; pinLockedUntil = now + PIN_LOCK_MS; return { ok:false, wait:30 }; }
   return { ok:false, wait:0 };
 }
 function openParent() {
+  enterActivity('parent', { keepParent: true });
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Parent'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -3960,16 +4834,22 @@ function openParent() {
   $('parent-screen').classList.add('on');
   $('pin-gate').style.display = parentUnlocked ? 'none' : 'block';
   $('parent-content').style.display = parentUnlocked ? 'block' : 'none';
+  const setup = $('pin-setup'), entry = $('pin-entry-help'), pinInput = $('pin-input'), unlock = $('pin-unlock-btn');
+  const needsSetup = !isValidParentPin(state.parentPin);
+  if (setup) setup.style.display = needsSetup ? 'block' : 'none';
+  if (entry) entry.textContent = needsSetup ? 'Create a 4-digit Parent PIN to protect settings.' : 'Enter your Parent PIN to continue.';
+  if (pinInput) pinInput.style.display = needsSetup ? 'none' : '';
+  if (unlock) unlock.style.display = needsSetup ? 'none' : '';
   $('pin-input').value = ''; $('pin-err').textContent = '';
   if (parentUnlocked) renderParent();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeParent() {
-  $('parent-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  lockParent();
+  goHome();
 }
 function checkPin() {
+  if (!isValidParentPin(state.parentPin)) { $('pin-err').textContent = 'Create a Parent PIN first.'; return; }
   const result = verifyParentPin($('pin-input').value);
   if (result.ok) {
     parentUnlocked = true;
@@ -3982,17 +4862,38 @@ function checkPin() {
   }
 }
 function changePin() {
+  if (!requireParentAuth()) return;
   const v = $('new-pin').value.trim();
   if (!/^\d{4}$/.test(v)) { toast('PIN must be 4 digits.'); return; }
-  state.parentPin = v; Store.set('smbt-state-v2', state);
+  const previous = state.parentPin;
+  state.parentPin = v;
+  const saved = Store.set('smbt-state-v2', state);
+  if (!saved || !saved.ok) { state.parentPin = previous; toast('⚠️ PIN could not be saved. Try again.'); return; }
   $('new-pin').value = '';
   toast('🔐 Parent PIN updated.');
   renderParent();
 }
 function requireUnlockedParent() {
-  if (parentUnlocked) return true;
-  toast('Unlock the Parent Dashboard first.');
-  return false;
+  return requireParentAuth();
+}
+function setupParentPin() {
+  if (isValidParentPin(state.parentPin)) return;
+  parentUnlocked = false;
+  const a = $('pin-new').value.trim(), b = $('pin-confirm').value.trim();
+  if (!isValidParentPin(a) || !isValidParentPin(b)) { $('pin-err').textContent = 'PIN must be exactly 4 digits.'; return; }
+  if (a !== b) { $('pin-err').textContent = 'PIN entries do not match.'; return; }
+  const previous = state.parentPin;
+  state.parentPin = a;
+  const saved = Store.set('smbt-state-v2', state);
+  if (!saved || !saved.ok) {
+    state.parentPin = previous;
+    parentUnlocked = false;
+    $('pin-err').textContent = 'PIN could not be saved. Try again.';
+    return;
+  }
+  parentUnlocked = true;
+  $('pin-gate').style.display = 'none'; $('parent-content').style.display = 'block';
+  renderParent();
 }
 function downloadJSONFile(name, value) {
   const blob = new Blob([JSON.stringify(value, null, 2)], { type:'application/json' });
@@ -4061,9 +4962,13 @@ function validateImportedProgress(payload) {
       return { ok:false, error:key + ' must be an object.' };
     }
   }
+  const normalized = typeof normalizeLoadedState === 'function'
+    ? normalizeLoadedState(imported)
+    : { state:JSON.parse(JSON.stringify(imported)), safe:true };
+  if (!normalized.safe) return { ok:false, error:'The imported progress contains unsafe or malformed state.' };
   return {
     ok:true,
-    state:JSON.parse(JSON.stringify(imported)),
+    state:normalized.state,
     familySync:payload.familySync ? JSON.parse(JSON.stringify(payload.familySync)) : null
   };
 }
@@ -4120,7 +5025,12 @@ function cancelProgressImport() {
 }
 function confirmProgressImport() {
   if (!requireUnlockedParent() || !pendingProgressImport) return;
-  const imported = pendingProgressImport.state;
+  const checked = normalizeLoadedState(pendingProgressImport.state);
+  if (!checked.safe) {
+    toast('Import stopped: the reviewed data is no longer valid.');
+    return;
+  }
+  const imported = checked.state;
   const newer = ['alex','katya'].filter(who =>
     Number((state[who]||{}).updatedAt||0) > Number((imported[who]||{}).updatedAt||0)
   );
@@ -4131,9 +5041,8 @@ function confirmProgressImport() {
   const backedUpAt = new Date().toISOString();
   const backupEnvelope = buildProgressExportEnvelope(state, 'automatic backup before reviewed import');
   backupEnvelope.exportedAt = backedUpAt;
-  try {
-    localStorage.setItem('smbt-state-v2-backup-before-import-' + Date.now(), JSON.stringify(backupEnvelope));
-  } catch (e) {
+  const importBackup = Store.writeAuxiliary('smbt-state-v2-backup-before-import-' + Date.now(), backupEnvelope);
+  if (!importBackup.ok) {
     toast('Import stopped: the safety backup could not be saved.');
     return;
   }
@@ -4141,16 +5050,22 @@ function confirmProgressImport() {
     'summer-math-battle-before-import-' + backedUpAt.replace(/[:.]/g,'-') + '.json',
     backupEnvelope
   );
-  const next = JSON.parse(JSON.stringify(imported));
+  const saved = Store.set(PRIMARY_STATE_KEY, imported, { allowRecovery:true, queueCloud:false });
+  if (!saved.ok) {
+    toast('Import stopped: the new progress could not be saved safely.');
+    return;
+  }
+  const next = saved.value;
   Object.keys(state).forEach(key => delete state[key]);
   Object.assign(state, next);
-  Store.set('smbt-state-v2', state);
   pendingProgressImport = null;
+  if (Store.cloudSafe()) Cloud.scheduleDebouncedPush();
   toast('Progress imported after backup. Review both profiles before syncing.');
   paint();
   renderParent();
 }
 async function generateFamilyCodeUI() {
+  if (!requireParentAuth()) return;
   if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
   const code = Cloud.genCode();
   toast('⏳ Creating family record...');
@@ -4164,6 +5079,7 @@ async function generateFamilyCodeUI() {
   renderParent();
 }
 async function linkFamilyCodeUI() {
+  if (!requireParentAuth()) return;
   const code = ($('family-code-input').value || '').trim().toUpperCase();
   if (!Cloud.configured()) { toast('⚠️ Cloud sync isn\u2019t set up yet \u2014 see the developer notes for a 5-minute setup.'); return; }
   if (!/^[A-HJ-NP-Z2-9]{8}$/.test(code)) { toast('Enter the complete 8-character Family Sync Code.'); return; }
@@ -4174,6 +5090,7 @@ async function linkFamilyCodeUI() {
   renderParent();
 }
 function dismissPinNotice() {
+  if (!requireParentAuth()) return;
   state.pinNoticeDismissed = true;
   Store.set('smbt-state-v2', state);
   const el = $('pin-default-notice');
@@ -4183,6 +5100,7 @@ function dismissPinNotice() {
 // year, so auto-advance keeps working correctly in every later September
 // instead of freezing the grade forever at the manually-set number.
 function setGradeOverride(who) {
+  if (!requireParentAuth()) return;
   const inp = $('grade-input-' + who);
   const v = parseInt(inp.value, 10);
   if (!Number.isFinite(v) || v < 1 || v > 12) { toast('Enter a grade from 1-12.'); return; }
@@ -4194,6 +5112,7 @@ function setGradeOverride(who) {
   renderParent();
 }
 function toggleMute() {
+  if (!requireParentAuth()) return;
   state.settings.muted = !state.settings.muted;
   Store.set('smbt-state-v2', state);
   syncMuteBtn();
@@ -4242,7 +5161,23 @@ function cancelResetProgress() {
 // is inherently PIN-protected; the extra click-through warning guards
 // against an accidental tap on a destructive, unrecoverable action.
 function doResetProgress() {
-  try { localStorage.removeItem('smbt-state-v2'); } catch (e) {}
+  if (!requireParentAuth()) return;
+  resetInProgress = true;
+  missionRunToken++;
+  const result = Store.resetPrimary(state);
+  if (!result.ok) {
+    resetInProgress = false;
+    toast('⚠️ Reset stopped: progress could not be backed up and removed safely.');
+    return;
+  }
+  if (!Cloud.unlinkForLocalReset()) {
+    const restored = Store.set(PRIMARY_STATE_KEY, state, { allowRecovery:true, queueCloud:false });
+    resetInProgress = false;
+    toast(restored.ok
+      ? '⚠️ Reset stopped because Family Sync could not be unlinked safely.'
+      : '⚠️ Reset could not finish safely. Use the recovery backup before continuing.');
+    return;
+  }
   toast('🗑️ Local progress reset — reloading…');
   setTimeout(() => { location.href = location.pathname + '?reset=' + Date.now(); }, 500);
 }
@@ -4286,6 +5221,7 @@ function renderStrategyLibrary() {
   $('strategy-cards').innerHTML = cardsHtml || '<div class="mgr-note">Play a Daily Mission and tap Brain Boost to start discovering strategies!</div>';
 }
 function openStrategyLib() {
+  enterActivity('strategy');
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen'].forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
@@ -4294,9 +5230,7 @@ function openStrategyLib() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeStrategyLib() {
-  $('strategy-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 
 function renderParent() {
@@ -4412,6 +5346,7 @@ function renderRewardsManager() {
   }).join('');
 }
 function editReward(i, field, val) {
+  if (!requireParentAuth()) return;
   const n = parseInt(val, 10);
   if (isNaN(n) || n < 0) { renderParent(); return; }
   state.rewards[i][field] = n;
@@ -4420,6 +5355,7 @@ function editReward(i, field, val) {
   toast('💾 Reward updated.');
 }
 function toggleReward(i) {
+  if (!requireParentAuth()) return;
   state.rewards[i].enabled = !state.rewards[i].enabled;
   Store.set('smbt-state-v2', state);
   renderParent();
@@ -4457,6 +5393,7 @@ function adjStat(who, field, label, val) {
   </div>`;
 }
 function adjust(who, field, delta) {
+  if (!requireParentAuth()) return;
   const step = (field === 'coins' || field === 'totalXP') ? 10 : 1;
   const p = state[who];
   p[field] = Math.max(0, (p[field] || 0) + delta * step);
@@ -4465,6 +5402,7 @@ function adjust(who, field, delta) {
   renderParent();
 }
 function markMissionDone(who) {
+  if (!requireParentAuth()) return;
   const p = state[who];
   state.activity[who].missions += 1;
   p.coins += 20;
@@ -4552,9 +5490,38 @@ $('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPi
 /* ============ MONEY LAB ============ */
 let mlGoalId = null;
 let mlStats = { solved: 0, earned: 0 };
-let mlQ = null, mlAttempts = 0;
+let mlQ = null, mlAttempts = 0, mlOwner = null;
+let activityEpoch = 0;
+function hideAllActivityScreens(keepParent=false) {
+  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','grant-screen','guided-screen','escape-screen','strategy-screen']
+    .forEach(id => { const el = $(id); if (el) el.classList.remove('on'); });
+  activityEpoch++;
+  if (!keepParent) lockParent();
+}
+function clearNonDailyActivityState() {
+  mlQ = null; mlOwner = null; mlAttempts = 0; mlGoalId = null;
+  mlStats = { solved: 0, earned: 0 };
+  GM = null;
+  ER = null;
+  B = null;
+}
+function enterActivity(kind, options = {}) {
+  if (kind !== 'daily' && M) pauseDailyMissionRun();
+  clearNonDailyActivityState();
+  hideAllActivityScreens(options.keepParent === true);
+}
+function goHome() {
+  if (M) pauseDailyMissionRun();
+  clearNonDailyActivityState();
+  hideAllActivityScreens();
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  $('hq-grid').style.display = 'grid';
+  const landing = $('landing'); if (landing) landing.style.display = 'block';
+  paint();
+}
 
 function openMoneyLab() {
+  enterActivity('money');
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Money Lab'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -4568,15 +5535,13 @@ function openMoneyLab() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeMoneyLab() {
-  $('moneylab-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 function mlTab(which) {
   document.querySelectorAll('.ml-tab').forEach(t => t.classList.toggle('on', t.dataset.mlt === which));
   $('ml-goal').classList.toggle('on', which === 'goal');
   $('ml-chal').classList.toggle('on', which === 'chal');
-  if (which === 'chal' && !mlQ) mlNextQ();
+  if (which === 'chal' && !mlQ) { mlOwner = state.activePlayer; mlNextQ(); }
 }
 
 /* --- Savings Goal (goals = real Store prizes) --- */
@@ -4625,9 +5590,8 @@ function renderGoalTrack() {
 
 /* --- Money Challenge: budgeting / change / discount, $ answers, pays coins --- */
 const money2 = n => Math.round(n * 100) / 100;
-function mlGen() {
-  const who = state.activePlayer;
-  const F = PERSONALIZATION.katya.friends;
+function mlGen(who = mlOwner || state.activePlayer) {
+  const F = FRIENDS;
   const pickF = () => F[R(0, 2)];
   const ALEX = [
     () => { const items = R(2, 4), price = pick([4, 5, 6, 7, 8]); return { s: '🛒 Stocking up on bubble tea for the squad.', q: `${items} bubble teas at $${price} each. Total cost?`, a: items * price, unit: '$' }; },
@@ -4648,6 +5612,7 @@ function mlGen() {
   return pick(who === 'alex' ? ALEX : KATYA)();
 }
 function mlNextQ() {
+  if (!mlOwner) return;
   mlAttempts = 0;
   let tries = 0, q;
   do { q = mlGen(); tries++; } while (mlQ && q.q === mlQ.q && tries < 8);
@@ -4661,17 +5626,19 @@ function mlNextQ() {
   $('ml-submit').disabled = false;
 }
 function mlCheck() {
-  const v = parseFloat($('ml-answer').value.trim().replace(',', '.'));
+  if (!mlQ || mlQ.completed || !mlOwner || !$('moneylab-screen').classList.contains('on')) return;
+  const v = parseStrictNumber($('ml-answer').value);
   const fb = $('ml-fb');
-  if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
+  if (v === null) { fb.textContent = 'Type a number first!'; fb.style.color = 'var(--pink)'; return; }
   if (Math.abs(v - mlQ.a) < 0.001) {
+    mlQ.completed = true;
     const reward = 15;
     const mlXp = 5 * weekendXpMult();
-    state[state.activePlayer].coins += reward;
-    gainXP(state.activePlayer, mlXp);
+    state[mlOwner].coins += reward;
+    gainXP(mlOwner, mlXp);
     mlStats.solved++; mlStats.earned += reward;
-    state.activity[state.activePlayer].money++;
-    touchPlayer(state.activePlayer);
+    state.activity[mlOwner].money++;
+    touchPlayer(state[mlOwner]);
     $('ml-solved').textContent = mlStats.solved;
     $('ml-earned').textContent = mlStats.earned;
     fb.textContent = pick(['✔ Correct! +15 coins 💰', '✔ Smart money move! +15 coins', '✔ Cha-ching! +15 coins']);
@@ -4680,14 +5647,22 @@ function mlCheck() {
     paint();
     renderGoalTrack();
     $('ml-answer').disabled = true; $('ml-submit').disabled = true;
-    setTimeout(mlNextQ, 1300);
+    const token = activityEpoch, owner = mlOwner, run = mlQ;
+    setTimeout(() => {
+      if (token !== activityEpoch || owner !== mlOwner || run !== mlQ || !$('moneylab-screen').classList.contains('on')) return;
+      mlNextQ();
+    }, 1300);
   } else {
     mlAttempts++;
     if (mlAttempts >= 2) {
       fb.textContent = '✖ The answer was ' + mlQ.unit + mlQ.a + '. New question coming up!';
       fb.style.color = 'var(--pink)';
       $('ml-answer').disabled = true; $('ml-submit').disabled = true;
-      setTimeout(mlNextQ, 1500);
+      const token = activityEpoch, owner = mlOwner, run = mlQ;
+      setTimeout(() => {
+        if (token !== activityEpoch || owner !== mlOwner || run !== mlQ || !$('moneylab-screen').classList.contains('on')) return;
+        mlNextQ();
+      }, 1500);
     } else {
       fb.textContent = '✖ Not quite — read it again carefully and retry!';
       fb.style.color = 'var(--pink)';
@@ -4708,6 +5683,7 @@ const GRANTS = [
 let gWho = 'alex', gPick = null;
 
 function openGrant() {
+  enterActivity('grant', { keepParent: parentUnlocked });
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Grant Prize'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen','strategy-screen'].forEach(s => $(s).classList.remove('on'));
@@ -4720,9 +5696,8 @@ function openGrant() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeGrant() {
-  $('grant-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  lockParent();
+  goHome();
 }
 function gCheckPin() {
   const result = verifyParentPin($('g-pin-input').value);
@@ -4763,6 +5738,7 @@ function gPickReward(id) {
   c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
 }
 function grantPrize() {
+  if (!requireParentAuth()) return;
   if (!gPick) return;
   const p = state[gWho];
   const name = gWho === 'alex' ? 'Alex' : 'Katya';
@@ -4996,10 +5972,11 @@ function openGuided() {
   startGuided(state.activePlayer);
 }
 function startGuided(who) {
+  enterActivity('guided');
   gmActiveSet = (who === 'alex' || who === 'katya') ? who : state.activePlayer;
   const bank = GUIDED[gmActiveSet];
   const prob = pick(bank)();
-  GM = { who: gmActiveSet, prob, step: 0, attempts: 0, usedHint: false, strategyOk: false, explainOk: false, checks: 0 };
+  GM = { who: gmActiveSet, prob, step: 0, attempts: 0, usedHint: false, strategyOk: false, explainOk: false, checks: 0, completed: false, runEpoch: activityEpoch };
 
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Missions'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
@@ -5018,9 +5995,11 @@ function startGuided(who) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeGuided() {
-  $('guided-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
+}
+
+function guidedIsCurrent() {
+  return !!(GM && GM.runEpoch === activityEpoch && $('guided-screen').classList.contains('on'));
 }
 
 function renderRail() {
@@ -5034,7 +6013,7 @@ function gmHintBtn() {
   return `<button class="gm-hint-btn" onclick="gmShowHint()">🧠 NEED A BRAIN BOOST?</button>
           <div class="gm-hintbox" id="gm-hintbox"><span>🧠</span><span>${GM.prob.hint}</span></div>`;
 }
-function gmShowHint() { GM.usedHint = true; $('gm-hintbox').classList.add('show'); }
+function gmShowHint() { if (!guidedIsCurrent()) return; GM.usedHint = true; $('gm-hintbox').classList.add('show'); }
 
 function renderStage() {
   renderRail();
@@ -5083,7 +6062,8 @@ function renderStage() {
         ${gmHintBtn()}
         <button class="gm-action" id="gm-solve-btn" style="margin-top:14px" onclick="gmCheckSolve()">CHECK MY ANSWER</button>
       </div>`;
-    setTimeout(() => { const a = $('gm-answer'); if (a) { a.focus(); a.addEventListener('keydown', e => { if (e.key === 'Enter') gmCheckSolve(); }); } }, 50);
+    const token = activityEpoch, run = GM;
+    setTimeout(() => { if (token !== activityEpoch || run !== GM || !$('guided-screen').classList.contains('on')) return; const a = $('gm-answer'); if (a) { a.focus(); a.addEventListener('keydown', e => { if (e.key === 'Enter') gmCheckSolve(); }); } }, 50);
   } else if (GM.step === 3) {
     // EXPLAIN — pick the reasoning that matches
     const opts = shuffle(p.explain.map(e => ({...e})));
@@ -5119,9 +6099,10 @@ function renderStage() {
   }
 }
 
-function gmNext() { GM.step++; GM.attempts = 0; renderStage(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function gmNext() { if (!guidedIsCurrent()) return; GM.step++; GM.attempts = 0; renderStage(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 function gmPickStrategy(btn, ok) {
+  if (!guidedIsCurrent()) return;
   if (btn.disabled) return;
   const fb = $('gm-strat-fb');
   if (ok) {
@@ -5140,10 +6121,11 @@ function gmPickStrategy(btn, ok) {
 }
 
 function gmCheckSolve() {
+  if (!guidedIsCurrent()) return;
   const inp = $('gm-answer'); if (!inp) return;
-  const v = parseFloat(inp.value.trim().replace(',', '.'));
+  const v = parseStrictNumber(inp.value);
   const fb = $('gm-solve-fb');
-  if (isNaN(v)) { fb.textContent = 'Type your answer first!'; fb.className = 'gm-fb bad'; return; }
+  if (v === null) { fb.textContent = 'Type your answer first!'; fb.className = 'gm-fb bad'; return; }
   if (Math.abs(v - GM.prob.answer) < 0.001) {
     GM.solveOk = GM.attempts === 0 && !GM.usedHint;
     fb.textContent = '✔ Correct! Well solved.'; fb.className = 'gm-fb good';
@@ -5167,6 +6149,7 @@ function gmCheckSolve() {
 }
 
 function gmPickExplain(btn, ok) {
+  if (!guidedIsCurrent()) return;
   if (btn.disabled) return;
   const fb = $('gm-explain-fb');
   if (ok) {
@@ -5185,6 +6168,7 @@ function gmPickExplain(btn, ok) {
 }
 
 function gmToggleCheck(i) {
+  if (!guidedIsCurrent()) return;
   const item = $('gm-chk-' + i), tick = $('gm-tick-' + i);
   const on = item.classList.toggle('on');
   tick.textContent = on ? '✓' : '';
@@ -5195,6 +6179,8 @@ function gmToggleCheck(i) {
 }
 
 function gmFinish() {
+  if (!guidedIsCurrent() || GM.completed) return;
+  GM.completed = true;
   const who = GM.who, p = state[who];
   // reward scales with how cleanly they reasoned (no hints, first-try)
   let xp = 60;
@@ -5281,9 +6267,10 @@ function genEscape(who) {
 function openEscape() { startEscape(state.activePlayer); }
 
 function startEscape(who) {
+  enterActivity('escape');
   erWho = (who === 'alex' || who === 'katya') ? who : state.activePlayer;
   ER = genEscape(erWho);
-  ER.attempts = 0; ER.usedHint = false; ER.cleanMoves = 0; ER.totalMoves = ER.moves.length;
+  ER.attempts = 0; ER.usedHint = false; ER.cleanMoves = 0; ER.totalMoves = ER.moves.length; ER.completed = false; ER.runEpoch = activityEpoch;
 
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Missions'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
@@ -5299,9 +6286,11 @@ function startEscape(who) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeEscape() {
-  $('escape-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
+}
+
+function escapeIsCurrent() {
+  return !!(ER && ER.runEpoch === activityEpoch && $('escape-screen').classList.contains('on'));
 }
 
 function renderLocks() {
@@ -5315,10 +6304,12 @@ function renderLocks() {
 }
 
 function renderEqState() {
+  if (!escapeIsCurrent()) return;
   $('er-eq').textContent = fmtEq(ER.curM, ER.curSign, ER.curC, ER.curRhs);
 }
 
 function renderMove() {
+  if (!escapeIsCurrent()) return;
   if (ER.stepIndex >= ER.moves.length) return erSolved();
   const move = ER.moves[ER.stepIndex];
   ER.attempts = 0; ER.usedHint = false;
@@ -5351,6 +6342,7 @@ function erHintFor(move) {
 }
 
 function erPick(btn, ok) {
+  if (!escapeIsCurrent() || ER.completed) return;
   if (btn.disabled) return;
   const fb = $('er-fb');
   if (ok) {
@@ -5369,7 +6361,8 @@ function erPick(btn, ok) {
     fb.textContent = '✔ Gate unlocked!'; fb.className = 'er-fb good';
     $('er-eq').classList.remove('flash'); void $('er-eq').offsetWidth; $('er-eq').classList.add('flash');
     burst(16);
-    setTimeout(() => { renderEqState(); renderMove(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, 900);
+    const token = activityEpoch, run = ER;
+    setTimeout(() => { if (token !== activityEpoch || run !== ER || !$('escape-screen').classList.contains('on')) return; renderEqState(); renderMove(); window.scrollTo({ top: 0, behavior: 'smooth' }); }, 900);
   } else {
     ER.attempts++;
     btn.classList.add('wrong'); btn.disabled = true;
@@ -5385,11 +6378,14 @@ function applyMove(move) {
 }
 
 function erShowHint() {
+  if (!escapeIsCurrent()) return;
   ER.usedHint = true;
   $('er-hintbox').classList.add('show');
 }
 
 function erSolved() {
+  if (!escapeIsCurrent() || ER.completed) return;
+  ER.completed = true;
   // final lock opens
   const fl = $('er-lock-final'); if (fl) { fl.textContent = '🎉'; fl.classList.add('open'); }
   const who = erWho, p = state[who];
@@ -5445,6 +6441,7 @@ function pickBMode(id) {
 }
 
 function openBattle() {
+  enterActivity('battle');
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Battle'));
   $('hq-grid').style.display = 'none'; var _l=$('landing'); if(_l)_l.style.display='none';
   $('mission-screen').classList.remove('on');
@@ -5462,13 +6459,12 @@ function openBattle() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function closeBattle() {
-  $('battle-screen').classList.remove('on');
-  $('hq-grid').style.display = 'grid'; var _l2=$('landing'); if(_l2)_l2.style.display='block';
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === 'Home'));
+  goHome();
 }
 
 function startBattle() {
-  B = { target: bMode.target, score: { alex: 0, katya: 0 }, turn: 'alex', round: 1, attempts: 0, lastQ: { alex:'', katya:'' }, q: null };
+  activityEpoch++;
+  B = { target: bMode.target, score: { alex: 0, katya: 0 }, turn: 'alex', round: 1, attempts: 0, lastQ: { alex:'', katya:'' }, q: null, completed: false, runEpoch: activityEpoch };
   $('b-setup').style.display = 'none';
   $('b-result').style.display = 'none';
   $('b-live').style.display = 'block';
@@ -5493,12 +6489,18 @@ function paintBoard() {
 }
 
 function bNextQ() {
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
   B.attempts = 0;
   const topic = pick(['speed','logic','money','mystery','boss','streak']);
   let tries = 0;
   do { B.q = pick(BANK[B.turn][topic])(); tries++; } while (B.q.q === B.lastQ[B.turn] && tries < 8);
   B.lastQ[B.turn] = B.q.q;
   B.q.category = topic;
+  B.q.coachKey = questionOperation(B.q);
+  if (topic === 'money' && !/%/.test(B.q.q)) {
+    B.q.coachKey = /change|spend|earn|coupon|final total/i.test(B.q.q) ? 'subtraction' : 'multiplication';
+  }
+  if (topic === 'logic' && /solve for x|equation/i.test(B.q.q)) B.q.coachKey = 'solve-equation';
   $('b-story').textContent = B.q.s;
   $('b-q').textContent = B.q.q;
   const signBtn = $('b-sign-btn');
@@ -5515,9 +6517,10 @@ function bNextQ() {
 }
 
 function bSubmit() {
-  const v = parseFloat($('b-answer').value.trim().replace(',', '.'));
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
+  const v = parseStrictNumber($('b-answer').value);
   const fb = $('b-fb');
-  if (isNaN(v)) { fb.textContent = 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
+  if (v === null) { fb.textContent = 'Type a number first!'; fb.className = 'feedback fb-bad'; return; }
   if (Math.abs(v - B.q.a) < 0.001) {
     B.score[B.turn]++;
     const sEl = $(B.turn === 'alex' ? 'b-score-a' : 'b-score-k');
@@ -5542,14 +6545,21 @@ function bSubmit() {
     }
   }
 }
-function bLock(f) { $('b-answer').disabled = true; $('b-submit').disabled = true; setTimeout(f, 1200); }
+function bLock(f) {
+  const token = activityEpoch, run = B;
+  $('b-answer').disabled = true; $('b-submit').disabled = true;
+  setTimeout(() => { if (token !== activityEpoch || run !== B || !B || B.completed || !$('battle-screen').classList.contains('on')) return; f(); }, 1200);
+}
 function swapTurn() {
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
   if (B.turn === 'katya') B.round++;
   B.turn = B.turn === 'alex' ? 'katya' : 'alex';
   bNextQ();
 }
 
 function endBattle() {
+  if (!B || B.completed || B.runEpoch !== activityEpoch || !$('battle-screen').classList.contains('on')) return;
+  B.completed = true;
   $('b-live').style.display = 'none';
   $('b-result').style.display = 'block';
   const aWin = B.score.alex > B.score.katya;
@@ -5583,21 +6593,24 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   if (t.dataset.screen === 'Battle') { openBattle(); }
   else if (t.dataset.screen === 'Store') { openStore(); }
   else if (t.dataset.screen === 'Parent') { openParent(); }
-  else if (t.dataset.screen === 'Money Lab') { openMoneyLab(); }
+   else if (t.dataset.screen === 'Money Lab') { openMoneyLab(); }
+   else if (t.dataset.screen === 'Equation Escape') { openEscape(); }
   else if (t.dataset.screen === 'Grant Prize') { openGrant(); }
   else if (t.dataset.screen === 'Missions') { openGuided(); }
-  else if (t.dataset.screen !== 'Home') toast('🚧 ' + t.dataset.screen + ' screen — next build step!');
-  else closeMission();
+  else if (t.dataset.screen !== 'Home') toast('That screen is not available yet.');
+  else goHome();
 }));
 function goTab(name) {
+  if (name === 'Home') { goHome(); return; }
   if (name === 'Battle') { openBattle(); return; }
   if (name === 'Store') { openStore(); return; }
   if (name === 'Parent') { openParent(); return; }
   if (name === 'Money Lab') { openMoneyLab(); return; }
+  if (name === 'Equation Escape') { openEscape(); return; }
   if (name === 'Grant Prize') { openGrant(); return; }
   if (name === 'Missions') { openGuided(); return; }
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.screen === name));
-  toast('🚧 ' + name + ' screen — next build step!');
+  toast('That screen is not available yet.');
 }
 
 /* ============ WEEKEND DOUBLE XP (real — actually applied to XP, not decorative) ============ */
@@ -5652,6 +6665,40 @@ function toast(msg) {
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.remove('show'), 2600);
 }
+function renderStorageWarning() {
+  const status = window.__storageStatus;
+  let warning = $('storage-warning');
+  if (!status) {
+    if (warning) warning.remove();
+    return;
+  }
+  if (!warning) {
+    warning = document.createElement('div');
+    warning.id = 'storage-warning';
+    warning.setAttribute('role', 'status');
+    warning.style.cssText = 'position:fixed;left:12px;right:12px;bottom:76px;z-index:9998;padding:10px 14px;border:1px solid rgba(255,180,0,.75);border-radius:12px;background:#2a1d05;color:#fff4bf;font-weight:700;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.3)';
+    document.body.appendChild(warning);
+  }
+  warning.textContent = status.reason === 'unavailable'
+    ? '⚠️ Progress storage is unavailable. Changes on this device may not persist.'
+    : status.recovery
+      ? '⚠️ Progress is in recovery mode. Existing data was preserved; ask a parent to review storage.'
+      : '⚠️ Progress saved, but the recovery backup could not be updated.';
+}
+window.renderStorageWarning = renderStorageWarning;
+window.__storageUiReady = true;
+if (window.__storageWarningPending || window.__storageStatus || window.__storageRecoveryNotice) setTimeout(() => {
+  renderStorageWarning();
+  const status = window.__storageStatus || {};
+  toast(window.__storageRecoveryNotice
+    ? '✅ Progress was recovered from the last known-good local backup.'
+    : status.reason === 'unavailable'
+    ? '⚠️ Progress storage is unavailable; changes may not persist.'
+    : status.recovery
+      ? '⚠️ Storage recovery mode: existing progress was preserved.'
+      : '⚠️ Progress backup could not be updated.');
+  window.__storageRecoveryNotice = false;
+}, 0);
 (function stars(){
   const c = $('stars');
   for (let i = 0; i < 60; i++) {
@@ -5711,6 +6758,7 @@ function hidePicker() {
   unlockScroll();
 }
 function pickProfile(who) {
+  pauseDailyMissionRun();
   if (who === 'parent') {
     // Route to the existing PIN-gated parent dashboard.
     hidePicker();
@@ -5723,17 +6771,15 @@ function pickProfile(who) {
   paint();
   hidePicker();
   // Land the child on their own HQ.
-  if (typeof goHome === 'function') goHome();
-  else {
-    ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(id => { const el=$(id); if(el) el.classList.remove('on'); });
-    $('hq-grid').style.display = 'grid'; var _l=$('landing'); if(_l)_l.style.display='block';
-  }
+  goHome();
   playCue('request');
 }
 function switchProfile() {
-  parentUnlocked = false;
+  pauseDailyMissionRun();
+  clearNonDailyActivityState();
+  hideAllActivityScreens();
+  lockParent();
   // Close any open screen and return to picker.
-  ['mission-screen','battle-screen','store-screen','parent-screen','moneylab-screen'].forEach(id => { const el=$(id); if(el) el.classList.remove('on'); });
   const hq = $('hq-grid'); if (hq) hq.style.display = 'grid';
   showPicker();
 }
