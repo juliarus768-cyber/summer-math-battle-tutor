@@ -5039,13 +5039,6 @@ function confirmProgressImport() {
     return;
   }
   const imported = checked.state;
-  const newer = ['alex','katya'].filter(who =>
-    Number((state[who]||{}).updatedAt||0) > Number((imported[who]||{}).updatedAt||0)
-  );
-  if (newer.length) {
-    toast('Import stopped: this device has a newer ' + newer.join(' and ') + ' profile.');
-    return;
-  }
   const backedUpAt = new Date().toISOString();
   const backupEnvelope = buildProgressExportEnvelope(state, 'automatic backup before reviewed import');
   backupEnvelope.exportedAt = backedUpAt;

@@ -58,17 +58,21 @@ class MockStorage {
     this.failSet = new Set();
     this.failRemove = new Set();
     this.readOverride = new Map();
+    this.operations = [];
   }
   getItem(key) {
+    this.operations.push(`get:${key}`);
     if (this.failGet.has(key)) throw new Error('read failed');
     if (this.readOverride.has(key)) return this.readOverride.get(key);
     return this.map.has(key) ? this.map.get(key) : null;
   }
   setItem(key, value) {
-    if (!this.available || this.failSet.has(key)) throw new Error('write failed');
+    this.operations.push(`set:${key}`);
+    if (!this.available || this.failSet.has(key) || [...this.failSet].some(pattern => pattern.endsWith('*') && key.startsWith(pattern.slice(0, -1)))) throw new Error('write failed');
     this.map.set(key, String(value));
   }
   removeItem(key) {
+    this.operations.push(`remove:${key}`);
     if (!this.available || this.failRemove.has(key)) throw new Error('remove failed');
     this.map.delete(key);
   }
@@ -451,6 +455,142 @@ vm.runInContext(
 assert.match(extractFunction('confirmProgressImport'), /Store\.writeAuxiliary\('smbt-state-v2-backup-before-import-'/);
 assert.match(extractFunction('confirmProgressImport'), /Store\.set\(PRIMARY_STATE_KEY, imported, \{ allowRecovery:true, queueCloud:false \}\)/);
 
+// Reviewed imports accept an older valid backup even when a fresh local profile
+// has a newer timestamp. The real confirmation, Store, and unlinked Cloud
+// scheduler are exercised with synthetic local-only state.
+vm.runInContext(
+  `const APP_VERSION='test';` +
+  `${extractFunction('buildProgressExportEnvelope')}` +
+  `${extractFunction('scheduleDebouncedPush')}` +
+  `${extractFunction('confirmProgressImport')}` +
+  `globalThis.buildProgressExportEnvelope=buildProgressExportEnvelope;` +
+  `globalThis.scheduleDebouncedPush=scheduleDebouncedPush;` +
+  `globalThis.confirmProgressImport=confirmProgressImport;`,
+  context
+);
+{
+  let timerCalls = 0;
+  let pushCalls = 0;
+  context.familyCode = null;
+  context.applyingCloudState = false;
+  context.debounceTimer = null;
+  context.setTimeout = () => { timerCalls++; return 1; };
+  context.clearTimeout = () => {};
+  context.pushNow = () => { pushCalls++; };
+  const toasts = [];
+  const downloads = [];
+  context.Cloud = {
+    getFamilyCode:() => null,
+    getLastSynced:() => null,
+    scheduleDebouncedPush:context.scheduleDebouncedPush
+  };
+  context.requireUnlockedParent = () => true;
+  context.toast = message => toasts.push(message);
+  context.paint = () => {};
+  context.renderParent = () => {};
+  context.downloadJSONFile = (name, value) => {
+    downloads.push({ name, value:JSON.parse(JSON.stringify(value)) });
+    storageForImport.operations.push('download');
+  };
+  context.$ = () => null;
+
+  function prepareImportHarness(failure = '') {
+    const current = JSON.parse(JSON.stringify(context.api.FRESH));
+    current.alex.updatedAt = 9999999999;
+    current.katya.updatedAt = 9999999999;
+    const initial = JSON.stringify(current);
+    const storage = new MockStorage({ [PRIMARY]:initial });
+    const store = createSafeStore(storage, { __storageUiReady:false }, () => context.Cloud);
+    const loaded = store.get(PRIMARY, context.api.FRESH);
+    assert.equal(loaded.status, 'ok');
+    const before = JSON.stringify(loaded.value);
+    context.state = JSON.parse(before);
+    const progressed = fixture();
+    progressed.alex.updatedAt = 1000;
+    progressed.katya.updatedAt = 900;
+    const validated = context.validateImportedProgress(envelope(progressed));
+    assert.equal(validated.ok, true, validated.error);
+    context.pendingProgressImport = {
+      state:validated.state,
+      familySync:null,
+      sourceName:'synthetic-older-backup.json'
+    };
+    if (failure === 'backup') storage.failSet.add('smbt-state-v2-backup-before-import-*');
+    if (failure === 'primary') storage.failSet.add(PRIMARY);
+    storage.operations.length = 0;
+    context.Store = store;
+    const realSet = store.set.bind(store);
+    store.set = (...args) => {
+      assert.equal(JSON.stringify(context.state), before, 'in-memory state is unchanged while Store verifies the import');
+      const result = realSet(...args);
+      assert.equal(JSON.stringify(context.state), before, 'in-memory replacement waits until Store.set succeeds');
+      return result;
+    };
+    return { storage, store, before, current };
+  }
+
+  let storageForImport;
+  let harness = prepareImportHarness();
+  storageForImport = harness.storage;
+  await context.confirmProgressImport();
+  assert.equal(context.state.alex.lvl, 4, 'older progressed Alex profile is imported');
+  assert.equal(context.state.katya.lvl, 3, 'older progressed Katya profile is imported');
+  assert.equal(context.state.alex.coins, 82);
+  assert.equal(context.state.katya.coins, 55);
+  assert.equal(context.state.mastery.alex.fractions.seen, 12);
+  assert.deepEqual(JSON.parse(JSON.stringify(context.state.mathThinking)), fixture().mathThinking);
+  assert.deepEqual(JSON.parse(JSON.stringify(context.state.evidence)), fixture().evidence);
+  assert.equal(context.state.log[0].msg, 'Mission complete');
+  assert.equal(context.pendingProgressImport, null, 'pending import clears only after verified save');
+  assert.equal(downloads.length, 1, 'pre-import recovery copy is downloaded');
+  assert.equal(downloads[0].value.state.alex.lvl, 1, 'downloaded backup contains the prior fresh state');
+  const auxBackupKey = [...harness.storage.map.keys()].find(key => key.startsWith('smbt-state-v2-backup-before-import-'));
+  assert.ok(auxBackupKey, 'automatic pre-import backup is written');
+  assert.equal(JSON.parse(harness.storage.getItem(auxBackupKey)).state.katya.lvl, 1);
+  const ops = harness.storage.operations;
+  const auxiliaryWrite = ops.findIndex(item => item === `set:${auxBackupKey}`);
+  const downloadIndex = ops.indexOf('download');
+  const primaryWrite = ops.lastIndexOf(`set:${PRIMARY}`);
+  assert.ok(auxiliaryWrite >= 0 && auxiliaryWrite < downloadIndex && downloadIndex < primaryWrite,
+    'recovery backup and download both happen before the primary state replacement');
+  assert.equal(timerCalls, 0, 'unlinked import does not schedule a cloud write');
+  assert.equal(pushCalls, 0, 'unlinked import cannot push to Firebase');
+  assert.equal(harness.storage.getItem(PRIMARY), JSON.stringify(context.state), 'verified imported state persists locally');
+
+  toasts.length = 0;
+  downloads.length = 0;
+  harness = prepareImportHarness('backup');
+  storageForImport = harness.storage;
+  await context.confirmProgressImport();
+  assert.equal(JSON.stringify(context.state), harness.before, 'backup failure preserves in-memory state');
+  assert.equal(context.pendingProgressImport.sourceName, 'synthetic-older-backup.json');
+  assert.equal(downloads.length, 0, 'failed backup stops before download');
+  assert.equal(harness.storage.operations.some(item => item === `set:${PRIMARY}`), false,
+    'failed backup stops before primary write');
+  assert.match(toasts.at(-1), /safety backup could not be saved/i);
+
+  toasts.length = 0;
+  downloads.length = 0;
+  harness = prepareImportHarness('primary');
+  storageForImport = harness.storage;
+  await context.confirmProgressImport();
+  assert.equal(JSON.stringify(context.state), harness.before, 'failed Store write does not replace in-memory progress');
+  assert.equal(context.pendingProgressImport.sourceName, 'synthetic-older-backup.json');
+  assert.equal(downloads.length, 1, 'pre-import backup exists before the failed primary write');
+  assert.equal(JSON.parse(harness.storage.getItem(PRIMARY)).alex.lvl, 1, 'failed write preserves old primary');
+  assert.match(toasts.at(-1), /new progress could not be saved safely/i);
+
+  toasts.length = 0;
+  downloads.length = 0;
+  harness = prepareImportHarness();
+  storageForImport = harness.storage;
+  context.pendingProgressImport.state.alex.coins = -1;
+  await context.confirmProgressImport();
+  assert.equal(JSON.stringify(context.state), harness.before, 'invalid reviewed data preserves current state');
+  assert.equal(downloads.length, 0, 'invalid data aborts before backup/download');
+  assert.equal(harness.storage.operations.some(item => item === `set:${PRIMARY}`), false);
+  assert.match(toasts.at(-1), /no longer valid/i);
+}
 // Reset creates a final valid backup before removal; unsafe state cannot replace an existing good backup.
 {
   const current = fixture();
