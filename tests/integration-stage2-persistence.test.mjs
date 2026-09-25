@@ -5,7 +5,11 @@ import vm from 'node:vm';
 const source = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 function extractFunction(name) {
-  const start = source.indexOf(`function ${name}(`);
+  const regularStart = source.indexOf(`function ${name}(`);
+  const asyncStart = source.indexOf(`async function ${name}(`);
+  const start = asyncStart >= 0 && (regularStart < 0 || asyncStart < regularStart)
+    ? asyncStart
+    : regularStart;
   assert.notEqual(start, -1, `${name} must exist`);
   const bodyStart = source.indexOf('{', start);
   let depth = 0;
@@ -389,6 +393,60 @@ const envelope = state => ({ format:'summer-math-battle-state', formatVersion:1,
   assert.equal(checked.ok, false);
   if (checked.ok) store.set(PRIMARY, checked.state);
   assert.equal(calls.length, 0, 'invalid import cannot reach any cloud queue');
+}
+// A valid sanitized export reaches the real preview renderer, escapes the
+// filename, and remains pending until the parent explicitly confirms import.
+vm.runInContext(
+  `${extractFunction('escapeHtml')}\n` +
+  `${extractFunction('summarizeImportDifferences')}\n` +
+  `${extractFunction('prepareProgressImport')}\n` +
+  `globalThis.prepareProgressImport=prepareProgressImport; globalThis.escapeHtml=escapeHtml; ` +
+  `globalThis.pendingProgressImport=null; globalThis.previewToastMessages=[]; ` +
+  `globalThis.previewImportCalls=0; globalThis.previewElement={style:{display:'none'},innerHTML:''}; ` +
+  `globalThis.requireUnlockedParent=()=>true; ` +
+  `globalThis.$=(id)=>id==='progress-import-preview'?previewElement:null; ` +
+  `globalThis.toast=(message)=>previewToastMessages.push(message); ` +
+  `globalThis.confirmProgressImport=()=>{previewImportCalls++;};`,
+  context
+);
+{
+  const payload = envelope(fixture());
+  payload.familySync = null;
+  const valid = context.validateImportedProgress(payload);
+  assert.equal(valid.ok, true, valid.error);
+  const originalState = JSON.stringify(fixture());
+  context.state = JSON.parse(originalState);
+  const fileName = 'test<backup>&".json';
+  await context.prepareProgressImport({
+    target:{ files:[{ name:fileName, size:256, text:async()=>JSON.stringify(payload) }] }
+  });
+  assert.equal(context.previewElement.style.display, 'block', 'valid export shows preview');
+  assert.match(context.previewElement.innerHTML, /test&lt;backup&gt;&amp;&quot;\.json/, 'filename is HTML-escaped');
+  assert.doesNotMatch(context.previewElement.innerHTML, /test<backup>|<backup>/, 'filename cannot inject markup');
+  assert.match(context.previewElement.innerHTML,
+    /Alex: Level 4 → 4, XP 500 → 500, coins 82 → 82, keys 1 → 1, streak 3 → 3/,
+    'preview includes the expected sanitized child summary');
+  assert.equal(context.previewToastMessages.length, 0, 'preview completes without a read/parse error');
+  assert.ok(context.pendingProgressImport, 'validated import remains pending for confirmation');
+  assert.equal(context.previewImportCalls, 0, 'preview rendering does not confirm/import');
+  assert.equal(JSON.stringify(context.state), originalState, 'preview does not mutate current progress');
+  assert.equal(context.escapeHtml(fileName), 'test&lt;backup&gt;&amp;&quot;.json');
+  assert.equal(context.escapeHtml(`<'"&>`), '&lt;&#39;&quot;&amp;&gt;');
+}
+// The original malformed-JSON feedback remains intact and never opens a preview.
+{
+  context.pendingProgressImport = null;
+  context.previewElement.style.display = 'none';
+  context.previewElement.innerHTML = '';
+  context.previewToastMessages.length = 0;
+  await context.prepareProgressImport({
+    target:{ files:[{ name:'malformed.json', size:20, text:async()=>'{not-json' }] }
+  });
+  assert.equal(context.previewElement.style.display, 'none');
+  assert.equal(context.pendingProgressImport, null);
+  assert.equal(context.previewToastMessages.length, 1);
+  assert.equal(context.previewToastMessages[0], 'Could not read that JSON file.');
+  assert.equal(context.previewImportCalls, 0);
 }
 assert.match(extractFunction('confirmProgressImport'), /Store\.writeAuxiliary\('smbt-state-v2-backup-before-import-'/);
 assert.match(extractFunction('confirmProgressImport'), /Store\.set\(PRIMARY_STATE_KEY, imported, \{ allowRecovery:true, queueCloud:false \}\)/);
