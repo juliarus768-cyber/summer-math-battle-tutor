@@ -96,7 +96,7 @@ assert.equal(preview.some(row => row.includes('275') && row.includes('55')), tru
 assert.equal(preview.some(row => row.includes('Math Secrets: Alex 1, Katya 1')), true);
 
 const confirmSource = extractFunction('confirmProgressImport');
-assert.match(confirmSource, /Import stopped: this device has a newer/, 'newer child profiles must block import');
+assert.doesNotMatch(confirmSource, /this device has a newer/, 'a reviewed valid backup is not rejected only because the local timestamp is newer');
 assert.ok(
   confirmSource.indexOf("Store.writeAuxiliary('smbt-state-v2-backup-before-import-'") <
     confirmSource.indexOf('Object.keys(state).forEach'),
